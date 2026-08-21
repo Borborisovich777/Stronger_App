@@ -1,0 +1,35 @@
+{
+  "id": "./",
+  "name": "Stronger — Gym Tracker",
+  "short_name": "Stronger",
+  "description": "A focused, offline-friendly workout tracker for logging sets and seeing progress.",
+  "lang": "en",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f3f2ed",
+  "theme_color": "#f3f2ed",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["health", "fitness", "utilities"],
+  "prefer_related_applications": false
+}

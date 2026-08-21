@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f3f2ed" />
+    <meta name="description" content="A focused, offline-friendly workout tracker for logging sets and seeing progress." />
+    <meta name="application-name" content="Stronger" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Stronger" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta property="og:title" content="Stronger — Gym Tracker" />
+    <meta property="og:description" content="A focused, offline-friendly workout tracker for logging sets and seeing progress." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://borborisovich777.github.io/stronger-gym-tracker/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" type="image/png" href="%BASE_URL%icon-192.png" />
+    <link rel="apple-touch-icon" href="%BASE_URL%apple-touch-icon.png" />
+    <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
+    <title>Stronger — Gym Tracker</title>
+  </head>
+  <body>
+    <div id="root">
+      <main class="loading-screen" role="status">
+        <span class="brand-mark large" aria-hidden="true">S</span>
+        <strong>Loading your training log…</strong>
+        <small>Your data stays on this device.</small>
+      </main>
+    </div>
+    <noscript>Stronger needs JavaScript to save workouts on this device.</noscript>
+    <script type="module" src="/app/main.tsx"></script>
+  </body>
+</html>
