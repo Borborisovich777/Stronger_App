@@ -2,7 +2,7 @@
 
 Stronger is a free, offline-first workout tracker designed for iPhone. It lets you create routines, record sets quickly, review workout history, and see simple strength trends without an account, subscription, ads, or social features.
 
-> Live app: **[Open Stronger](https://borborisovich777.github.io/stronger-gym-tracker/)**
+> Live app: **[Open Stronger](https://borborisovich777.github.io/Stronger_App/)**
 
 ## What kind of app is this?
 
@@ -35,7 +35,7 @@ Your workout records stay in the browser storage on your device. Stronger does n
 
 Use Safari for the initial installation.
 
-1. Open `https://borborisovich777.github.io/stronger-gym-tracker/` in **Safari**.
+1. Open `https://borborisovich777.github.io/Stronger_App/` in **Safari**.
 2. Wait for the app to finish loading.
 3. Tap Safari’s **Share** button—the square with an upward arrow.
 4. Scroll down and tap **Add to Home Screen**.
@@ -486,18 +486,18 @@ This repository includes `.github/workflows/deploy-pages.yml`. Every push to `ma
 
 For the initial setup:
 
-1. Create a public GitHub repository named `stronger-gym-tracker`.
+1. Use the public GitHub repository named `Stronger_App`.
 2. Push this project to its `main` branch.
 3. In the repository, open **Settings → Pages**.
 4. Under **Build and deployment**, choose **GitHub Actions** as the source.
 5. Open the **Actions** tab and confirm “Deploy Stronger to GitHub Pages” succeeds.
-6. Open `https://borborisovich777.github.io/stronger-gym-tracker/` online on the iPhone.
+6. Open `https://borborisovich777.github.io/Stronger_App/` online on the iPhone.
 7. Install it through Safari.
 8. Create a small test workout, then close and reopen the app.
 9. Enable Airplane Mode and confirm the app still launches.
 10. Return online and test export and replace-only import.
 
-The configured Vite base path depends on the repository remaining named `stronger-gym-tracker`. If the repository name changes, update `base` in `vite.config.ts`, the production URLs in `index.html` and this README, then rebuild before publishing.
+The configured Vite base path depends on the repository remaining named `Stronger_App`. If the repository name changes, update `base` in `vite.config.ts`, the production URLs in `index.html` and this README, then rebuild before publishing.
 
 Free hosting services may change their quotas or terms. Keep the project source and data exports so the app can be moved if necessary.
 

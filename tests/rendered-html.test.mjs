@@ -12,9 +12,9 @@ test("builds a static Stronger shell for the GitHub Pages project path", async (
   assert.match(html, /Loading your training log/);
   assert.match(html, /Your data stays on this device/);
   assert.match(html, /viewport-fit=cover/);
-  assert.match(html, /\/stronger-gym-tracker\/manifest\.webmanifest/);
-  assert.match(html, /\/stronger-gym-tracker\/apple-touch-icon\.png/);
-  assert.match(html, /\/stronger-gym-tracker\/assets\/[^"']+\.js/);
+  assert.match(html, /\/Stronger_App\/manifest\.webmanifest/);
+  assert.match(html, /\/Stronger_App\/apple-touch-icon\.png/);
+  assert.match(html, /\/Stronger_App\/assets\/[^"']+\.js/);
   assert.doesNotMatch(html, /Your site is taking shape|vinext|codex-preview/i);
 
   const assets = await readdir(new URL("dist/assets/", projectRoot));
