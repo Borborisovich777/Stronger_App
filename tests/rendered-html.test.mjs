@@ -15,6 +15,7 @@ test("builds a static Stronger shell for the GitHub Pages project path", async (
   assert.match(html, /\/Stronger_App\/manifest\.webmanifest/);
   assert.match(html, /\/Stronger_App\/apple-touch-icon\.png/);
   assert.match(html, /\/Stronger_App\/assets\/[^"']+\.js/);
+  assert.match(html, /stronger-theme/);
   assert.doesNotMatch(html, /Your site is taking shape|vinext|codex-preview/i);
 
   const assets = await readdir(new URL("dist/assets/", projectRoot));
@@ -23,10 +24,11 @@ test("builds a static Stronger shell for the GitHub Pages project path", async (
 });
 
 test("ships scoped install metadata and an offline shell", async () => {
-  const [manifestText, serviceWorker, app, packageText, workflow] = await Promise.all([
+  const [manifestText, serviceWorker, app, styles, packageText, workflow] = await Promise.all([
     readFile(new URL("dist/manifest.webmanifest", projectRoot), "utf8"),
     readFile(new URL("dist/sw.js", projectRoot), "utf8"),
     readFile(new URL("app/StrongerApp.tsx", projectRoot), "utf8"),
+    readFile(new URL("app/globals.css", projectRoot), "utf8"),
     readFile(new URL("package.json", projectRoot), "utf8"),
     readFile(new URL(".github/workflows/deploy-pages.yml", projectRoot), "utf8"),
   ]);
@@ -39,8 +41,8 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.equal(manifest.scope, "./");
   assert.equal(manifest.display, "standalone");
   assert.equal(manifest.orientation, "portrait-primary");
-  assert.equal(manifest.background_color, "#f3f2ed");
-  assert.equal(manifest.theme_color, "#f3f2ed");
+  assert.equal(manifest.background_color, "#f3f1e9");
+  assert.equal(manifest.theme_color, "#f3f1e9");
 
   for (const [src, sizes] of [["icon-192.png", "192x192"], ["icon-512.png", "512x512"]]) {
     const icon = manifest.icons.find((candidate) => candidate.src === src && candidate.purpose.includes("any"));
@@ -56,6 +58,19 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(app, /import\.meta\.env\.PROD/);
   assert.match(app, /import\.meta\.env\.BASE_URL/);
   assert.match(app, /register\(`\$\{appBase\}sw\.js`/);
+  assert.match(app, /role="switch"/);
+  assert.match(app, /aria-checked=\{theme === "dark"\}/);
+  assert.match(app, /THEME_STORAGE_KEY = "stronger-theme"/);
+  assert.match(app, /window\.scrollTo\(\{ top: 0, left: 0, behavior: "auto" \}\)/);
+
+  assert.match(styles, /--font-sans:/);
+  assert.doesNotMatch(styles, /--font-geist-sans/);
+  assert.match(styles, /:root\[data-theme="dark"\]/);
+  assert.match(styles, /\.topbar\s*\{[^}]*position:\s*fixed;/s);
+  assert.match(styles, /\.bottom-nav\s*\{[^}]*position:\s*fixed;/s);
+  assert.match(styles, /\.toast\s*\{[^}]*bottom:\s*calc\(84px \+ env\(safe-area-inset-bottom\)\);/s);
+  assert.doesNotMatch(styles, /\.toast\s*\{[^}]*top:/s);
+  assert.match(styles, /scroll-padding-top:\s*calc\(82px \+ env\(safe-area-inset-top\)\)/);
 
   assert.match(serviceWorker, /self\.registration\.scope/);
   assert.match(serviceWorker, /APP_PATH/);

@@ -23,6 +23,9 @@ import {
 } from "./storage";
 
 type Tab = "workout" | "history" | "progress" | "settings";
+type ThemeMode = "light" | "dark";
+
+const THEME_STORAGE_KEY = "stronger-theme";
 
 type ExerciseDraft = {
   name: string;
@@ -55,6 +58,27 @@ function formatDate(dateKey: string): string {
     month: "short",
     year: "numeric",
   }).format(new Date(year, month - 1, day));
+}
+
+function formatHeaderDate(date = new Date()): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).format(date);
+}
+
+function initialTheme(): ThemeMode {
+  if (typeof window === "undefined") return "light";
+  const pageTheme = document.documentElement.dataset.theme;
+  if (pageTheme === "light" || pageTheme === "dark") return pageTheme;
+  try {
+    const saved = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (saved === "light" || saved === "dark") return saved;
+  } catch {
+    // The system preference remains a safe fallback when storage is unavailable.
+  }
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 function formatDuration(totalSeconds: number): string {
@@ -164,6 +188,80 @@ function Modal({
   onClose: () => void;
   wide?: boolean;
 }) {
+  const dialogRef = useRef<HTMLElement>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const backdrop = dialog.parentElement;
+    const shell = backdrop?.parentElement;
+    const hiddenSiblings = shell
+      ? [...shell.children].filter((element) => element !== backdrop).map((element) => ({
+        element,
+        ariaHidden: element.getAttribute("aria-hidden"),
+        inert: element.hasAttribute("inert"),
+      }))
+      : [];
+
+    hiddenSiblings.forEach(({ element }) => {
+      element.setAttribute("aria-hidden", "true");
+      element.setAttribute("inert", "");
+    });
+
+    const focusableSelector = [
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "textarea:not([disabled])",
+      "button:not([disabled])",
+      "a[href]",
+    ].join(",");
+    const focusable = () => [...dialog.querySelectorAll<HTMLElement>(focusableSelector)]
+      .filter((element) => element.offsetParent !== null);
+    window.requestAnimationFrame(() => {
+      const firstFormControl = dialog.querySelector<HTMLElement>(
+        "input:not([disabled]), select:not([disabled]), textarea:not([disabled])",
+      );
+      (firstFormControl ?? focusable()[0])?.focus();
+    });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = focusable();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items.at(-1) ?? first;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      hiddenSiblings.forEach(({ element, ariaHidden, inert }) => {
+        if (ariaHidden === null) element.removeAttribute("aria-hidden");
+        else element.setAttribute("aria-hidden", ariaHidden);
+        if (!inert) element.removeAttribute("inert");
+      });
+      previousFocus?.focus();
+    };
+  }, []);
+
   return (
     <div
       className="modal-backdrop"
@@ -173,6 +271,7 @@ function Modal({
       }}
     >
       <section
+        ref={dialogRef}
         className={`modal-sheet ${wide ? "modal-wide" : ""}`}
         role="dialog"
         aria-modal="true"
@@ -368,7 +467,7 @@ function AppHeader({
         <span className="brand-mark" aria-hidden="true">S</span>
         <span>
           <strong>Stronger</strong>
-          <small>{formatDate(localDateKey())}</small>
+          <small>{formatHeaderDate()}</small>
         </span>
       </button>
       <div className="topbar-actions">
@@ -407,11 +506,30 @@ export default function StrongerApp() {
   const [installGuide, setInstallGuide] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
+  const [theme, setTheme] = useState<ThemeMode>(initialTheme);
   const importInputRef = useRef<HTMLInputElement>(null);
   const finishingRef = useRef(false);
 
   const activeWorkout = data.activeWorkout;
   const unit = data.settings.unit;
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch {
+      // Theme still applies for this session if localStorage is unavailable.
+    }
+    document.querySelector('meta[name="theme-color"]')?.setAttribute(
+      "content",
+      theme === "dark" ? "#171a18" : "#f3f1e9",
+    );
+  }, [theme]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [tab, activeWorkout?.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -882,9 +1000,11 @@ export default function StrongerApp() {
                               className="set-input"
                               type="number"
                               inputMode="decimal"
+                              enterKeyHint="next"
                               min="0"
                               step="0.5"
                               value={toDisplayWeight(set.weightKg, unit)}
+                              onFocus={(event) => event.currentTarget.select()}
                               onChange={(event) => updateSet(exercise.id, set.id, { weightKg: toKilograms(Number(event.target.value), unit) })}
                             />
                             <label className="visually-hidden" htmlFor={`reps-${set.id}`}>Repetitions for {exercise.name}, set {setIndex + 1}</label>
@@ -893,9 +1013,11 @@ export default function StrongerApp() {
                               className="set-input"
                               type="number"
                               inputMode="numeric"
+                              enterKeyHint="done"
                               min="0"
                               max="999"
                               value={set.reps}
+                              onFocus={(event) => event.currentTarget.select()}
                               onChange={(event) => updateSet(exercise.id, set.id, { reps: Math.max(0, Math.round(Number(event.target.value))) })}
                             />
                             <button
@@ -1068,6 +1190,20 @@ export default function StrongerApp() {
 
           <section className="settings-card">
             <div className="setting-row">
+              <div><strong>Appearance</strong><small>Switch between light and dark without changing Stronger’s palette.</small></div>
+              <button
+                className="theme-switch"
+                type="button"
+                role="switch"
+                aria-label="Dark mode"
+                aria-checked={theme === "dark"}
+                onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}
+              >
+                <span className="theme-switch-label" aria-hidden="true">{theme === "dark" ? "Dark" : "Light"}</span>
+                <span className="theme-switch-track" aria-hidden="true"><span /></span>
+              </button>
+            </div>
+            <div className="setting-row">
               <div><strong>Weight units</strong><small>Stored safely in kg; converted only for display.</small></div>
               <div className="segmented" role="group" aria-label="Weight units">
                 {(["kg", "lb"] as WeightUnit[]).map((option) => <button key={option} type="button" aria-pressed={unit === option} onClick={() => setData((current) => ({ ...current, settings: { ...current.settings, unit: option } }))}>{option.toUpperCase()}</button>)}
@@ -1130,7 +1266,8 @@ export default function StrongerApp() {
       ) : null}
 
       {restRemaining !== null ? (
-        <div className={`rest-banner ${restRemaining === 0 ? "is-ready" : ""}`} role="timer" aria-live="polite">
+        <div className={`rest-banner ${restRemaining === 0 ? "is-ready" : ""}`} role="timer" aria-live="off">
+          {restRemaining === 0 ? <span className="visually-hidden" role="status">Rest complete. Ready for the next set.</span> : null}
           <span className="rest-ring" aria-hidden="true">{restRemaining === 0 ? "✓" : "↻"}</span>
           <span><small>{restRemaining === 0 ? "REST COMPLETE" : "REST TIMER"}</small><strong>{restRemaining === 0 ? "Ready for the next set" : formatDuration(restRemaining)}</strong></span>
           <button type="button" onClick={() => updateActive((workout) => ({ ...workout, restEndsAt: undefined }))}>{restRemaining === 0 ? "Dismiss" : "Skip"}</button>
@@ -1150,7 +1287,7 @@ export default function StrongerApp() {
         ))}
       </nav>
 
-      {message ? <div className="toast" role="status">{message}</div> : null}
+      {message ? <div className={`toast ${restRemaining !== null ? "with-rest" : ""}`} role="status">{message}</div> : null}
 
       {showBlankWorkout ? (
         <Modal eyebrow="START FROM SCRATCH" title="Blank workout" onClose={() => setShowBlankWorkout(false)}>

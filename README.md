@@ -26,6 +26,8 @@ Your workout records stay in the browser storage on your device. Stronger does n
 - Duplicate a past workout for today
 - Best weight, estimated one-rep max, volume, and trend views
 - Kilograms and pounds
+- Persistent light and dark appearance modes
+- Fixed workout header and bottom navigation for long sessions
 - Local JSON backup and restore
 - No account, ads, subscription, or server-side workout database
 
@@ -55,12 +57,19 @@ Apple’s general instructions are available in [Turn a website into an app in S
 
 Before starting a workout, open **Settings** and check:
 
+- **Appearance:** light or dark mode
 - **Units:** kilograms (kg) or pounds (lb)
 - **Default rest time:** the countdown used after completing a set
 
 You can change these later. Changing units converts the displayed values; it does not erase or weaken the original workout records.
 
 Stronger stores weights internally in kilograms and converts them for display when pounds are selected. Small rounding differences may appear after switching units repeatedly.
+
+## Appearance and fixed controls
+
+Open **Settings → Appearance** and use the switch to choose light or dark mode. Stronger remembers this appearance on the current installation. Dark mode keeps the same cream, charcoal, lime, and red palette; it only remaps those colors for a darker canvas.
+
+The header and bottom navigation remain fixed while you scroll. During an active workout, the header keeps the workout timer visible, while the footer keeps Workout, History, Progress, and Settings within thumb reach. Page content includes extra safe-area spacing so these controls do not cover the first or last workout actions.
 
 ## Navigation
 
@@ -69,7 +78,7 @@ Stronger has four main areas:
 - **Workout:** routines and the active training session
 - **History:** completed workouts, search, details, duplicate, and delete
 - **Progress:** exercise-specific strength and volume trends
-- **Settings:** units, default rest time, installation help, backup, restore, and reset
+- **Settings:** appearance, units, default rest time, installation help, backup, restore, and reset
 
 ## Create and edit routines
 

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#f3f2ed" />
+    <meta name="theme-color" content="#f3f1e9" />
     <meta name="description" content="A focused, offline-friendly workout tracker for logging sets and seeing progress." />
     <meta name="application-name" content="Stronger" />
     <meta name="format-detection" content="telephone=no" />
@@ -21,6 +21,24 @@
     <link rel="icon" type="image/png" href="%BASE_URL%icon-192.png" />
     <link rel="apple-touch-icon" href="%BASE_URL%apple-touch-icon.png" />
     <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
+    <script>
+      (() => {
+        try {
+          const savedTheme = window.localStorage.getItem("stronger-theme");
+          const theme = savedTheme === "light" || savedTheme === "dark"
+            ? savedTheme
+            : window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+          document.querySelector('meta[name="theme-color"]')?.setAttribute(
+            "content",
+            theme === "dark" ? "#171a18" : "#f3f1e9",
+          );
+        } catch {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
     <title>Stronger — Gym Tracker</title>
   </head>
   <body>

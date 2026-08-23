@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v2-pages";
+const CACHE_VERSION = "v3-theme";
 const CACHE_PREFIX = "stronger-";
 const SHELL_CACHE = `${CACHE_PREFIX}shell-${CACHE_VERSION}`;
 const ASSET_CACHE = `${CACHE_PREFIX}assets-${CACHE_VERSION}`;
