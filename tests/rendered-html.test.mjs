@@ -24,11 +24,12 @@ test("builds a static Stronger shell for the GitHub Pages project path", async (
 });
 
 test("ships scoped install metadata and an offline shell", async () => {
-  const [manifestText, serviceWorker, app, storage, styles, packageText, workflow] = await Promise.all([
+  const [manifestText, serviceWorker, app, storage, exercises, styles, packageText, workflow] = await Promise.all([
     readFile(new URL("dist/manifest.webmanifest", projectRoot), "utf8"),
     readFile(new URL("dist/sw.js", projectRoot), "utf8"),
     readFile(new URL("app/StrongerApp.tsx", projectRoot), "utf8"),
     readFile(new URL("app/storage.ts", projectRoot), "utf8"),
+    readFile(new URL("app/exercises.ts", projectRoot), "utf8"),
     readFile(new URL("app/globals.css", projectRoot), "utf8"),
     readFile(new URL("package.json", projectRoot), "utf8"),
     readFile(new URL(".github/workflows/deploy-pages.yml", projectRoot), "utf8"),
@@ -68,9 +69,23 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(app, /exercise\.restSeconds > 0/);
   assert.match(app, /exercise\.restSeconds === 0 \? "Rest timer off"/);
   assert.match(app, /window\.scrollTo\(\{ top: 0, left: 0, behavior: "auto" \}\)/);
+  assert.match(app, /function ExercisePicker/);
+  assert.match(app, /\+ Create custom exercise/);
+  assert.match(app, /exerciseKey: draft\.exerciseKey/);
+  assert.match(app, /normalizeStrongerData\(wrapped\)/);
 
   assert.match(storage, /Math\.round\(value \* 100\) \/ 100/);
   assert.match(storage, /if \(!Number\.isFinite\(value\)\) return 0/);
+  assert.match(storage, /customExercises: CustomExercise\[\]/);
+  assert.match(storage, /export function normalizeStrongerData/);
+
+  const catalogEntries = [...exercises.matchAll(/\{ exerciseKey: "([^"]+)", name: "([^"]+)", category: "([^"]+)" \}/g)];
+  assert.equal(catalogEntries.length, 50);
+  assert.equal(new Set(catalogEntries.map((entry) => entry[1])).size, catalogEntries.length);
+  assert.equal(new Set(catalogEntries.map((entry) => entry[2].toLocaleLowerCase())).size, catalogEntries.length);
+  for (const starterKey of ["bench-press", "deadlift", "back-squat", "leg-curl", "standing-calf-raise"]) {
+    assert.ok(catalogEntries.some((entry) => entry[1] === starterKey), `catalog is missing ${starterKey}`);
+  }
 
   assert.match(styles, /--font-sans:/);
   assert.doesNotMatch(styles, /--font-geist-sans/);
@@ -83,7 +98,7 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(styles, /scroll-padding-top:\s*calc\(82px \+ env\(safe-area-inset-top\)\)/);
 
   assert.match(serviceWorker, /self\.registration\.scope/);
-  assert.match(serviceWorker, /v4-inputs-rest/);
+  assert.match(serviceWorker, /v5-exercise-library/);
   assert.match(serviceWorker, /APP_PATH/);
   assert.match(serviceWorker, /addEventListener\(["']install["']/);
   assert.match(serviceWorker, /addEventListener\(["']activate["']/);

@@ -4,11 +4,12 @@ import { ChangeEvent, FormEvent, ReactNode, useEffect, useMemo, useRef, useState
 import {
   completedSets,
   createDefaultData,
+  CustomExercise,
   estimatedOneRepMax,
   formatWeight,
-  isStrongerData,
   loadData,
   makeId,
+  normalizeStrongerData,
   requestPersistentStorage,
   Routine,
   RoutineExercise,
@@ -21,6 +22,7 @@ import {
   WorkoutSession,
   workoutVolumeKg,
 } from "./storage";
+import { BUILT_IN_EXERCISES } from "./exercises";
 
 type Tab = "workout" | "history" | "progress" | "settings";
 type ThemeMode = "light" | "dark";
@@ -29,6 +31,7 @@ const THEME_STORAGE_KEY = "stronger-theme";
 const REST_DURATION_OPTIONS = [0, 30, 45, 60, 90, 120, 150, 180, 240, 300] as const;
 
 type ExerciseDraft = {
+  exerciseKey: string;
   name: string;
   sets: number;
   weight: number;
@@ -37,12 +40,45 @@ type ExerciseDraft = {
 };
 
 const EMPTY_EXERCISE: ExerciseDraft = {
+  exerciseKey: "",
   name: "",
   sets: 3,
   weight: 0,
   reps: 8,
   restSeconds: 90,
 };
+
+type ExerciseCatalogCategory = "Custom" | "Saved" | "Chest" | "Back" | "Shoulders" | "Arms" | "Legs" | "Core";
+
+type ExerciseCatalogItem = {
+  exerciseKey: string;
+  name: string;
+  category: ExerciseCatalogCategory;
+};
+
+type CreateCustomExerciseResult = {
+  exercise: ExerciseCatalogItem;
+  created: boolean;
+};
+
+const EXERCISE_CATEGORY_ORDER: ExerciseCatalogCategory[] = [
+  "Custom",
+  "Saved",
+  "Chest",
+  "Back",
+  "Shoulders",
+  "Arms",
+  "Legs",
+  "Core",
+];
+
+function cleanExerciseName(value: string): string {
+  return value.normalize("NFKC").trim().replace(/\s+/gu, " ");
+}
+
+function normalizedExerciseName(value: string): string {
+  return cleanExerciseName(value).toLocaleLowerCase("en-US");
+}
 
 function localDateKey(date = new Date()): string {
   const year = date.getFullYear();
@@ -257,12 +293,14 @@ function Modal({
   children,
   onClose,
   wide = false,
+  initialFocus = "form",
 }: {
   title: string;
   eyebrow?: string;
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;
+  initialFocus?: "form" | "close";
 }) {
   const dialogRef = useRef<HTMLElement>(null);
   const onCloseRef = useRef(onClose);
@@ -300,10 +338,10 @@ function Modal({
     const focusable = () => [...dialog.querySelectorAll<HTMLElement>(focusableSelector)]
       .filter((element) => element.offsetParent !== null);
     window.requestAnimationFrame(() => {
-      const firstFormControl = dialog.querySelector<HTMLElement>(
-        "input:not([disabled]), select:not([disabled]), textarea:not([disabled])",
-      );
-      (firstFormControl ?? focusable()[0])?.focus();
+      const preferred = initialFocus === "close"
+        ? dialog.querySelector<HTMLElement>("[data-modal-close]")
+        : dialog.querySelector<HTMLElement>("input:not([disabled]), select:not([disabled]), textarea:not([disabled])");
+      (preferred ?? focusable()[0])?.focus();
     });
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -336,7 +374,7 @@ function Modal({
       });
       previousFocus?.focus();
     };
-  }, []);
+  }, [initialFocus]);
 
   return (
     <div
@@ -359,7 +397,7 @@ function Modal({
             {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
             <h2>{title}</h2>
           </div>
-          <button className="round-button" type="button" onClick={onClose} aria-label="Close">
+          <button className="round-button" type="button" onClick={onClose} aria-label="Close" data-modal-close>
             ×
           </button>
         </header>
@@ -369,16 +407,155 @@ function Modal({
   );
 }
 
+function ExercisePicker({
+  catalog,
+  onSelect,
+  onCreateCustom,
+}: {
+  catalog: ExerciseCatalogItem[];
+  onSelect: (exercise: ExerciseCatalogItem) => void;
+  onCreateCustom: (name: string) => CreateCustomExerciseResult;
+}) {
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<"All" | ExerciseCatalogCategory>("All");
+  const [creatingCustom, setCreatingCustom] = useState(false);
+  const [customName, setCustomName] = useState("");
+  const [customStatus, setCustomStatus] = useState("");
+
+  const availableCategories = EXERCISE_CATEGORY_ORDER.filter((candidate) =>
+    catalog.some((exercise) => exercise.category === candidate),
+  );
+  const normalizedQuery = normalizedExerciseName(query);
+  const filtered = catalog.filter((exercise) =>
+    (category === "All" || exercise.category === category) &&
+    (!normalizedQuery || normalizedExerciseName(exercise.name).includes(normalizedQuery)),
+  );
+
+  function saveCustomExercise() {
+    const name = cleanExerciseName(customName);
+    if (!name) {
+      setCustomStatus("Enter an exercise name first.");
+      return;
+    }
+    const result = onCreateCustom(name);
+    setCustomStatus(result.created ? `${result.exercise.name} was saved to your library.` : `${result.exercise.name} is already in your library.`);
+    setCustomName("");
+    onSelect(result.exercise);
+  }
+
+  return (
+    <div className="exercise-picker">
+      <div className="exercise-picker-controls">
+        <label className="exercise-picker-search">
+          <span>Search exercises</span>
+          <span className="search-field">
+            <span aria-hidden="true">⌕</span>
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.preventDefault();
+              }}
+              placeholder="Bench press, squat…"
+              autoComplete="off"
+            />
+          </span>
+        </label>
+        <div className="exercise-category-tabs" role="group" aria-label="Exercise category">
+          {(["All", ...availableCategories] as const).map((option) => (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={category === option}
+              onClick={() => setCategory(option)}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="custom-exercise-panel">
+        <button
+          className="secondary-button full-width"
+          type="button"
+          aria-expanded={creatingCustom}
+          onClick={() => {
+            setCreatingCustom((current) => !current);
+            setCustomStatus("");
+          }}
+        >
+          {creatingCustom ? "Cancel custom exercise" : "+ Create custom exercise"}
+        </button>
+        {creatingCustom ? (
+          <div className="custom-exercise-fields">
+            <label>
+              Custom exercise name
+              <input
+                value={customName}
+                onChange={(event) => {
+                  setCustomName(event.target.value);
+                  setCustomStatus("");
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    saveCustomExercise();
+                  }
+                }}
+                placeholder="e.g. Landmine press"
+                maxLength={80}
+                autoComplete="off"
+              />
+            </label>
+            <button className="primary-button" type="button" onClick={saveCustomExercise}>Save and select</button>
+          </div>
+        ) : null}
+        {customStatus ? <p className="field-status" role="status">{customStatus}</p> : null}
+      </div>
+
+      <p className="exercise-result-count" aria-live="polite">
+        {filtered.length} {filtered.length === 1 ? "exercise" : "exercises"}
+      </p>
+      {filtered.length ? (
+        <div className="exercise-option-list">
+          {filtered.map((exercise) => (
+            <button
+              className="exercise-option"
+              key={exercise.exerciseKey}
+              type="button"
+              onClick={() => onSelect(exercise)}
+            >
+              <span><strong>{exercise.name}</strong><small>{exercise.category}</small></span>
+              <span aria-hidden="true">›</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="exercise-picker-empty" role="status">
+          <strong>No matching exercise</strong>
+          <p>Create it once and it will stay in your library.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ExerciseModal({
   unit,
   defaultRestSeconds,
+  catalog,
   onClose,
   onAdd,
+  onCreateCustom,
 }: {
   unit: WeightUnit;
   defaultRestSeconds: number;
+  catalog: ExerciseCatalogItem[];
   onClose: () => void;
   onAdd: (exercise: ExerciseDraft) => void;
+  onCreateCustom: (name: string) => CreateCustomExerciseResult;
 }) {
   const [draft, setDraft] = useState<ExerciseDraft>({
     ...EMPTY_EXERCISE,
@@ -387,7 +564,7 @@ function ExerciseModal({
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (!draft.name.trim()) return;
+    if (!draft.exerciseKey || !draft.name.trim()) return;
     onAdd({
       ...draft,
       name: draft.name.trim(),
@@ -398,37 +575,47 @@ function ExerciseModal({
   }
 
   return (
-    <Modal eyebrow="CUSTOM EXERCISE" title="Add an exercise" onClose={onClose}>
+    <Modal eyebrow="EXERCISE LIBRARY" title={draft.exerciseKey ? "Set exercise targets" : "Choose an exercise"} onClose={onClose} initialFocus="close">
       <form className="form-stack" onSubmit={submit}>
-        <label>
-          Exercise name
-          <input
-            value={draft.name}
-            onChange={(event) => setDraft({ ...draft, name: event.target.value })}
-            placeholder="e.g. Bench press"
+        {!draft.exerciseKey ? (
+          <ExercisePicker
+            catalog={catalog}
+            onCreateCustom={onCreateCustom}
+            onSelect={(exercise) => setDraft((current) => ({
+              ...current,
+              exerciseKey: exercise.exerciseKey,
+              name: exercise.name,
+            }))}
           />
-        </label>
-        <div className="form-grid four-columns">
-          <label htmlFor="custom-exercise-sets">
-            Sets
-            <NumericInput id="custom-exercise-sets" value={draft.sets} min={1} max={20} onValueChange={(sets) => setDraft((current) => ({ ...current, sets }))} />
-          </label>
-          <label htmlFor="custom-exercise-weight">
-            {unit.toUpperCase()}
-            <NumericInput id="custom-exercise-weight" decimal value={draft.weight} onValueChange={(weight) => setDraft((current) => ({ ...current, weight }))} />
-          </label>
-          <label htmlFor="custom-exercise-reps">
-            Reps
-            <NumericInput id="custom-exercise-reps" emptyWhenZero value={draft.reps} max={999} onValueChange={(reps) => setDraft((current) => ({ ...current, reps }))} />
-          </label>
-          <label>
-            Rest
-            <select value={draft.restSeconds} onChange={(event) => setDraft({ ...draft, restSeconds: Number(event.target.value) })}>
-              {REST_DURATION_OPTIONS.map((seconds) => <option key={seconds} value={seconds}>{formatRestOption(seconds)}</option>)}
-            </select>
-          </label>
-        </div>
-        <button className="primary-button" type="submit">Add exercise</button>
+        ) : (
+          <>
+            <div className="selected-exercise-summary">
+              <span><small>SELECTED EXERCISE</small><strong>{draft.name}</strong></span>
+              <button className="small-button" type="button" onClick={() => setDraft((current) => ({ ...current, exerciseKey: "", name: "" }))}>Change</button>
+            </div>
+            <div className="form-grid four-columns">
+              <label htmlFor="custom-exercise-sets">
+                Sets
+                <NumericInput id="custom-exercise-sets" value={draft.sets} min={1} max={20} onValueChange={(sets) => setDraft((current) => ({ ...current, sets }))} />
+              </label>
+              <label htmlFor="custom-exercise-weight">
+                {unit.toUpperCase()}
+                <NumericInput id="custom-exercise-weight" decimal value={draft.weight} onValueChange={(weight) => setDraft((current) => ({ ...current, weight }))} />
+              </label>
+              <label htmlFor="custom-exercise-reps">
+                Reps
+                <NumericInput id="custom-exercise-reps" emptyWhenZero value={draft.reps} max={999} onValueChange={(reps) => setDraft((current) => ({ ...current, reps }))} />
+              </label>
+              <label>
+                Rest
+                <select value={draft.restSeconds} onChange={(event) => setDraft({ ...draft, restSeconds: Number(event.target.value) })}>
+                  {REST_DURATION_OPTIONS.map((seconds) => <option key={seconds} value={seconds}>{formatRestOption(seconds)}</option>)}
+                </select>
+              </label>
+            </div>
+            <button className="primary-button" type="submit">Add to workout</button>
+          </>
+        )}
       </form>
     </Modal>
   );
@@ -438,16 +625,21 @@ function RoutineEditor({
   initialRoutine,
   unit,
   defaultRestSeconds,
+  catalog,
   onClose,
   onSave,
+  onCreateCustom,
 }: {
   initialRoutine: Routine;
   unit: WeightUnit;
   defaultRestSeconds: number;
+  catalog: ExerciseCatalogItem[];
   onClose: () => void;
   onSave: (routine: Routine) => void;
+  onCreateCustom: (name: string) => CreateCustomExerciseResult;
 }) {
   const [draft, setDraft] = useState<Routine>(() => structuredClone(initialRoutine));
+  const [addingExercise, setAddingExercise] = useState(false);
 
   function updateExercise(index: number, update: Partial<RoutineExercise>) {
     setDraft((current) => ({
@@ -468,6 +660,22 @@ function RoutineEditor({
         .filter((exercise) => exercise.name.trim())
         .map((exercise) => ({ ...exercise, name: exercise.name.trim() })),
     });
+  }
+
+  function addCatalogExercise(exercise: ExerciseCatalogItem) {
+    setDraft((current) => ({
+      ...current,
+      exercises: [...current.exercises, {
+        id: makeId("routine-exercise"),
+        exerciseKey: exercise.exerciseKey,
+        name: exercise.name,
+        targetSets: 3,
+        targetWeightKg: 0,
+        targetReps: 8,
+        restSeconds: defaultRestSeconds,
+      }],
+    }));
+    setAddingExercise(false);
   }
 
   return (
@@ -500,24 +708,19 @@ function RoutineEditor({
           ))}
         </div>
 
-        <button
-          className="secondary-button"
-          type="button"
-          onClick={() => setDraft({
-            ...draft,
-            exercises: [...draft.exercises, {
-              id: makeId("routine-exercise"),
-              exerciseKey: makeId("exercise"),
-              name: "",
-              targetSets: 3,
-              targetWeightKg: 0,
-              targetReps: 8,
-              restSeconds: defaultRestSeconds,
-            }],
-          })}
-        >
-          + Add exercise
-        </button>
+        {addingExercise ? (
+          <section className="routine-picker-panel" aria-label="Add an exercise to this routine">
+            <div className="routine-picker-heading">
+              <div><p className="section-kicker">EXERCISE LIBRARY</p><h3>Choose an exercise</h3></div>
+              <button className="small-button" type="button" onClick={() => setAddingExercise(false)}>Cancel</button>
+            </div>
+            <ExercisePicker catalog={catalog} onSelect={addCatalogExercise} onCreateCustom={onCreateCustom} />
+          </section>
+        ) : (
+          <button className="secondary-button" type="button" onClick={() => setAddingExercise(true)}>
+            + Add exercise
+          </button>
+        )}
         <button className="primary-button" type="submit">Save routine</button>
       </form>
     </Modal>
@@ -588,6 +791,44 @@ export default function StrongerApp() {
 
   const activeWorkout = data.activeWorkout;
   const unit = data.settings.unit;
+
+  const exerciseCatalog = useMemo(() => {
+    const exercises: ExerciseCatalogItem[] = [];
+    const names = new Set<string>();
+    const keys = new Set<string>();
+    const add = (exercise: ExerciseCatalogItem) => {
+      const normalizedName = normalizedExerciseName(exercise.name);
+      if (!normalizedName || names.has(normalizedName) || keys.has(exercise.exerciseKey)) return;
+      names.add(normalizedName);
+      keys.add(exercise.exerciseKey);
+      exercises.push(exercise);
+    };
+
+    BUILT_IN_EXERCISES.forEach(add);
+    data.customExercises.forEach((exercise) => add({ ...exercise, category: "Custom" }));
+    data.routines.forEach((routine) => routine.exercises.forEach((exercise) => add({
+      exerciseKey: exercise.exerciseKey,
+      name: exercise.name,
+      category: "Saved",
+    })));
+    if (data.activeWorkout) {
+      data.activeWorkout.exercises.forEach((exercise) => add({
+        exerciseKey: exercise.exerciseKey,
+        name: exercise.name,
+        category: "Saved",
+      }));
+    }
+    data.history.forEach((session) => session.exercises.forEach((exercise) => add({
+      exerciseKey: exercise.exerciseKey,
+      name: exercise.name,
+      category: "Saved",
+    })));
+
+    return exercises.sort((first, second) => {
+      const categoryDifference = EXERCISE_CATEGORY_ORDER.indexOf(first.category) - EXERCISE_CATEGORY_ORDER.indexOf(second.category);
+      return categoryDifference || first.name.localeCompare(second.name);
+    });
+  }, [data.activeWorkout, data.customExercises, data.history, data.routines]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -749,6 +990,26 @@ export default function StrongerApp() {
     setMessage(`${workout.name} is ready.`);
   }
 
+  function createCustomExercise(rawName: string): CreateCustomExerciseResult {
+    const name = cleanExerciseName(rawName).slice(0, 80);
+    const existing = exerciseCatalog.find((exercise) => normalizedExerciseName(exercise.name) === normalizedExerciseName(name));
+    if (existing) {
+      setMessage(`${existing.name} already exists, so it was selected.`);
+      return { exercise: existing, created: false };
+    }
+
+    const custom: CustomExercise = {
+      exerciseKey: makeId("custom-exercise"),
+      name,
+    };
+    setData((current) => ({
+      ...current,
+      customExercises: [...current.customExercises, custom],
+    }));
+    setMessage(`${name} was added to your exercise library.`);
+    return { exercise: { ...custom, category: "Custom" }, created: true };
+  }
+
   function startRoutine(routine: Routine) {
     startWorkout(routineToWorkout(routine, data.history, localDateKey()));
   }
@@ -773,7 +1034,7 @@ export default function StrongerApp() {
       ...workout,
       exercises: [...workout.exercises, {
         id: makeId("session-exercise"),
-        exerciseKey: makeId("exercise"),
+        exerciseKey: draft.exerciseKey,
         name: draft.name,
         restSeconds: draft.restSeconds,
         sets: Array.from({ length: draft.sets }, () => ({
@@ -952,9 +1213,9 @@ export default function StrongerApp() {
       const wrapped = parsed && typeof parsed === "object" && "data" in parsed
         ? (parsed as { data: unknown }).data
         : parsed;
-      if (!isStrongerData(wrapped)) throw new Error("Invalid Stronger backup");
-      if (!window.confirm("Replace all routines, workouts, history, and settings on this installation with this backup? This cannot be merged or undone.")) return;
-      const replacement = structuredClone(wrapped);
+      const replacement = normalizeStrongerData(wrapped);
+      if (!replacement) throw new Error("Invalid Stronger backup");
+      if (!window.confirm("Replace the exercise library, routines, workouts, history, and settings on this installation with this backup? This cannot be merged or undone.")) return;
       await saveData(replacement);
       setData(replacement);
       setTab("workout");
@@ -965,7 +1226,7 @@ export default function StrongerApp() {
   }
 
   function resetAllData() {
-    if (!window.confirm("Reset Stronger and permanently remove every local workout, routine, and setting? Export first if you may need this data.")) return;
+    if (!window.confirm("Reset Stronger and permanently remove every custom exercise, workout, routine, and setting? Export first if you may need this data.")) return;
     setData(createDefaultData());
     setTab("workout");
     setMessage("Stronger was reset to its starter routines.");
@@ -1379,11 +1640,26 @@ export default function StrongerApp() {
       ) : null}
 
       {showExerciseModal ? (
-        <ExerciseModal unit={unit} defaultRestSeconds={data.settings.defaultRestSeconds} onClose={() => setShowExerciseModal(false)} onAdd={addExerciseToActive} />
+        <ExerciseModal
+          unit={unit}
+          defaultRestSeconds={data.settings.defaultRestSeconds}
+          catalog={exerciseCatalog}
+          onClose={() => setShowExerciseModal(false)}
+          onAdd={addExerciseToActive}
+          onCreateCustom={createCustomExercise}
+        />
       ) : null}
 
       {routineDraft ? (
-        <RoutineEditor initialRoutine={routineDraft} unit={unit} defaultRestSeconds={data.settings.defaultRestSeconds} onClose={() => setRoutineDraft(null)} onSave={saveRoutine} />
+        <RoutineEditor
+          initialRoutine={routineDraft}
+          unit={unit}
+          defaultRestSeconds={data.settings.defaultRestSeconds}
+          catalog={exerciseCatalog}
+          onClose={() => setRoutineDraft(null)}
+          onSave={saveRoutine}
+          onCreateCustom={createCustomExercise}
+        />
       ) : null}
 
       {installGuide ? (

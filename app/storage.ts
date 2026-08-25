@@ -51,11 +51,17 @@ export type StrongerSettings = {
   weeklyDays: number;
 };
 
+export type CustomExercise = {
+  exerciseKey: string;
+  name: string;
+};
+
 export type StrongerData = {
   formatVersion: 1;
   routines: Routine[];
   activeWorkout: WorkoutSession | null;
   history: WorkoutSession[];
+  customExercises: CustomExercise[];
   settings: StrongerSettings;
 };
 
@@ -119,6 +125,7 @@ export function createDefaultData(): StrongerData {
     activeWorkout: null,
     settings: { unit: "kg", defaultRestSeconds: 90, goal: "strength", weeklyDays: 4 },
     history: [],
+    customExercises: [],
     routines: [
       {
         id: "routine-push",
@@ -157,7 +164,7 @@ export function createDefaultData(): StrongerData {
   };
 }
 
-export function isStrongerData(value: unknown): value is StrongerData {
+function hasValidStrongerDataShape(value: unknown): boolean {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<StrongerData>;
   const settings = candidate.settings as Partial<StrongerSettings> | undefined;
@@ -204,12 +211,43 @@ export function isStrongerData(value: unknown): value is StrongerData {
   );
 }
 
+function isCustomExercise(value: unknown): value is CustomExercise {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<CustomExercise>;
+  return (
+    typeof candidate.exerciseKey === "string" &&
+    candidate.exerciseKey.trim().length > 0 &&
+    typeof candidate.name === "string" &&
+    candidate.name.trim().length > 0
+  );
+}
+
+export function isStrongerData(value: unknown): value is StrongerData {
+  if (!hasValidStrongerDataShape(value)) return false;
+  const candidate = value as Partial<StrongerData>;
+  return Array.isArray(candidate.customExercises) && candidate.customExercises.every(isCustomExercise);
+}
+
+export function normalizeStrongerData(value: unknown): StrongerData | null {
+  if (!hasValidStrongerDataShape(value)) return null;
+  const candidate = value as Omit<StrongerData, "customExercises"> & { customExercises?: unknown };
+  if (candidate.customExercises !== undefined && !Array.isArray(candidate.customExercises)) return null;
+  if (Array.isArray(candidate.customExercises) && !candidate.customExercises.every(isCustomExercise)) return null;
+  return {
+    ...candidate,
+    customExercises: candidate.customExercises
+      ? candidate.customExercises.map((exercise) => ({ ...exercise }))
+      : [],
+  } as StrongerData;
+}
+
 export async function loadData(): Promise<StrongerData> {
   if (typeof window === "undefined") return createDefaultData();
   try {
     if ("indexedDB" in window) {
-      const saved = await transact<StrongerData | undefined>("readonly", (store) => store.get(DATA_KEY));
-      if (isStrongerData(saved)) return saved;
+      const saved = await transact<unknown>("readonly", (store) => store.get(DATA_KEY));
+      const normalized = normalizeStrongerData(saved);
+      if (normalized) return normalized;
     }
   } catch {
     // Fall through to the emergency localStorage copy below.
@@ -218,7 +256,8 @@ export async function loadData(): Promise<StrongerData> {
     const fallback = window.localStorage.getItem(FALLBACK_KEY);
     if (fallback) {
       const parsed: unknown = JSON.parse(fallback);
-      if (isStrongerData(parsed)) return parsed;
+      const normalized = normalizeStrongerData(parsed);
+      if (normalized) return normalized;
     }
   } catch {
     // A malformed fallback must not prevent Stronger from starting cleanly.

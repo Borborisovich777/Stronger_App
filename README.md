@@ -17,7 +17,8 @@ Your workout records stay in the browser storage on your device. Stronger does n
 - Installable on an iPhone Home Screen
 - Works offline after the first successful online load
 - Starter Push, Pull, and Legs routines
-- Custom routines and exercises
+- Searchable library of 50 built-in exercises
+- Custom exercises saved to your personal library
 - Editable active workouts
 - Quick decimal weight, reps, and set completion
 - Previous results shown beside new sets
@@ -89,14 +90,14 @@ To create a routine:
 1. Open **Workout**.
 2. Choose the option to create a routine.
 3. Enter a routine name.
-4. Add exercises.
+4. Tap **Add exercise**, then search or browse the exercise library.
 5. Add the desired starting sets, weights, and repetitions.
 6. Save the routine.
 
 While editing a routine, you can:
 
 - Rename the routine
-- Add a custom exercise
+- Add an exercise from the built-in or custom library
 - Rename an exercise
 - Change its target sets, weight, or reps
 - Move an exercise using **Move up** or **Move down**
@@ -104,6 +105,27 @@ While editing a routine, you can:
 - Delete the entire routine
 
 Deleting or editing a routine does not rewrite completed workout history. Completed workouts retain the values that were performed at that time.
+
+## Exercise library and custom exercises
+
+Stronger includes 50 common strength exercises across Chest, Back, Shoulders, Arms, Legs, and Core. When adding an exercise to a workout or routine:
+
+1. Tap **Add exercise**.
+2. Browse **All**, choose a category, or type in **Search exercises**.
+3. Tap an exercise name.
+4. Set the starting sets, weight, reps, and rest time.
+5. Tap **Add to workout**. In the routine builder, selecting a name adds it directly to the routine so you can edit its targets.
+
+To add an exercise that is not included:
+
+1. Open the exercise library.
+2. Tap **Create custom exercise**.
+3. Enter its name and tap **Save and select**.
+4. Finish its targets as usual.
+
+The custom exercise is saved immediately to the **Custom** category and can be reused in later workouts and routines. Names are checked without regard to capitalization or extra spaces. If the name already exists, Stronger selects the existing exercise instead of creating a duplicate.
+
+Each library exercise has a stable internal identity. Reusing the same library entry lets Previous and Progress connect results across workouts. Renaming an exercise inside a particular routine or active workout changes that displayed copy; when possible, reuse the library entry rather than typing a different lift over an unrelated one.
 
 ## Start a workout
 
@@ -124,7 +146,7 @@ Starting a routine creates a working copy for today. Changes made inside the act
 1. Open **Workout**.
 2. Choose **Blank workout**.
 3. Name the workout.
-4. Add the exercises you plan to perform.
+4. Add the exercises you plan to perform from the searchable library, or create a custom exercise.
 5. Add sets and enter weight and rep targets.
 
 ### Resume an active workout
@@ -271,7 +293,7 @@ Do not rely on iCloud to preserve PWA storage. Export a backup regularly.
 3. Save the generated JSON file to the Files app, iCloud Drive, or another location you control.
 4. Keep at least one recent copy outside Stronger.
 
-A backup may contain exercise names, workout dates, weights, reps, and settings. Treat it as personal data.
+A backup may contain built-in selections, custom exercise names, workout dates, weights, reps, and settings. Treat it as personal data.
 
 Good times to export include:
 
@@ -299,7 +321,7 @@ Do not manually edit a backup unless you understand its data format.
 
 ## Reset all data
 
-**Reset all data** permanently removes local routines, the active workout, history, progress source data, and settings.
+**Reset all data** permanently removes custom exercises, local routines, the active workout, history, progress source data, and settings.
 
 Export a backup first. Reset cannot be undone unless a valid backup exists.
 
