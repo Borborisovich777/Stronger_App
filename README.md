@@ -19,9 +19,9 @@ Your workout records stay in the browser storage on your device. Stronger does n
 - Starter Push, Pull, and Legs routines
 - Custom routines and exercises
 - Editable active workouts
-- Quick weight, reps, and set completion
+- Quick decimal weight, reps, and set completion
 - Previous results shown beside new sets
-- Foreground workout and rest timers
+- Foreground workout timer with an optional per-exercise rest timer
 - Searchable workout history
 - Duplicate a past workout for today
 - Best weight, estimated one-rep max, volume, and trend views
@@ -59,7 +59,7 @@ Before starting a workout, open **Settings** and check:
 
 - **Appearance:** light or dark mode
 - **Units:** kilograms (kg) or pounds (lb)
-- **Default rest time:** the countdown used after completing a set
+- **Default rest time:** the countdown used after completing a set, or **Off** for no automatic timer
 
 You can change these later. Changing units converts the displayed values; it does not erase or weaken the original workout records.
 
@@ -164,6 +164,8 @@ To record a set:
 3. Mark the set complete.
 4. Continue to the next set.
 
+Weight fields accept decimal values with up to two digits after the decimal point, such as `7.5` or `12.25`. The decimal keyboard also accepts a comma and normalizes it to a decimal point. A cleared reps field stays empty while you type, so entering `10` will not produce `010`.
+
 Tap a completed set again if it was marked by mistake.
 
 Previous values come from completed workout history for the same exercise. A new or renamed exercise may not show a previous result until it has been completed in a workout.
@@ -172,7 +174,9 @@ Workout progress updates as sets and exercises are completed.
 
 ## Rest timer
 
-Completing a set starts the rest countdown using the default duration from Settings. The timer is stored as a deadline rather than as a fragile in-memory counter, so reopening the app can recalculate the correct remaining time.
+Completing a set starts the rest countdown using the duration selected for that exercise. The timer is stored as a deadline rather than as a fragile in-memory counter, so reopening the app can recalculate the correct remaining time.
+
+Choose **Off** in **Settings → Default rest** to make newly created exercises start without a timer. You can also choose **Off** for an individual exercise while editing a routine or active workout. Completing a set for that exercise will still record the set normally but will not show a rest countdown.
 
 ### Important iPhone limitation
 

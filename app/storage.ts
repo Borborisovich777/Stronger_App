@@ -253,17 +253,19 @@ export async function requestPersistentStorage(): Promise<boolean> {
 }
 
 export function toDisplayWeight(weightKg: number, unit: WeightUnit): number {
+  if (!Number.isFinite(weightKg)) return 0;
   const value = unit === "kg" ? weightKg : weightKg * 2.2046226218;
-  return Math.round(value * 2) / 2;
+  return Math.round(value * 100) / 100;
 }
 
 export function toKilograms(value: number, unit: WeightUnit): number {
+  if (!Number.isFinite(value)) return 0;
   const kilograms = unit === "kg" ? value : value / 2.2046226218;
   return Math.max(0, Math.round(kilograms * 1000) / 1000);
 }
 
 export function formatWeight(weightKg: number, unit: WeightUnit): string {
-  return toDisplayWeight(weightKg, unit).toLocaleString(undefined, { maximumFractionDigits: 1 });
+  return toDisplayWeight(weightKg, unit).toLocaleString(undefined, { maximumFractionDigits: 2 });
 }
 
 export function completedSets(session: WorkoutSession): WorkoutSet[] {

@@ -1517,7 +1517,7 @@ small {
   width: min(100%, 560px);
   min-height: calc(72px + env(safe-area-inset-bottom));
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  padding: 7px 8px env(safe-area-inset-bottom);
+  padding: 7px 8px max(7px, env(safe-area-inset-bottom));
   border-top: 1px solid var(--chrome-border);
   background: var(--chrome-bg);
   box-shadow: 0 -8px 24px rgba(23, 26, 24, 0.06);

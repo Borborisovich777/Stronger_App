@@ -26,6 +26,7 @@ type Tab = "workout" | "history" | "progress" | "settings";
 type ThemeMode = "light" | "dark";
 
 const THEME_STORAGE_KEY = "stronger-theme";
+const REST_DURATION_OPTIONS = [0, 30, 45, 60, 90, 120, 150, 180, 240, 300] as const;
 
 type ExerciseDraft = {
   name: string;
@@ -89,6 +90,81 @@ function formatDuration(totalSeconds: number): string {
   return hours > 0
     ? `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
     : `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function formatRestOption(seconds: number): string {
+  return seconds === 0 ? "Off" : `${seconds}s`;
+}
+
+function formatNumericDraft(value: number, emptyWhenZero: boolean): string {
+  return emptyWhenZero && value === 0 ? "" : String(value);
+}
+
+function NumericInput({
+  value,
+  onValueChange,
+  decimal = false,
+  min = 0,
+  max,
+  emptyWhenZero = false,
+  className,
+  id,
+  enterKeyHint,
+}: {
+  value: number;
+  onValueChange: (value: number) => void;
+  decimal?: boolean;
+  min?: number;
+  max?: number;
+  emptyWhenZero?: boolean;
+  className?: string;
+  id?: string;
+  enterKeyHint?: "next" | "done";
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const safeValue = Number.isFinite(value) ? Math.max(min, max === undefined ? value : Math.min(max, value)) : min;
+  const [draft, setDraft] = useState(() => formatNumericDraft(safeValue, emptyWhenZero));
+
+  useEffect(() => {
+    if (document.activeElement !== inputRef.current) setDraft(formatNumericDraft(safeValue, emptyWhenZero));
+  }, [emptyWhenZero, safeValue]);
+
+  function commit(rawValue: string) {
+    const parsed = rawValue === "" || rawValue === "." ? min : Number(rawValue);
+    const finite = Number.isFinite(parsed) ? parsed : min;
+    const bounded = Math.max(min, max === undefined ? finite : Math.min(max, finite));
+    onValueChange(bounded);
+    return bounded;
+  }
+
+  return (
+    <input
+      ref={inputRef}
+      id={id}
+      className={className}
+      type="text"
+      inputMode={decimal ? "decimal" : "numeric"}
+      enterKeyHint={enterKeyHint}
+      autoComplete="off"
+      spellCheck={false}
+      pattern={decimal ? "[0-9]*[.,]?[0-9]{0,2}" : "[0-9]*"}
+      value={draft}
+      onFocus={(event) => event.currentTarget.select()}
+      onChange={(event) => {
+        const normalized = event.target.value.replace(",", ".");
+        const valid = decimal ? /^\d*(?:\.\d{0,2})?$/.test(normalized) : /^\d*$/.test(normalized);
+        if (!valid) return;
+        if (max !== undefined && normalized !== "" && Number(normalized) > max) {
+          setDraft(String(max));
+          onValueChange(max);
+          return;
+        }
+        setDraft(normalized);
+        commit(normalized);
+      }}
+      onBlur={() => setDraft(formatNumericDraft(commit(draft), emptyWhenZero))}
+    />
+  );
 }
 
 function formatVolume(volumeKg: number, unit: WeightUnit): string {
@@ -333,22 +409,22 @@ function ExerciseModal({
           />
         </label>
         <div className="form-grid four-columns">
-          <label>
+          <label htmlFor="custom-exercise-sets">
             Sets
-            <input type="number" inputMode="numeric" min="1" max="20" value={draft.sets} onChange={(event) => setDraft({ ...draft, sets: Number(event.target.value) })} />
+            <NumericInput id="custom-exercise-sets" value={draft.sets} min={1} max={20} onValueChange={(sets) => setDraft((current) => ({ ...current, sets }))} />
           </label>
-          <label>
+          <label htmlFor="custom-exercise-weight">
             {unit.toUpperCase()}
-            <input type="number" inputMode="decimal" min="0" step="0.5" value={draft.weight} onChange={(event) => setDraft({ ...draft, weight: Number(event.target.value) })} />
+            <NumericInput id="custom-exercise-weight" decimal value={draft.weight} onValueChange={(weight) => setDraft((current) => ({ ...current, weight }))} />
           </label>
-          <label>
+          <label htmlFor="custom-exercise-reps">
             Reps
-            <input type="number" inputMode="numeric" min="0" max="999" value={draft.reps} onChange={(event) => setDraft({ ...draft, reps: Number(event.target.value) })} />
+            <NumericInput id="custom-exercise-reps" emptyWhenZero value={draft.reps} max={999} onValueChange={(reps) => setDraft((current) => ({ ...current, reps }))} />
           </label>
           <label>
             Rest
             <select value={draft.restSeconds} onChange={(event) => setDraft({ ...draft, restSeconds: Number(event.target.value) })}>
-              {[30, 45, 60, 90, 120, 150, 180, 240, 300].map((seconds) => <option key={seconds} value={seconds}>{seconds}s</option>)}
+              {REST_DURATION_OPTIONS.map((seconds) => <option key={seconds} value={seconds}>{formatRestOption(seconds)}</option>)}
             </select>
           </label>
         </div>
@@ -410,10 +486,10 @@ function RoutineEditor({
                 <input aria-label={`Exercise ${index + 1} name`} value={exercise.name} onChange={(event) => updateExercise(index, { name: event.target.value })} />
               </div>
               <div className="form-grid four-columns compact-fields">
-                <label>Sets<input type="number" inputMode="numeric" min="1" max="20" value={exercise.targetSets} onChange={(event) => updateExercise(index, { targetSets: Math.max(1, Number(event.target.value)) })} /></label>
-                <label>{unit.toUpperCase()}<input type="number" inputMode="decimal" min="0" step="0.5" value={toDisplayWeight(exercise.targetWeightKg, unit)} onChange={(event) => updateExercise(index, { targetWeightKg: toKilograms(Number(event.target.value), unit) })} /></label>
-                <label>Reps<input type="number" inputMode="numeric" min="0" max="999" value={exercise.targetReps} onChange={(event) => updateExercise(index, { targetReps: Math.max(0, Number(event.target.value)) })} /></label>
-                <label>Rest<select value={exercise.restSeconds} onChange={(event) => updateExercise(index, { restSeconds: Number(event.target.value) })}>{[30, 45, 60, 90, 120, 150, 180, 240, 300].map((seconds) => <option key={seconds} value={seconds}>{seconds}s</option>)}</select></label>
+                <label htmlFor={`routine-${exercise.id}-sets`}>Sets<NumericInput id={`routine-${exercise.id}-sets`} value={exercise.targetSets} min={1} max={20} onValueChange={(targetSets) => updateExercise(index, { targetSets })} /></label>
+                <label htmlFor={`routine-${exercise.id}-weight`}>{unit.toUpperCase()}<NumericInput id={`routine-${exercise.id}-weight`} decimal value={toDisplayWeight(exercise.targetWeightKg, unit)} onValueChange={(weight) => updateExercise(index, { targetWeightKg: toKilograms(weight, unit) })} /></label>
+                <label htmlFor={`routine-${exercise.id}-reps`}>Reps<NumericInput id={`routine-${exercise.id}-reps`} emptyWhenZero value={exercise.targetReps} max={999} onValueChange={(targetReps) => updateExercise(index, { targetReps })} /></label>
+                <label>Rest<select value={exercise.restSeconds} onChange={(event) => updateExercise(index, { restSeconds: Number(event.target.value) })}>{REST_DURATION_OPTIONS.map((seconds) => <option key={seconds} value={seconds}>{formatRestOption(seconds)}</option>)}</select></label>
               </div>
               <div className="row-actions">
                 <button type="button" className="small-button" disabled={index === 0} onClick={() => setDraft({ ...draft, exercises: moveItem(draft.exercises, index, index - 1) })}>Move up</button>
@@ -748,7 +824,11 @@ export default function StrongerApp() {
     const timestamp = Date.now();
     updateActive((workout) => ({
       ...workout,
-      restEndsAt: target.completed ? workout.restEndsAt : timestamp + exercise.restSeconds * 1000,
+      restEndsAt: target.completed
+        ? workout.restEndsAt
+        : exercise.restSeconds > 0
+          ? timestamp + exercise.restSeconds * 1000
+          : undefined,
       exercises: workout.exercises.map((item) => item.id === exercise.id
         ? {
           ...item,
@@ -973,7 +1053,7 @@ export default function StrongerApp() {
                               onChange={(event) => updateExercise(exercise.id, { name: event.target.value })}
                             />
                           ) : <h2>{exercise.name}</h2>}
-                          <p className="exercise-note">{exercise.restSeconds}s rest · previous results shown below</p>
+                          <p className="exercise-note">{exercise.restSeconds === 0 ? "Rest timer off" : `${exercise.restSeconds}s rest`} · previous results shown below</p>
                         </div>
                       </div>
                       {editingWorkout ? (
@@ -995,30 +1075,23 @@ export default function StrongerApp() {
                             <span className="set-number" aria-label={`Set ${setIndex + 1}`}>{setIndex + 1}</span>
                             <span className="previous-value">{prior ? `${formatWeight(prior.weightKg, unit)} × ${prior.reps}` : "—"}</span>
                             <label className="visually-hidden" htmlFor={`weight-${set.id}`}>Weight in {unit} for {exercise.name}, set {setIndex + 1}</label>
-                            <input
+                            <NumericInput
                               id={`weight-${set.id}`}
                               className="set-input"
-                              type="number"
-                              inputMode="decimal"
+                              decimal
                               enterKeyHint="next"
-                              min="0"
-                              step="0.5"
                               value={toDisplayWeight(set.weightKg, unit)}
-                              onFocus={(event) => event.currentTarget.select()}
-                              onChange={(event) => updateSet(exercise.id, set.id, { weightKg: toKilograms(Number(event.target.value), unit) })}
+                              onValueChange={(weight) => updateSet(exercise.id, set.id, { weightKg: toKilograms(weight, unit) })}
                             />
                             <label className="visually-hidden" htmlFor={`reps-${set.id}`}>Repetitions for {exercise.name}, set {setIndex + 1}</label>
-                            <input
+                            <NumericInput
                               id={`reps-${set.id}`}
                               className="set-input"
-                              type="number"
-                              inputMode="numeric"
+                              emptyWhenZero
                               enterKeyHint="done"
-                              min="0"
-                              max="999"
+                              max={999}
                               value={set.reps}
-                              onFocus={(event) => event.currentTarget.select()}
-                              onChange={(event) => updateSet(exercise.id, set.id, { reps: Math.max(0, Math.round(Number(event.target.value))) })}
+                              onValueChange={(reps) => updateSet(exercise.id, set.id, { reps })}
                             />
                             <button
                               className="complete-button"
@@ -1038,8 +1111,15 @@ export default function StrongerApp() {
                     {editingWorkout ? (
                       <div className="exercise-edit-footer">
                         <label>Rest after set
-                          <select value={exercise.restSeconds} onChange={(event) => updateExercise(exercise.id, { restSeconds: Number(event.target.value) })}>
-                            {[30, 45, 60, 90, 120, 150, 180, 240, 300].map((seconds) => <option key={seconds} value={seconds}>{seconds}s</option>)}
+                          <select value={exercise.restSeconds} onChange={(event) => {
+                            const restSeconds = Number(event.target.value);
+                            updateActive((workout) => ({
+                              ...workout,
+                              restEndsAt: restSeconds === 0 ? undefined : workout.restEndsAt,
+                              exercises: workout.exercises.map((item) => item.id === exercise.id ? { ...item, restSeconds } : item),
+                            }));
+                          }}>
+                            {REST_DURATION_OPTIONS.map((seconds) => <option key={seconds} value={seconds}>{formatRestOption(seconds)}</option>)}
                           </select>
                         </label>
                         <button type="button" className="small-button danger-text" onClick={() => removeExercise(exercise)}>Remove exercise</button>
@@ -1212,7 +1292,7 @@ export default function StrongerApp() {
             <label className="setting-row" htmlFor="default-rest">
               <span><strong>Default rest</strong><small>Used for new exercises.</small></span>
               <select id="default-rest" value={data.settings.defaultRestSeconds} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, defaultRestSeconds: Number(event.target.value) } }))}>
-                {[30, 45, 60, 90, 120, 150, 180, 240, 300].map((seconds) => <option key={seconds} value={seconds}>{seconds}s</option>)}
+                {REST_DURATION_OPTIONS.map((seconds) => <option key={seconds} value={seconds}>{formatRestOption(seconds)}</option>)}
               </select>
             </label>
             <label className="setting-row" htmlFor="training-goal">

@@ -24,10 +24,11 @@ test("builds a static Stronger shell for the GitHub Pages project path", async (
 });
 
 test("ships scoped install metadata and an offline shell", async () => {
-  const [manifestText, serviceWorker, app, styles, packageText, workflow] = await Promise.all([
+  const [manifestText, serviceWorker, app, storage, styles, packageText, workflow] = await Promise.all([
     readFile(new URL("dist/manifest.webmanifest", projectRoot), "utf8"),
     readFile(new URL("dist/sw.js", projectRoot), "utf8"),
     readFile(new URL("app/StrongerApp.tsx", projectRoot), "utf8"),
+    readFile(new URL("app/storage.ts", projectRoot), "utf8"),
     readFile(new URL("app/globals.css", projectRoot), "utf8"),
     readFile(new URL("package.json", projectRoot), "utf8"),
     readFile(new URL(".github/workflows/deploy-pages.yml", projectRoot), "utf8"),
@@ -61,18 +62,28 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(app, /role="switch"/);
   assert.match(app, /aria-checked=\{theme === "dark"\}/);
   assert.match(app, /THEME_STORAGE_KEY = "stronger-theme"/);
+  assert.match(app, /REST_DURATION_OPTIONS = \[0, 30, 45, 60, 90, 120, 150, 180, 240, 300\]/);
+  assert.match(app, /function NumericInput/);
+  assert.match(app, /type="text"[\s\S]*inputMode=\{decimal \? "decimal" : "numeric"\}/);
+  assert.match(app, /exercise\.restSeconds > 0/);
+  assert.match(app, /exercise\.restSeconds === 0 \? "Rest timer off"/);
   assert.match(app, /window\.scrollTo\(\{ top: 0, left: 0, behavior: "auto" \}\)/);
+
+  assert.match(storage, /Math\.round\(value \* 100\) \/ 100/);
+  assert.match(storage, /if \(!Number\.isFinite\(value\)\) return 0/);
 
   assert.match(styles, /--font-sans:/);
   assert.doesNotMatch(styles, /--font-geist-sans/);
   assert.match(styles, /:root\[data-theme="dark"\]/);
   assert.match(styles, /\.topbar\s*\{[^}]*position:\s*fixed;/s);
   assert.match(styles, /\.bottom-nav\s*\{[^}]*position:\s*fixed;/s);
+  assert.match(styles, /\.bottom-nav\s*\{[^}]*padding:\s*7px 8px max\(7px, env\(safe-area-inset-bottom\)\);/s);
   assert.match(styles, /\.toast\s*\{[^}]*bottom:\s*calc\(84px \+ env\(safe-area-inset-bottom\)\);/s);
   assert.doesNotMatch(styles, /\.toast\s*\{[^}]*top:/s);
   assert.match(styles, /scroll-padding-top:\s*calc\(82px \+ env\(safe-area-inset-top\)\)/);
 
   assert.match(serviceWorker, /self\.registration\.scope/);
+  assert.match(serviceWorker, /v4-inputs-rest/);
   assert.match(serviceWorker, /APP_PATH/);
   assert.match(serviceWorker, /addEventListener\(["']install["']/);
   assert.match(serviceWorker, /addEventListener\(["']activate["']/);
