@@ -1,0 +1,50 @@
+{
+  "kind": "stronger-backup",
+  "backupVersion": 1,
+  "formatVersion": 1,
+  "exportedAt": "2026-08-29T14:00:00.000Z",
+  "appVersion": "0.1.0",
+  "data": {
+    "formatVersion": 1,
+    "routines": [],
+    "activeWorkout": null,
+    "history": [
+      {
+        "id": "workout-fixture-effort",
+        "name": "Effort fixture",
+        "workoutDate": "2026-08-29",
+        "startedAt": 1787983200000,
+        "finishedAt": 1787986800000,
+        "exercises": [
+          {
+            "id": "exercise-fixture-effort",
+            "exerciseKey": "fixture-back-squat",
+            "name": "Fixture back squat",
+            "restSeconds": 120,
+            "sets": [
+              {
+                "id": "set-fixture-effort",
+                "weightKg": 80,
+                "reps": 6,
+                "completed": true,
+                "completedAt": 1787985000000,
+                "effort": {
+                  "scale": "rpe",
+                  "value": 8.5
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "customExercises": [],
+    "settings": {
+      "unit": "kg",
+      "defaultRestSeconds": 90,
+      "goal": "strength",
+      "weeklyDays": 4,
+      "effortScale": "rpe"
+    }
+  }
+}

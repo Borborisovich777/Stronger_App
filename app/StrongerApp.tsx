@@ -2,18 +2,39 @@
 
 import { ChangeEvent, FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
+  BACKUP_FORMAT_VERSION,
+  BACKUP_KIND,
   completedSets,
   createDefaultData,
+  CURRENT_FORMAT_VERSION,
   CustomExercise,
+  EffortScale,
   estimatedOneRepMax,
   formatWeight,
+  isWithinSafeResourceLimits,
   loadData,
   makeId,
-  normalizeStrongerData,
+  MAX_CUSTOM_EXERCISES,
+  MAX_EXERCISES_PER_ITEM,
+  MAX_HISTORY_SESSIONS,
+  MAX_PROGRAM_BLOCKS,
+  MAX_PROGRAM_BLOCK_LOAD_PERCENT,
+  MAX_PROGRAM_BLOCK_WEEKS,
+  MAX_ROUTINES,
+  MAX_SETS_PER_EXERCISE,
+  MAX_TOTAL_SETS_PER_ITEM,
+  MAX_WEIGHT_KG,
+  MIN_PROGRAM_BLOCK_LOAD_PERCENT,
+  MIN_PROGRAM_BLOCK_WEEKS,
+  normalizeStrongerBackup,
+  ProgramBlock,
+  replaceData,
   requestPersistentStorage,
   Routine,
   RoutineExercise,
   saveData,
+  SetEffort,
+  StrongerDataConflictError,
   StrongerData,
   toDisplayWeight,
   toKilograms,
@@ -23,9 +44,52 @@ import {
   workoutVolumeKg,
 } from "./storage";
 import { BUILT_IN_EXERCISES } from "./exercises";
+import { buildHistoryCsv } from "./historyCsv";
+import {
+  effortHint,
+  effortOptionLabel,
+  effortScaleLabel,
+  effortValues,
+  formatSetEffort,
+  toggleSetCompletion,
+} from "./effort";
+import {
+  copyRoutineToProgramBlock,
+  programBlockTargetWeight,
+  updateProgramBlockWeek,
+} from "./programBlocks";
+import {
+  calculatePlateLoad,
+  createEmptyPlateInventory,
+  MAX_CALCULATOR_LOAD,
+  MAX_PLATE_PAIRS_PER_SIZE,
+  PlateInventoryItem,
+} from "./plateCalculator";
+import { buildNextSetPreview } from "./nextSetPreview";
+import {
+  buildPeriodProgress,
+  type ExerciseVolumeProgress,
+  type ProgressPeriod,
+} from "./overallProgress";
+import {
+  finishWorkoutTimer,
+  pauseWorkoutTimer,
+  resumeWorkoutTimer,
+  sessionInactivityMs,
+  shouldOfferSessionRescue,
+  workoutElapsedSeconds,
+} from "./sessionRescue";
+import { buildWeeklyReview } from "./weeklyReview";
 
 type Tab = "workout" | "history" | "progress" | "settings";
 type ThemeMode = "light" | "dark";
+type SessionRescuePrompt = { workoutId: string; offeredAt: number };
+type PlateCalculatorDraft = {
+  unit: WeightUnit;
+  targetTotal: number;
+  barWeight: number;
+  inventory: PlateInventoryItem[];
+};
 
 const THEME_STORAGE_KEY = "stronger-theme";
 const REST_DURATION_OPTIONS = [0, 30, 45, 60, 90, 120, 150, 180, 240, 300] as const;
@@ -57,7 +121,7 @@ type ExerciseCatalogItem = {
 };
 
 type CreateCustomExerciseResult = {
-  exercise: ExerciseCatalogItem;
+  exercise: ExerciseCatalogItem | null;
   created: boolean;
 };
 
@@ -105,6 +169,18 @@ function formatHeaderDate(date = new Date()): string {
   }).format(date);
 }
 
+function formatWeekRange(startDate: string, endDate: string): string {
+  const formatter = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
+  if (startDate === endDate) return formatter.format(new Date(`${startDate}T12:00:00`));
+  return `${formatter.format(new Date(`${startDate}T12:00:00`))}–${formatter.format(new Date(`${endDate}T12:00:00`))}`;
+}
+
+function trainingGoalLabel(goal: StrongerData["settings"]["goal"]): string {
+  if (goal === "muscle") return "Build muscle";
+  if (goal === "fitness") return "General fitness";
+  return "Strength";
+}
+
 function initialTheme(): ThemeMode {
   if (typeof window === "undefined") return "light";
   const pageTheme = document.documentElement.dataset.theme;
@@ -134,6 +210,10 @@ function formatRestOption(seconds: number): string {
 
 function formatNumericDraft(value: number, emptyWhenZero: boolean): string {
   return emptyWhenZero && value === 0 ? "" : String(value);
+}
+
+function formatPlateWeight(value: number): string {
+  return String(Math.round(value * 100) / 100);
 }
 
 function NumericInput({
@@ -206,6 +286,27 @@ function NumericInput({
 function formatVolume(volumeKg: number, unit: WeightUnit): string {
   const converted = unit === "kg" ? volumeKg : volumeKg * 2.2046226218;
   return `${Math.round(converted).toLocaleString("en-US")} ${unit}`;
+}
+
+function formatMetricDelta(current: number, previous: number): string {
+  const difference = current - previous;
+  if (difference === 0) return "No change";
+  return `${difference > 0 ? "+" : ""}${difference.toLocaleString("en-US")}`;
+}
+
+function formatVolumeDelta(current: number, previous: number): string {
+  if (previous <= 0) return current > 0 ? "New" : "No change";
+  const percent = Math.round((current - previous) / previous * 100);
+  if (percent === 0) return "No change";
+  return `${percent > 0 ? "+" : ""}${percent}%`;
+}
+
+function formatPreviousCount(current: number, previous: number): string {
+  return `Was ${previous.toLocaleString("en-US")} · ${formatMetricDelta(current, previous)}`;
+}
+
+function formatPreviousVolume(current: number, previous: number, unit: WeightUnit): string {
+  return `Was ${formatVolume(previous, unit)} · ${formatVolumeDelta(current, previous)}`;
 }
 
 function sameExercise(first: string, second: string): boolean {
@@ -300,7 +401,7 @@ function Modal({
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;
-  initialFocus?: "form" | "close";
+  initialFocus?: "form" | "close" | "primary";
 }) {
   const dialogRef = useRef<HTMLElement>(null);
   const onCloseRef = useRef(onClose);
@@ -340,7 +441,9 @@ function Modal({
     window.requestAnimationFrame(() => {
       const preferred = initialFocus === "close"
         ? dialog.querySelector<HTMLElement>("[data-modal-close]")
-        : dialog.querySelector<HTMLElement>("input:not([disabled]), select:not([disabled]), textarea:not([disabled])");
+        : initialFocus === "primary"
+          ? dialog.querySelector<HTMLElement>("[data-modal-primary]")
+          : dialog.querySelector<HTMLElement>("input:not([disabled]), select:not([disabled]), textarea:not([disabled])");
       (preferred ?? focusable()[0])?.focus();
     });
 
@@ -438,6 +541,10 @@ function ExercisePicker({
       return;
     }
     const result = onCreateCustom(name);
+    if (!result.exercise) {
+      setCustomStatus("The custom exercise limit has been reached.");
+      return;
+    }
     setCustomStatus(result.created ? `${result.exercise.name} was saved to your library.` : `${result.exercise.name} is already in your library.`);
     setCustomName("");
     onSelect(result.exercise);
@@ -600,7 +707,7 @@ function ExerciseModal({
               </label>
               <label htmlFor="custom-exercise-weight">
                 {unit.toUpperCase()}
-                <NumericInput id="custom-exercise-weight" decimal value={draft.weight} onValueChange={(weight) => setDraft((current) => ({ ...current, weight }))} />
+                <NumericInput id="custom-exercise-weight" decimal value={draft.weight} max={toDisplayWeight(MAX_WEIGHT_KG, unit)} onValueChange={(weight) => setDraft((current) => ({ ...current, weight }))} />
               </label>
               <label htmlFor="custom-exercise-reps">
                 Reps
@@ -640,6 +747,7 @@ function RoutineEditor({
 }) {
   const [draft, setDraft] = useState<Routine>(() => structuredClone(initialRoutine));
   const [addingExercise, setAddingExercise] = useState(false);
+  const [limitStatus, setLimitStatus] = useState("");
 
   function updateExercise(index: number, update: Partial<RoutineExercise>) {
     setDraft((current) => ({
@@ -653,6 +761,11 @@ function RoutineEditor({
   function submit(event: FormEvent) {
     event.preventDefault();
     if (!draft.name.trim()) return;
+    const targetSetCount = draft.exercises.reduce((total, exercise) => total + exercise.targetSets, 0);
+    if (draft.exercises.length > MAX_EXERCISES_PER_ITEM || targetSetCount > MAX_TOTAL_SETS_PER_ITEM) {
+      setLimitStatus("Reduce this routine to the safe limit of 100 exercises and 500 total sets.");
+      return;
+    }
     onSave({
       ...draft,
       name: draft.name.trim(),
@@ -663,6 +776,13 @@ function RoutineEditor({
   }
 
   function addCatalogExercise(exercise: ExerciseCatalogItem) {
+    if (draft.exercises.length >= MAX_EXERCISES_PER_ITEM ||
+      draft.exercises.reduce((total, item) => total + item.targetSets, 0) + 3 > MAX_TOTAL_SETS_PER_ITEM) {
+      setLimitStatus("This routine has reached its safe exercise or set limit.");
+      setAddingExercise(false);
+      return;
+    }
+    setLimitStatus("");
     setDraft((current) => ({
       ...current,
       exercises: [...current.exercises, {
@@ -695,7 +815,7 @@ function RoutineEditor({
               </div>
               <div className="form-grid four-columns compact-fields">
                 <label htmlFor={`routine-${exercise.id}-sets`}>Sets<NumericInput id={`routine-${exercise.id}-sets`} value={exercise.targetSets} min={1} max={20} onValueChange={(targetSets) => updateExercise(index, { targetSets })} /></label>
-                <label htmlFor={`routine-${exercise.id}-weight`}>{unit.toUpperCase()}<NumericInput id={`routine-${exercise.id}-weight`} decimal value={toDisplayWeight(exercise.targetWeightKg, unit)} onValueChange={(weight) => updateExercise(index, { targetWeightKg: toKilograms(weight, unit) })} /></label>
+                <label htmlFor={`routine-${exercise.id}-weight`}>{unit.toUpperCase()}<NumericInput id={`routine-${exercise.id}-weight`} decimal value={toDisplayWeight(exercise.targetWeightKg, unit)} max={toDisplayWeight(MAX_WEIGHT_KG, unit)} onValueChange={(weight) => updateExercise(index, { targetWeightKg: toKilograms(weight, unit) })} /></label>
                 <label htmlFor={`routine-${exercise.id}-reps`}>Reps<NumericInput id={`routine-${exercise.id}-reps`} emptyWhenZero value={exercise.targetReps} max={999} onValueChange={(targetReps) => updateExercise(index, { targetReps })} /></label>
                 <label>Rest<select value={exercise.restSeconds} onChange={(event) => updateExercise(index, { restSeconds: Number(event.target.value) })}>{REST_DURATION_OPTIONS.map((seconds) => <option key={seconds} value={seconds}>{formatRestOption(seconds)}</option>)}</select></label>
               </div>
@@ -721,6 +841,7 @@ function RoutineEditor({
             + Add exercise
           </button>
         )}
+        {limitStatus ? <p className="field-status" role="status">{limitStatus}</p> : null}
         <button className="primary-button" type="submit">Save routine</button>
       </form>
     </Modal>
@@ -736,9 +857,7 @@ function AppHeader({
   now: number;
   onOpenSettings: () => void;
 }) {
-  const elapsed = activeWorkout
-    ? Math.max(0, Math.floor(((activeWorkout.finishedAt ?? now) - activeWorkout.startedAt) / 1000))
-    : 0;
+  const elapsed = activeWorkout ? workoutElapsedSeconds(activeWorkout, now) : 0;
 
   return (
     <header className="topbar">
@@ -750,7 +869,7 @@ function AppHeader({
         </span>
       </button>
       <div className="topbar-actions">
-        {activeWorkout ? <span className="timer-pill" aria-label={`Workout time ${formatDuration(elapsed)}`}>{formatDuration(elapsed)}</span> : null}
+        {activeWorkout ? <span className="timer-pill" aria-label={`Workout time ${formatDuration(elapsed)}${activeWorkout.timerPausedAt !== undefined ? ", paused" : ""}`}>{formatDuration(elapsed)}</span> : null}
         <button className="round-button" type="button" onClick={onOpenSettings} aria-label="Open settings">⚙</button>
       </div>
     </header>
@@ -767,9 +886,41 @@ function EmptyState({ title, copy }: { title: string; copy: string }) {
   );
 }
 
+function ExerciseVolumeRows({
+  exercises,
+  unit,
+  showComparison,
+}: {
+  exercises: ExerciseVolumeProgress[];
+  unit: WeightUnit;
+  showComparison: boolean;
+}) {
+  return (
+    <ul className="exercise-volume-list">
+      {exercises.map((exercise) => (
+        <li key={exercise.exerciseKey}>
+          <span>
+            <strong>{exercise.name}</strong>
+            <small>{exercise.completedSets} {exercise.completedSets === 1 ? "set" : "sets"} · best {formatWeight(exercise.bestWeightKg, unit)} {unit}</small>
+          </span>
+          <span>
+            <strong>{formatVolume(exercise.volumeKg, unit)}</strong>
+            {showComparison ? <small>{formatPreviousVolume(exercise.volumeKg, exercise.previousVolumeKg, unit)}</small> : null}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default function StrongerApp() {
   const [data, setData] = useState<StrongerData>(() => createDefaultData());
   const [hydrated, setHydrated] = useState(false);
+  const [storageRecoveryRequired, setStorageRecoveryRequired] = useState(false);
+  const [canOverwriteUnreadableStorage, setCanOverwriteUnreadableStorage] = useState(false);
+  const [oversizedStoredData, setOversizedStoredData] = useState(false);
+  const [isReplacingData, setIsReplacingData] = useState(false);
+  const [sessionRescuePrompt, setSessionRescuePrompt] = useState<SessionRescuePrompt | null>(null);
   const [tab, setTab] = useState<Tab>("workout");
   const [now, setNow] = useState(() => Date.now());
   const [message, setMessage] = useState("");
@@ -778,19 +929,40 @@ export default function StrongerApp() {
   const [blankName, setBlankName] = useState("Workout");
   const [showExerciseModal, setShowExerciseModal] = useState(false);
   const [routineDraft, setRoutineDraft] = useState<Routine | null>(null);
+  const [showProgramBlockSetup, setShowProgramBlockSetup] = useState(false);
+  const [programBlockSourceId, setProgramBlockSourceId] = useState("");
+  const [programBlockWeekCount, setProgramBlockWeekCount] = useState(4);
+  const [programBlockDetailId, setProgramBlockDetailId] = useState<string | null>(null);
   const [historyDetail, setHistoryDetail] = useState<WorkoutSession | null>(null);
   const [summary, setSummary] = useState<WorkoutSession | null>(null);
   const [historySearch, setHistorySearch] = useState("");
   const [selectedExerciseKey, setSelectedExerciseKey] = useState("");
+  const [progressPeriod, setProgressPeriod] = useState<ProgressPeriod>("week");
   const [installGuide, setInstallGuide] = useState(false);
+  const [plateCalculatorDraft, setPlateCalculatorDraft] = useState<PlateCalculatorDraft | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>(initialTheme);
   const importInputRef = useRef<HTMLInputElement>(null);
   const finishingRef = useRef(false);
+  const skipNextSaveRef = useRef(true);
+  const rescueEligibleWorkoutIdRef = useRef<string | null>(null);
+  const dismissedRescueWorkoutIdRef = useRef<string | null>(null);
+  const deferredRescueCheckRef = useRef(false);
 
   const activeWorkout = data.activeWorkout;
   const unit = data.settings.unit;
+  const sessionRescueWorkout = activeWorkout?.id === sessionRescuePrompt?.workoutId ? activeWorkout : null;
+  const workoutTimerPaused = activeWorkout?.timerPausedAt !== undefined;
+  const effortScaleSetting = data.settings.effortScale ?? "off";
+  const activeEffortScale: EffortScale | null = effortScaleSetting === "off" ? null : effortScaleSetting;
+  const nextSetPreviewEnabled = data.settings.nextSetPreview ?? false;
+  const programBlocks = data.programBlocks ?? [];
+  const programBlockDetail = programBlocks.find((block) => block.id === programBlockDetailId) ?? null;
+  const otherModalOpen = Boolean(
+    showBlankWorkout || showExerciseModal || routineDraft || showProgramBlockSetup || programBlockDetail ||
+      historyDetail || summary || installGuide || plateCalculatorDraft,
+  );
 
   const exerciseCatalog = useMemo(() => {
     const exercises: ExerciseCatalogItem[] = [];
@@ -853,14 +1025,33 @@ export default function StrongerApp() {
     loadData()
       .then((saved) => {
         if (!cancelled) {
+          skipNextSaveRef.current = true;
           setData(saved);
+          const withinSafeLimits = isWithinSafeResourceLimits(saved);
+          if (!withinSafeLimits) {
+            setStorageRecoveryRequired(true);
+            setCanOverwriteUnreadableStorage(false);
+            setOversizedStoredData(true);
+            setMessage("Your existing data was preserved in read-only recovery because it exceeds the new screen safety limits.");
+          } else if (saved.activeWorkout) {
+            rescueEligibleWorkoutIdRef.current = saved.activeWorkout.id;
+            const offeredAt = Date.now();
+            if (shouldOfferSessionRescue(saved.activeWorkout, offeredAt)) {
+              setSessionRescuePrompt({ workoutId: saved.activeWorkout.id, offeredAt });
+              setTab("workout");
+            }
+          }
           setHydrated(true);
         }
       })
       .catch(() => {
         if (!cancelled) {
+          setStorageRecoveryRequired(true);
+          setCanOverwriteUnreadableStorage(true);
+          setOversizedStoredData(false);
+          rescueEligibleWorkoutIdRef.current = null;
           setHydrated(true);
-          setMessage("Local storage could not be opened. Export often until it is available again.");
+          setMessage("Stronger stopped before replacing any stored workout data.");
         }
       });
     return () => {
@@ -869,9 +1060,22 @@ export default function StrongerApp() {
   }, []);
 
   useEffect(() => {
-    if (!hydrated) return;
-    void saveData(data).catch(() => setMessage("This change could not be saved. Check your available iPhone storage."));
-  }, [data, hydrated]);
+    if (!hydrated || storageRecoveryRequired) return;
+    if (skipNextSaveRef.current) {
+      skipNextSaveRef.current = false;
+      return;
+    }
+    void saveData(data).catch((error: unknown) => {
+      setStorageRecoveryRequired(true);
+      setCanOverwriteUnreadableStorage(false);
+      setOversizedStoredData(false);
+      if (error instanceof StrongerDataConflictError) {
+        setMessage("Workout data changed in another tab. Reload before making more changes.");
+        return;
+      }
+      setMessage("Saving stopped before more changes could be made. Reload and check your available iPhone storage.");
+    });
+  }, [data, hydrated, storageRecoveryRequired]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -884,6 +1088,32 @@ export default function StrongerApp() {
       document.removeEventListener("visibilitychange", syncClock);
     };
   }, []);
+
+  useEffect(() => {
+    const offerRescueOnReturn = () => {
+      if (!hydrated || storageRecoveryRequired || document.visibilityState === "hidden") return;
+      if (otherModalOpen) {
+        deferredRescueCheckRef.current = true;
+        return;
+      }
+      deferredRescueCheckRef.current = false;
+      const workout = data.activeWorkout;
+      if (!workout || rescueEligibleWorkoutIdRef.current !== workout.id ||
+        dismissedRescueWorkoutIdRef.current === workout.id || sessionRescuePrompt?.workoutId === workout.id) return;
+      const offeredAt = Date.now();
+      if (shouldOfferSessionRescue(workout, offeredAt)) {
+        setSessionRescuePrompt({ workoutId: workout.id, offeredAt });
+        setTab("workout");
+      }
+    };
+    window.addEventListener("pageshow", offerRescueOnReturn);
+    document.addEventListener("visibilitychange", offerRescueOnReturn);
+    if (!otherModalOpen && deferredRescueCheckRef.current) offerRescueOnReturn();
+    return () => {
+      window.removeEventListener("pageshow", offerRescueOnReturn);
+      document.removeEventListener("visibilitychange", offerRescueOnReturn);
+    };
+  }, [data.activeWorkout, hydrated, otherModalOpen, sessionRescuePrompt?.workoutId, storageRecoveryRequired]);
 
   useEffect(() => {
     const standaloneQuery = window.matchMedia("(display-mode: standalone)");
@@ -976,14 +1206,60 @@ export default function StrongerApp() {
     });
   }, [data.history, effectiveSelectedExerciseKey]);
 
+  const todayDateKey = localDateKey(new Date(now));
+  const periodProgress = useMemo(
+    () => buildPeriodProgress(data.history, progressPeriod, todayDateKey),
+    [data.history, progressPeriod, todayDateKey],
+  );
+  const primaryExerciseVolumes = periodProgress.exercises.slice(0, 4);
+  const additionalExerciseVolumes = periodProgress.exercises.slice(4);
+  const periodKicker = progressPeriod === "day" ? "TODAY"
+    : progressPeriod === "week" ? "THIS WEEK"
+      : progressPeriod === "month" ? "THIS MONTH"
+        : "ALL COMPLETED WORKOUTS";
+  const currentPeriodLabel = periodProgress.currentRange
+    ? formatWeekRange(periodProgress.currentRange.startDate, periodProgress.currentRange.endDate)
+    : "All saved history";
+  const comparisonPeriodLabel = periodProgress.previousRange
+    ? `Compared with ${formatWeekRange(periodProgress.previousRange.startDate, periodProgress.previousRange.endDate)}`
+    : "No earlier period comparison";
+  const weekReview = useMemo(
+    () => buildWeeklyReview(data.history, data.routines, data.settings.weeklyDays, todayDateKey),
+    [data.history, data.routines, data.settings.weeklyDays, todayDateKey],
+  );
+  const sessionsToTarget = Math.max(weekReview.targetSessions - weekReview.completedSessions, 0);
+  const weeklyTargetStatus = sessionsToTarget > 0
+    ? `${sessionsToTarget} ${sessionsToTarget === 1 ? "session" : "sessions"} remaining to reach the target saved in Settings.`
+    : "The saved weekly target is reached. Additional sessions remain visible in the count.";
+  const plateCalculatorResult = useMemo(() => plateCalculatorDraft
+    ? calculatePlateLoad(
+      plateCalculatorDraft.targetTotal,
+      plateCalculatorDraft.barWeight,
+      plateCalculatorDraft.inventory,
+    )
+    : null, [plateCalculatorDraft]);
+
+  function openPlateCalculator() {
+    const defaultBarWeight = unit === "kg" ? 20 : 45;
+    setPlateCalculatorDraft({
+      unit,
+      targetTotal: defaultBarWeight,
+      barWeight: defaultBarWeight,
+      inventory: createEmptyPlateInventory(unit),
+    });
+  }
+
   function updateActive(update: (workout: WorkoutSession) => WorkoutSession) {
-    setData((current) => current.activeWorkout
+    setData((current) => current.activeWorkout && current.activeWorkout.timerPausedAt === undefined
       ? { ...current, activeWorkout: update(current.activeWorkout) }
       : current);
   }
 
   function startWorkout(workout: WorkoutSession) {
     if (data.activeWorkout && !window.confirm("Replace the workout currently in progress? Its unfinished changes will be removed.")) return;
+    rescueEligibleWorkoutIdRef.current = workout.id;
+    dismissedRescueWorkoutIdRef.current = null;
+    setSessionRescuePrompt(null);
     setData((current) => ({ ...current, activeWorkout: workout }));
     setTab("workout");
     setEditingWorkout(false);
@@ -996,6 +1272,10 @@ export default function StrongerApp() {
     if (existing) {
       setMessage(`${existing.name} already exists, so it was selected.`);
       return { exercise: existing, created: false };
+    }
+    if (data.customExercises.length >= MAX_CUSTOM_EXERCISES) {
+      setMessage("The custom exercise limit has been reached. Remove an unused custom exercise before adding another.");
+      return { exercise: null, created: false };
     }
 
     const custom: CustomExercise = {
@@ -1021,7 +1301,7 @@ export default function StrongerApp() {
       id: makeId("workout"),
       name,
       workoutDate: localDateKey(),
-      startedAt: Date.now(),
+      startedAt: now,
       exercises: [],
     });
     setShowBlankWorkout(false);
@@ -1030,6 +1310,13 @@ export default function StrongerApp() {
   }
 
   function addExerciseToActive(draft: ExerciseDraft) {
+    if (!data.activeWorkout) return;
+    const currentSetCount = data.activeWorkout.exercises.reduce((total, exercise) => total + exercise.sets.length, 0);
+    if (data.activeWorkout.exercises.length >= MAX_EXERCISES_PER_ITEM ||
+      currentSetCount + draft.sets > MAX_TOTAL_SETS_PER_ITEM) {
+      setMessage("This workout has reached its safe exercise or set limit.");
+      return;
+    }
     updateActive((workout) => ({
       ...workout,
       exercises: [...workout.exercises, {
@@ -1074,6 +1361,24 @@ export default function StrongerApp() {
     }));
   }
 
+  function updateSetEffort(exerciseId: string, setId: string, effort: SetEffort | undefined) {
+    updateActive((workout) => ({
+      ...workout,
+      exercises: workout.exercises.map((exercise) => exercise.id === exerciseId
+        ? {
+          ...exercise,
+          sets: exercise.sets.map((set) => {
+            if (set.id !== setId || !set.completed) return set;
+            const nextSet = { ...set };
+            if (effort) nextSet.effort = effort;
+            else delete nextSet.effort;
+            return nextSet;
+          }),
+        }
+        : exercise),
+    }));
+  }
+
   function toggleSet(exercise: WorkoutExercise, setId: string) {
     const target = exercise.sets.find((set) => set.id === setId);
     if (!target) return;
@@ -1093,15 +1398,18 @@ export default function StrongerApp() {
       exercises: workout.exercises.map((item) => item.id === exercise.id
         ? {
           ...item,
-          sets: item.sets.map((set) => set.id === setId
-            ? { ...set, completed: !set.completed, completedAt: set.completed ? undefined : timestamp }
-            : set),
+          sets: item.sets.map((set) => set.id === setId ? toggleSetCompletion(set, timestamp) : set),
         }
         : item),
     }));
   }
 
   function addSet(exercise: WorkoutExercise) {
+    const totalSetCount = data.activeWorkout?.exercises.reduce((total, item) => total + item.sets.length, 0) ?? 0;
+    if (exercise.sets.length >= MAX_SETS_PER_EXERCISE || totalSetCount >= MAX_TOTAL_SETS_PER_ITEM) {
+      setMessage("This workout has reached its safe set limit.");
+      return;
+    }
     const last = exercise.sets.at(-1);
     updateExercise(exercise.id, {
       sets: [...exercise.sets, {
@@ -1119,29 +1427,101 @@ export default function StrongerApp() {
     updateExercise(exercise.id, { sets: exercise.sets.filter((item) => item.id !== setId) });
   }
 
-  function finishWorkout() {
-    if (!data.activeWorkout || finishingRef.current) return;
-    const incomplete = data.activeWorkout.exercises.reduce(
+  function finishWorkout(options: {
+    expectedWorkoutId?: string;
+    closeAtLastActivity?: boolean;
+    skipIncompleteConfirmation?: boolean;
+  } = {}): boolean {
+    const active = data.activeWorkout;
+    if (!active || finishingRef.current ||
+      (options.expectedWorkoutId !== undefined && active.id !== options.expectedWorkoutId)) return false;
+    if (data.history.length >= MAX_HISTORY_SESSIONS) {
+      setMessage("The history safety limit has been reached. Export a backup and remove an old workout before finishing this one.");
+      return false;
+    }
+    const incomplete = active.exercises.reduce(
       (total, exercise) => total + exercise.sets.filter((set) => !set.completed).length,
       0,
     );
-    if (incomplete > 0 && !window.confirm(`Finish with ${incomplete} incomplete ${incomplete === 1 ? "set" : "sets"}? Only completed sets count toward progress.`)) return;
+    if (!options.skipIncompleteConfirmation && incomplete > 0 &&
+      !window.confirm(`Finish with ${incomplete} incomplete ${incomplete === 1 ? "set" : "sets"}? Only completed sets count toward progress.`)) return false;
     finishingRef.current = true;
-    const finished: WorkoutSession = {
-      ...structuredClone(data.activeWorkout),
-      finishedAt: Date.now(),
-      restEndsAt: undefined,
-    };
+    const finished = finishWorkoutTimer(
+      structuredClone(active),
+      Date.now(),
+      options.closeAtLastActivity ?? false,
+    );
     setData((current) => {
-      if (!current.activeWorkout || current.history.some((session) => session.id === finished.id)) return current;
+      if (current.activeWorkout?.id !== finished.id || current.history.some((session) => session.id === finished.id)) return current;
       return { ...current, activeWorkout: null, history: [finished, ...current.history] };
     });
+    rescueEligibleWorkoutIdRef.current = null;
+    dismissedRescueWorkoutIdRef.current = null;
+    setSessionRescuePrompt(null);
     setEditingWorkout(false);
     setSummary(finished);
     void requestPersistentStorage();
     window.setTimeout(() => {
       finishingRef.current = false;
     }, 500);
+    return true;
+  }
+
+  function dismissSessionRescue() {
+    if (sessionRescuePrompt) dismissedRescueWorkoutIdRef.current = sessionRescuePrompt.workoutId;
+    setSessionRescuePrompt(null);
+  }
+
+  function focusActiveWorkout() {
+    window.setTimeout(() => {
+      document.getElementById("active-workout-title")?.focus();
+    }, 0);
+  }
+
+  function continueRescuedWorkout() {
+    if (!sessionRescueWorkout) return;
+    dismissedRescueWorkoutIdRef.current = sessionRescueWorkout.id;
+    setSessionRescuePrompt(null);
+    setTab("workout");
+    focusActiveWorkout();
+  }
+
+  function pauseRescuedWorkout() {
+    if (!sessionRescueWorkout) return;
+    const expectedWorkoutId = sessionRescueWorkout.id;
+    setData((current) => current.activeWorkout?.id === expectedWorkoutId
+      ? { ...current, activeWorkout: pauseWorkoutTimer(current.activeWorkout, Date.now()) }
+      : current);
+    dismissedRescueWorkoutIdRef.current = expectedWorkoutId;
+    setSessionRescuePrompt(null);
+    setTab("workout");
+    setMessage("Workout timer paused at the last recorded activity. Logged work is unchanged.");
+  }
+
+  function resumePausedWorkout() {
+    if (!activeWorkout || activeWorkout.timerPausedAt === undefined) return;
+    const expectedWorkoutId = activeWorkout.id;
+    setData((current) => current.activeWorkout?.id === expectedWorkoutId
+      ? { ...current, activeWorkout: resumeWorkoutTimer(current.activeWorkout, Date.now()) }
+      : current);
+    dismissedRescueWorkoutIdRef.current = expectedWorkoutId;
+    setMessage("Workout timer resumed. Time spent paused will not count toward duration.");
+    focusActiveWorkout();
+  }
+
+  function closeWorkoutSafely(expectedWorkoutId: string, closeAtLastActivity: boolean) {
+    const workout = data.activeWorkout;
+    if (!workout || workout.id !== expectedWorkoutId) return;
+    const completed = completedSets(workout).length;
+    const timing = closeAtLastActivity ? "The timer will end at the last recorded activity." : "The paused timer will be kept.";
+    if (!window.confirm(
+      `Close ${workout.name} and save ${completed} completed ${completed === 1 ? "set" : "sets"} to History? ${timing} Incomplete sets remain visible but do not count toward progress.`,
+    )) return;
+    finishWorkout({
+      expectedWorkoutId,
+      closeAtLastActivity,
+      skipIncompleteConfirmation: true,
+    });
   }
 
   function duplicateForToday(session: WorkoutSession) {
@@ -1156,8 +1536,12 @@ export default function StrongerApp() {
   }
 
   function saveRoutine(routine: Routine) {
+    const exists = data.routines.some((item) => item.id === routine.id);
+    if (!exists && data.routines.length >= MAX_ROUTINES) {
+      setMessage("The routine safety limit has been reached. Remove an unused routine before adding another.");
+      return;
+    }
     setData((current) => {
-      const exists = current.routines.some((item) => item.id === routine.id);
       return {
         ...current,
         routines: exists
@@ -1174,9 +1558,57 @@ export default function StrongerApp() {
     setData((current) => ({ ...current, routines: current.routines.filter((item) => item.id !== routine.id) }));
   }
 
+  function openProgramBlockSetup() {
+    setProgramBlockSourceId(data.routines[0]?.id ?? "");
+    setProgramBlockWeekCount(4);
+    setShowProgramBlockSetup(true);
+  }
+
+  function createProgramBlock(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const sourceRoutine = data.routines.find((routine) => routine.id === programBlockSourceId);
+    if (!sourceRoutine) {
+      setMessage("Choose a routine to copy first.");
+      return;
+    }
+    if (programBlocks.length >= MAX_PROGRAM_BLOCKS) {
+      setMessage("The program sandbox limit has been reached. Remove an old copy before creating another.");
+      return;
+    }
+    const block = copyRoutineToProgramBlock(sourceRoutine, programBlockWeekCount, Date.now(), makeId);
+    setData((current) => ({
+      ...current,
+      programBlocks: [...(current.programBlocks ?? []), block],
+    }));
+    setShowProgramBlockSetup(false);
+    setProgramBlockDetailId(block.id);
+    setMessage("Program copy created. Your routine and workouts are unchanged.");
+  }
+
+  function setProgramWeekLoad(blockId: string, weekId: string, loadPercent: number) {
+    setData((current) => ({
+      ...current,
+      programBlocks: (current.programBlocks ?? []).map((block) =>
+        block.id === blockId ? updateProgramBlockWeek(block, weekId, loadPercent) : block,
+      ),
+    }));
+  }
+
+  function deleteProgramBlock(block: ProgramBlock) {
+    if (!window.confirm(`Delete the ${block.name} sandbox copy? Its source routine and all workouts will stay unchanged.`)) return;
+    setData((current) => ({
+      ...current,
+      programBlocks: (current.programBlocks ?? []).filter((item) => item.id !== block.id),
+    }));
+    setProgramBlockDetailId(null);
+    setMessage("Program copy removed. Live training data was not changed.");
+  }
+
   async function exportData() {
     const payload = JSON.stringify({
-      formatVersion: 1,
+      kind: BACKUP_KIND,
+      backupVersion: BACKUP_FORMAT_VERSION,
+      formatVersion: CURRENT_FORMAT_VERSION,
       exportedAt: new Date().toISOString(),
       appVersion: "0.1.0",
       data,
@@ -1200,6 +1632,34 @@ export default function StrongerApp() {
     }
   }
 
+  async function exportWorkoutCsv() {
+    if (!data.history.length) {
+      setMessage("Finish a workout before exporting workout history.");
+      return;
+    }
+    const file = new File(
+      [buildHistoryCsv(data.history)],
+      `stronger-workouts-${localDateKey()}.csv`,
+      { type: "text/csv;charset=utf-8" },
+    );
+    const shareNavigator = navigator as Navigator & { canShare?: (data?: ShareData) => boolean };
+    try {
+      if (navigator.share && shareNavigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: "Stronger workout CSV", files: [file] });
+      } else {
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(file);
+        link.href = url;
+        link.download = file.name;
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      setMessage("Workout CSV created. It is a readable copy, not a backup.");
+    } catch (error) {
+      if ((error as DOMException).name !== "AbortError") setMessage("The workout CSV could not be shared.");
+    }
+  }
+
   async function importData(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -1208,25 +1668,42 @@ export default function StrongerApp() {
       setMessage("That backup is too large to import safely.");
       return;
     }
+    let replacement: StrongerData | null = null;
     try {
-      const parsed: unknown = JSON.parse(await file.text());
-      const wrapped = parsed && typeof parsed === "object" && "data" in parsed
-        ? (parsed as { data: unknown }).data
-        : parsed;
-      const replacement = normalizeStrongerData(wrapped);
-      if (!replacement) throw new Error("Invalid Stronger backup");
-      if (!window.confirm("Replace the exercise library, routines, workouts, history, and settings on this installation with this backup? This cannot be merged or undone.")) return;
-      await saveData(replacement);
+      replacement = normalizeStrongerBackup(JSON.parse(await file.text()) as unknown);
+    } catch {
+      // The message below deliberately does not reveal parser details from an untrusted file.
+    }
+    if (!replacement) {
+      setMessage("This file is not a valid Stronger backup. Your current data was not changed.");
+      return;
+    }
+    if (!window.confirm("Replace the exercise library, routines, program copies, workouts, history, and settings on this installation with this backup? This cannot be merged or undone.")) return;
+    setIsReplacingData(true);
+    try {
+      await replaceData(replacement, { allowRecoveryOverwrite: canOverwriteUnreadableStorage });
+      skipNextSaveRef.current = true;
+      rescueEligibleWorkoutIdRef.current = replacement.activeWorkout?.id ?? null;
+      dismissedRescueWorkoutIdRef.current = null;
+      setSessionRescuePrompt(null);
       setData(replacement);
+      setStorageRecoveryRequired(false);
+      setCanOverwriteUnreadableStorage(false);
+      setOversizedStoredData(false);
       setTab("workout");
       setMessage("Backup restored.");
     } catch {
-      setMessage("This file is not a valid Stronger backup. Your current data was not changed.");
+      setMessage("The backup could not be committed. Your current on-screen data was not changed.");
+    } finally {
+      setIsReplacingData(false);
     }
   }
 
   function resetAllData() {
     if (!window.confirm("Reset Stronger and permanently remove every custom exercise, workout, routine, and setting? Export first if you may need this data.")) return;
+    rescueEligibleWorkoutIdRef.current = null;
+    dismissedRescueWorkoutIdRef.current = null;
+    setSessionRescuePrompt(null);
     setData(createDefaultData());
     setTab("workout");
     setMessage("Stronger was reset to its starter routines.");
@@ -1242,7 +1719,41 @@ export default function StrongerApp() {
     );
   }
 
-  const restRemaining = activeWorkout?.restEndsAt
+  if (isReplacingData) {
+    return (
+      <main className="loading-screen" role="status">
+        <span className="brand-mark large" aria-hidden="true">S</span>
+        <strong>Restoring backup…</strong>
+        <small>Stronger is keeping the current screen locked until storage and the app agree.</small>
+      </main>
+    );
+  }
+
+  if (storageRecoveryRequired) {
+    return (
+      <main className="loading-screen" aria-labelledby="storage-recovery-title">
+        <span className="brand-mark large" aria-hidden="true">S</span>
+        <h1 id="storage-recovery-title">Stored data needs attention</h1>
+        <small>{canOverwriteUnreadableStorage
+          ? "Stronger paused before writing starter data over a record it could not read. Reload, or restore a verified JSON backup."
+          : oversizedStoredData
+            ? "This version will not render or rewrite a log beyond its screen safety limits. Export the preserved data before using a cleanup or rollback build."
+            : "Saving stopped because storage changed or became unavailable. Export the current on-screen data if it includes unsaved changes, then reload this tab."}</small>
+        <div className="button-pair">
+          <button className="secondary-button" type="button" onClick={() => window.location.reload()}>Try again</button>
+          {canOverwriteUnreadableStorage ? (
+            <button className="primary-button" type="button" onClick={() => importInputRef.current?.click()}>Choose backup</button>
+          ) : (
+            <button className="primary-button" type="button" onClick={() => void exportData()}>Export current data</button>
+          )}
+        </div>
+        <input ref={importInputRef} className="visually-hidden" type="file" accept="application/json,.json" onChange={(event) => void importData(event)} />
+        {message ? <small role="status">{message}</small> : null}
+      </main>
+    );
+  }
+
+  const restRemaining = activeWorkout?.restEndsAt && !workoutTimerPaused && !sessionRescueWorkout
     ? Math.max(0, Math.ceil((activeWorkout.restEndsAt - now) / 1000))
     : null;
   const exerciseDoneCount = activeWorkout?.exercises.filter(
@@ -1272,17 +1783,33 @@ export default function StrongerApp() {
         <main>
           {activeWorkout ? (
             <>
+              {workoutTimerPaused ? (
+                <section className="session-paused-card" role="status" aria-labelledby="session-paused-title">
+                  <div>
+                    <p className="section-kicker">SESSION RESCUE</p>
+                    <h2 id="session-paused-title">Workout timer paused</h2>
+                    <p>Logged sets are unchanged. Resume when you are ready; paused time will not count toward duration.</p>
+                  </div>
+                  <div className="button-pair">
+                    <button className="primary-button" type="button" onClick={resumePausedWorkout}>Resume timer</button>
+                    <button className="secondary-button" type="button" onClick={() => closeWorkoutSafely(activeWorkout.id, false)}>Close safely</button>
+                  </div>
+                </section>
+              ) : null}
+
+              <fieldset className={`workout-editing-surface ${workoutTimerPaused ? "is-paused" : ""}`} disabled={workoutTimerPaused}>
               <section className="page-heading workout-heading">
                 <div>
                   <p className="section-kicker">CURRENT WORKOUT · {formatDate(activeWorkout.workoutDate).toUpperCase()}</p>
                   {editingWorkout ? (
                     <input
+                      id="active-workout-title"
                       className="workout-name-input"
                       aria-label="Workout name"
                       value={activeWorkout.name}
                       onChange={(event) => updateActive((workout) => ({ ...workout, name: event.target.value }))}
                     />
-                  ) : <h1>{activeWorkout.name}</h1>}
+                  ) : <h1 id="active-workout-title" tabIndex={-1}>{activeWorkout.name}</h1>}
                 </div>
                 <button className="text-button" type="button" onClick={() => setEditingWorkout((value) => !value)}>
                   {editingWorkout ? "Done" : "Edit"}
@@ -1299,6 +1826,15 @@ export default function StrongerApp() {
 
               {activeWorkout.exercises.length ? activeWorkout.exercises.map((exercise, exerciseIndex) => {
                 const exerciseComplete = exercise.sets.length > 0 && exercise.sets.every((set) => set.completed);
+                const nextSetPreview = nextSetPreviewEnabled
+                  ? buildNextSetPreview(
+                    exercise,
+                    data.history,
+                    toKilograms(unit === "kg" ? 2.5 : 5, unit),
+                    MAX_WEIGHT_KG,
+                    Boolean(activeEffortScale),
+                  )
+                  : null;
                 return (
                   <article className={`exercise-card ${exerciseComplete ? "exercise-complete" : ""}`} key={exercise.id}>
                     <header className="exercise-header">
@@ -1325,6 +1861,21 @@ export default function StrongerApp() {
                       ) : null}
                     </header>
 
+                    {nextSetPreview ? (
+                      <section className="next-set-preview" aria-label={`Optional next-set preview for ${exercise.name}`}>
+                        <div className="next-set-preview-heading">
+                          <span>OPTIONAL · READ-ONLY</span>
+                          <strong>Consider {formatWeight(nextSetPreview.suggestedWeightKg, unit)} {unit} for set {nextSetPreview.nextSetNumber}</strong>
+                        </div>
+                        <p>Set {nextSetPreview.nextSetNumber} is still {formatWeight(nextSetPreview.plannedWeightKg, unit)} {unit} × {nextSetPreview.plannedReps}. These two results met or exceeded that plan:</p>
+                        <div className="next-set-evidence">
+                          <span><small>TODAY</small><strong>{formatWeight(nextSetPreview.todayEvidence.weightKg, unit)} {unit} × {nextSetPreview.todayEvidence.reps}</strong>{nextSetPreview.todayEvidence.effort ? <em>{formatSetEffort(nextSetPreview.todayEvidence.effort)}</em> : null}</span>
+                          <span><small>{formatDate(nextSetPreview.historyEvidence.workoutDate).toUpperCase()}</small><strong>{formatWeight(nextSetPreview.historyEvidence.weightKg, unit)} {unit} × {nextSetPreview.historyEvidence.reps}</strong>{nextSetPreview.historyEvidence.effort ? <em>{formatSetEffort(nextSetPreview.historyEvidence.effort)}</em> : null}</span>
+                        </div>
+                        <small>This does not assess fatigue, pain, technique, or equipment. The next set stays unchanged unless you edit it.</small>
+                      </section>
+                    ) : null}
+
                     <div className="set-grid set-grid-header" aria-hidden="true">
                       <span>SET</span><span>PREVIOUS</span><span>{unit.toUpperCase()}</span><span>REPS</span><span>DONE</span>
                     </div>
@@ -1332,37 +1883,69 @@ export default function StrongerApp() {
                       {exercise.sets.map((set, setIndex) => {
                         const prior = previousSet(data.history, exercise.exerciseKey, exercise.name, setIndex);
                         return (
-                          <div className={`set-grid set-row ${set.completed ? "is-done" : ""}`} key={set.id}>
-                            <span className="set-number" aria-label={`Set ${setIndex + 1}`}>{setIndex + 1}</span>
-                            <span className="previous-value">{prior ? `${formatWeight(prior.weightKg, unit)} × ${prior.reps}` : "—"}</span>
-                            <label className="visually-hidden" htmlFor={`weight-${set.id}`}>Weight in {unit} for {exercise.name}, set {setIndex + 1}</label>
-                            <NumericInput
-                              id={`weight-${set.id}`}
-                              className="set-input"
-                              decimal
-                              enterKeyHint="next"
-                              value={toDisplayWeight(set.weightKg, unit)}
-                              onValueChange={(weight) => updateSet(exercise.id, set.id, { weightKg: toKilograms(weight, unit) })}
-                            />
-                            <label className="visually-hidden" htmlFor={`reps-${set.id}`}>Repetitions for {exercise.name}, set {setIndex + 1}</label>
-                            <NumericInput
-                              id={`reps-${set.id}`}
-                              className="set-input"
-                              emptyWhenZero
-                              enterKeyHint="done"
-                              max={999}
-                              value={set.reps}
-                              onValueChange={(reps) => updateSet(exercise.id, set.id, { reps })}
-                            />
-                            <button
-                              className="complete-button"
-                              type="button"
-                              aria-pressed={set.completed}
-                              aria-label={`${set.completed ? "Mark" : "Complete"} ${exercise.name} set ${setIndex + 1}${set.completed ? " incomplete" : ""}`}
-                              onClick={() => toggleSet(exercise, set.id)}
-                            >✓</button>
-                            {editingWorkout ? (
-                              <button className="remove-set-button" type="button" onClick={() => removeSet(exercise, set.id)} aria-label={`Remove ${exercise.name} set ${setIndex + 1}`}>Remove</button>
+                          <div className="set-entry" key={set.id}>
+                            <div className={`set-grid set-row ${set.completed ? "is-done" : ""}`}>
+                              <span className="set-number" aria-label={`Set ${setIndex + 1}`}>{setIndex + 1}</span>
+                              <span className="previous-value">{prior ? `${formatWeight(prior.weightKg, unit)} × ${prior.reps}` : "—"}</span>
+                              <label className="visually-hidden" htmlFor={`weight-${set.id}`}>Weight in {unit} for {exercise.name}, set {setIndex + 1}</label>
+                              <NumericInput
+                                id={`weight-${set.id}`}
+                                className="set-input"
+                                decimal
+                                enterKeyHint="next"
+                                value={toDisplayWeight(set.weightKg, unit)}
+                                max={toDisplayWeight(MAX_WEIGHT_KG, unit)}
+                                onValueChange={(weight) => updateSet(exercise.id, set.id, { weightKg: toKilograms(weight, unit) })}
+                              />
+                              <label className="visually-hidden" htmlFor={`reps-${set.id}`}>Repetitions for {exercise.name}, set {setIndex + 1}</label>
+                              <NumericInput
+                                id={`reps-${set.id}`}
+                                className="set-input"
+                                emptyWhenZero
+                                enterKeyHint="done"
+                                max={999}
+                                value={set.reps}
+                                onValueChange={(reps) => updateSet(exercise.id, set.id, { reps })}
+                              />
+                              <button
+                                className="complete-button"
+                                type="button"
+                                aria-pressed={set.completed}
+                                aria-label={`${set.completed ? "Mark" : "Complete"} ${exercise.name} set ${setIndex + 1}${set.completed ? " incomplete" : ""}`}
+                                onClick={() => toggleSet(exercise, set.id)}
+                              >✓</button>
+                              {editingWorkout ? (
+                                <button className="remove-set-button" type="button" onClick={() => removeSet(exercise, set.id)} aria-label={`Remove ${exercise.name} set ${setIndex + 1}`}>Remove</button>
+                              ) : null}
+                            </div>
+                            {activeEffortScale && set.completed ? (
+                              <div className="set-effort-row">
+                                <label htmlFor={`effort-${set.id}`}>
+                                  <span>{set.effort && set.effort.scale !== activeEffortScale
+                                    ? `Replace with ${effortScaleLabel(activeEffortScale)}`
+                                    : effortScaleLabel(activeEffortScale)}</span>
+                                  <select
+                                    id={`effort-${set.id}`}
+                                    aria-label={`${effortScaleLabel(activeEffortScale)} for ${exercise.name}, set ${setIndex + 1}`}
+                                    value={set.effort?.scale === activeEffortScale ? String(set.effort.value) : ""}
+                                    onChange={(event) => updateSetEffort(
+                                      exercise.id,
+                                      set.id,
+                                      event.target.value === ""
+                                        ? undefined
+                                        : { scale: activeEffortScale, value: Number(event.target.value) },
+                                    )}
+                                  >
+                                    <option value="">{set.effort && set.effort.scale !== activeEffortScale
+                                      ? `Keep ${formatSetEffort(set.effort)}`
+                                      : "Not recorded"}</option>
+                                    {effortValues(activeEffortScale).map((value) => (
+                                      <option key={value} value={value}>{effortOptionLabel(activeEffortScale, value)}</option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <small>{effortHint(activeEffortScale)}</small>
+                              </div>
                             ) : null}
                           </div>
                         );
@@ -1391,14 +1974,22 @@ export default function StrongerApp() {
               }) : <EmptyState title="Add your first exercise" copy="This workout is empty. Add an exercise, then enter weight and reps as you train." />}
 
               <button className="secondary-button full-width" type="button" onClick={() => setShowExerciseModal(true)}>+ Add exercise</button>
-              <button className="finish-button" type="button" onClick={finishWorkout}>Finish workout</button>
+              <button className="finish-button" type="button" onClick={() => { finishWorkout(); }}>Finish workout</button>
               <button
                 className="danger-link"
                 type="button"
                 onClick={() => {
-                  if (window.confirm("Discard this unfinished workout? This cannot be undone.")) setData((current) => ({ ...current, activeWorkout: null }));
+                  if (!window.confirm("Discard this unfinished workout? This cannot be undone.")) return;
+                  const expectedWorkoutId = activeWorkout.id;
+                  rescueEligibleWorkoutIdRef.current = null;
+                  dismissedRescueWorkoutIdRef.current = null;
+                  setSessionRescuePrompt(null);
+                  setData((current) => current.activeWorkout?.id === expectedWorkoutId
+                    ? { ...current, activeWorkout: null }
+                    : current);
                 }}
               >Discard workout</button>
+              </fieldset>
             </>
           ) : (
             <>
@@ -1441,6 +2032,34 @@ export default function StrongerApp() {
                 </div>
                 <button className="secondary-button full-width" type="button" onClick={() => setShowBlankWorkout(true)}>Start a blank workout</button>
               </section>
+
+              <section className="section-block program-lab">
+                <div className="section-heading">
+                  <div><p className="section-kicker">EXPERIMENTAL · COPIED DATA</p><h2>Program lab</h2></div>
+                  <button className="text-button" type="button" onClick={openProgramBlockSetup} disabled={!data.routines.length}>New copy</button>
+                </div>
+                <p className="section-copy">Preview a multi-week block without changing a routine or starting a workout. Every week begins at the copied targets.</p>
+                {programBlocks.length ? (
+                  <div className="program-block-list">
+                    {programBlocks.map((block) => (
+                      <article className="program-block-card" key={block.id}>
+                        <button type="button" onClick={() => setProgramBlockDetailId(block.id)}>
+                          <span><strong>{block.name}</strong><small>{block.weeks.length} weeks · copied from {block.sourceRoutineName}</small></span>
+                          <span aria-hidden="true">Review →</span>
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="program-lab-empty">
+                    <strong>No sandbox copies</strong>
+                    <span>Create one only when you want to explore a block. Nothing is applied automatically.</span>
+                  </div>
+                )}
+                <button className="secondary-button full-width" type="button" onClick={openProgramBlockSetup} disabled={!data.routines.length}>
+                  {data.routines.length ? "Create a program copy" : "Create a routine first"}
+                </button>
+              </section>
             </>
           )}
         </main>
@@ -1465,7 +2084,7 @@ export default function StrongerApp() {
                   <button type="button" onClick={() => setHistoryDetail(session)}>
                     <span className="history-date"><strong>{session.workoutDate.slice(8)}</strong><small>{new Intl.DateTimeFormat("en", { month: "short" }).format(new Date(`${session.workoutDate}T12:00:00`))}</small></span>
                     <span className="history-main"><strong>{session.name}</strong><small>{session.exercises.length} exercises · {completedSets(session).length} sets</small></span>
-                    <span className="history-metric"><strong>{formatVolume(workoutVolumeKg(session), unit)}</strong><small>{formatDuration(Math.max(0, ((session.finishedAt ?? session.startedAt) - session.startedAt) / 1000))}</small></span>
+                    <span className="history-metric"><strong>{formatVolume(workoutVolumeKg(session), unit)}</strong><small>{formatDuration(workoutElapsedSeconds(session, now))}</small></span>
                   </button>
                 </article>
               ))}
@@ -1483,8 +2102,114 @@ export default function StrongerApp() {
             <h1>Progress</h1>
             <p>Simple records from completed sets—enough to see whether the work is moving.</p>
           </section>
+          <section className="overall-progress-card" aria-labelledby="overall-progress-title">
+            <div className="section-heading compact">
+              <div><p className="section-kicker">{periodKicker}</p><h2 id="overall-progress-title">Overall progress</h2></div>
+              <span>{periodProgress.current.exerciseCount} {periodProgress.current.exerciseCount === 1 ? "exercise" : "exercises"}</span>
+            </div>
+            <div className="progress-period-tabs" role="group" aria-label="Overall progress period">
+              {(["day", "week", "month", "all"] as ProgressPeriod[]).map((period) => (
+                <button
+                  key={period}
+                  type="button"
+                  aria-pressed={progressPeriod === period}
+                  onClick={() => setProgressPeriod(period)}
+                >{period === "all" ? "All" : `${period[0].toUpperCase()}${period.slice(1)}`}</button>
+              ))}
+            </div>
+            <div className="progress-period-context">
+              <strong>{currentPeriodLabel}</strong>
+              <span>{comparisonPeriodLabel}</span>
+            </div>
+            <div className="stat-grid overall-stat-grid" aria-label="Overall training totals">
+              <article>
+                <small>WORKOUTS</small>
+                <strong>{periodProgress.current.completedSessions.toLocaleString("en-US")}</strong>
+                {periodProgress.previous ? <em>{formatPreviousCount(periodProgress.current.completedSessions, periodProgress.previous.completedSessions)}</em> : null}
+              </article>
+              <article>
+                <small>COMPLETED SETS</small>
+                <strong>{periodProgress.current.completedSets.toLocaleString("en-US")}</strong>
+                {periodProgress.previous ? <em>{formatPreviousCount(periodProgress.current.completedSets, periodProgress.previous.completedSets)}</em> : null}
+              </article>
+              <article>
+                <small>TOTAL VOLUME</small>
+                <strong>{formatVolume(periodProgress.current.totalVolumeKg, unit)}</strong>
+                {periodProgress.previous ? <em>{formatPreviousVolume(periodProgress.current.totalVolumeKg, periodProgress.previous.totalVolumeKg, unit)}</em> : null}
+              </article>
+            </div>
+            {primaryExerciseVolumes.length ? (
+              <>
+                <div className="exercise-volume-heading">
+                  <span><strong>Volume by exercise</strong><small>Weight × reps from completed sets</small></span>
+                  <span>{periodProgress.exercises.length}</span>
+                </div>
+                <ExerciseVolumeRows exercises={primaryExerciseVolumes} unit={unit} showComparison={Boolean(periodProgress.previous)} />
+                {additionalExerciseVolumes.length ? (
+                  <details className="exercise-volume-more">
+                    <summary>Show {additionalExerciseVolumes.length} more {additionalExerciseVolumes.length === 1 ? "exercise" : "exercises"}</summary>
+                    <ExerciseVolumeRows exercises={additionalExerciseVolumes} unit={unit} showComparison={Boolean(periodProgress.previous)} />
+                  </details>
+                ) : null}
+              </>
+            ) : <p className="overall-progress-empty">No completed sets in this period.</p>}
+          </section>
+          <section className="weekly-review-card" aria-labelledby="weekly-review-title">
+            <div className="section-heading compact">
+              <div><p className="section-kicker">READ-ONLY · THIS WEEK</p><h2 id="weekly-review-title">Weekly review</h2></div>
+              <span>{formatWeekRange(weekReview.startDate, weekReview.endDate)}</span>
+            </div>
+            <div className="weekly-review-progress">
+              <div>
+                <strong>{weekReview.completedSessions} <span>of {weekReview.targetSessions}</span></strong>
+                <small>sessions with completed sets</small>
+              </div>
+              <div
+                className="weekly-review-track"
+                role="progressbar"
+                aria-label="Weekly session target"
+                aria-valuemin={0}
+                aria-valuemax={weekReview.targetSessions}
+                aria-valuenow={Math.min(weekReview.completedSessions, weekReview.targetSessions)}
+              >
+                <span style={{ width: `${weekReview.progressPercent}%` }} />
+              </div>
+              <p>{weeklyTargetStatus} Saved goal: {trainingGoalLabel(data.settings.goal)}.</p>
+            </div>
+            <div className="weekly-review-details">
+              <article>
+                <small>RECENT BEST WEIGHTS</small>
+                {weekReview.personalRecords.length ? (
+                  <ul className="weekly-pr-list">
+                    {weekReview.personalRecords.slice(0, 3).map((record) => (
+                      <li key={record.exerciseKey}>
+                        <span><strong>{record.name}</strong><small>Previous {formatWeight(record.previousWeightKg, unit)} {unit}</small></span>
+                        <strong>{formatWeight(record.currentWeightKg, unit)} {unit}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                ) : <p>No completed set exceeded an earlier logged weight this week.</p>}
+                {weekReview.personalRecords.length > 3 ? <em>+{weekReview.personalRecords.length - 3} more this week</em> : null}
+              </article>
+              <article>
+                <small>NEXT IN ROUTINE ORDER</small>
+                {weekReview.nextRoutine ? (
+                  <div className="next-routine-preview">
+                    <strong>{weekReview.nextRoutine.name}</strong>
+                    <span>{weekReview.nextRoutine.exercises.length} exercises · preview only</span>
+                  </div>
+                ) : <p>Create a routine to show the next item in rotation.</p>}
+                <p>Based on the latest completed routine still in your saved list. Nothing is scheduled or started.</p>
+              </article>
+            </div>
+          </section>
           {exerciseOptions.length ? (
             <>
+              <div className="progress-detail-heading">
+                <p className="section-kicker">EXERCISE DETAIL</p>
+                <h2>Strength by exercise</h2>
+                <p>Choose one exercise to see its best weight, estimated 1RM, and trend.</p>
+              </div>
               <label className="select-card">Exercise
                 <select value={effectiveSelectedExerciseKey} onChange={(event) => setSelectedExerciseKey(event.target.value)}>
                   {exerciseOptions.map((exercise) => <option key={exercise.key} value={exercise.key}>{exercise.name}</option>)}
@@ -1517,7 +2242,7 @@ export default function StrongerApp() {
                 <p className="chart-note">Estimated 1RM uses completed sets of 1–12 reps. It is a training estimate, not a tested maximum.</p>
               </section>
             </>
-          ) : <EmptyState title="No progress data yet" copy="Complete and finish a workout to create your first strength trend." />}
+          ) : null}
         </main>
       ) : null}
 
@@ -1562,6 +2287,51 @@ export default function StrongerApp() {
                 <option value="strength">Strength</option><option value="muscle">Build muscle</option><option value="fitness">General fitness</option>
               </select>
             </label>
+            <label className="setting-row" htmlFor="effort-scale">
+              <span>
+                <strong>Effort tracking</strong>
+                <small id="effort-scale-help">{activeEffortScale
+                  ? effortHint(activeEffortScale)
+                  : "Optional and off by default. Existing effort entries are kept when hidden."}</small>
+              </span>
+              <select
+                id="effort-scale"
+                aria-label="Effort tracking"
+                aria-describedby="effort-scale-help"
+                value={effortScaleSetting}
+                onChange={(event) => setData((current) => ({
+                  ...current,
+                  settings: {
+                    ...current.settings,
+                    effortScale: event.target.value as NonNullable<StrongerData["settings"]["effortScale"]>,
+                  },
+                }))}
+              >
+                <option value="off">Off</option>
+                <option value="rpe">RPE</option>
+                <option value="rir">RIR</option>
+              </select>
+            </label>
+            <div className="setting-row">
+              <div>
+                <strong>Next-set previews</strong>
+                <small>Off by default. Shows a small evidence-backed prompt after two matching results; never edits a set.</small>
+              </div>
+              <button
+                className="theme-switch"
+                type="button"
+                role="switch"
+                aria-label="Next-set previews"
+                aria-checked={nextSetPreviewEnabled}
+                onClick={() => setData((current) => ({
+                  ...current,
+                  settings: { ...current.settings, nextSetPreview: !(current.settings.nextSetPreview ?? false) },
+                }))}
+              >
+                <span className="theme-switch-label" aria-hidden="true">{nextSetPreviewEnabled ? "On" : "Off"}</span>
+                <span className="theme-switch-track" aria-hidden="true"><span /></span>
+              </button>
+            </div>
             <label className="setting-row" htmlFor="weekly-days">
               <span><strong>Weekly days</strong><small>Your preferred training rhythm.</small></span>
               <select id="weekly-days" value={data.settings.weeklyDays} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, weeklyDays: Number(event.target.value) } }))}>
@@ -1584,6 +2354,12 @@ export default function StrongerApp() {
           </section>
 
           <section className="section-block settings-section">
+            <p className="section-kicker">TEMPORARY TOOL</p><h2>Plate calculator</h2>
+            <p className="section-copy">Shows which plates to load on each side for your target weight. It never changes your workout.</p>
+            <button className="secondary-button full-width" type="button" onClick={openPlateCalculator}>Open plate calculator</button>
+          </section>
+
+          <section className="section-block settings-section">
             <p className="section-kicker">IPHONE APP</p><h2>Install & offline</h2>
             <p className="section-copy">Open once online, then add Stronger from Safari to your Home Screen. The app shell works offline after that first complete load.</p>
             <button className="secondary-button full-width" type="button" onClick={() => setInstallGuide(true)}>{isStandalone ? "Review install & data notes" : "Install on iPhone"}</button>
@@ -1591,11 +2367,13 @@ export default function StrongerApp() {
 
           <section className="section-block settings-section">
             <p className="section-kicker">LOCAL DATA</p><h2>Backup & restore</h2>
-            <p className="section-copy">There is no cloud account. Export a JSON backup regularly—especially before clearing Safari data or changing this app’s web address.</p>
+            <p className="section-copy">JSON is the complete backup you can restore. CSV is a readable workout-history copy for spreadsheets.</p>
             <div className="button-pair">
-              <button className="primary-button" type="button" onClick={() => void exportData()}>Export data</button>
-              <button className="secondary-button" type="button" onClick={() => importInputRef.current?.click()}>Import data</button>
+              <button className="primary-button" type="button" onClick={() => void exportData()}>Export JSON</button>
+              <button className="secondary-button" type="button" onClick={() => importInputRef.current?.click()}>Import JSON</button>
             </div>
+            <button className="secondary-button full-width backup-csv-button" type="button" onClick={() => void exportWorkoutCsv()} disabled={!data.history.length}>Export workout CSV</button>
+            <p className="backup-export-note">CSV cannot be imported and does not replace your JSON backup.</p>
             <input ref={importInputRef} className="visually-hidden" type="file" accept="application/json,.json" onChange={(event) => void importData(event)} />
             <button className="danger-link bordered" type="button" onClick={resetAllData}>Reset all data</button>
           </section>
@@ -1622,13 +2400,49 @@ export default function StrongerApp() {
           ["progress", "↗", "Progress"],
           ["settings", "••", "Settings"],
         ] as const).map(([itemTab, icon, label]) => (
-          <button key={itemTab} type="button" className={tab === itemTab ? "active" : ""} aria-current={tab === itemTab ? "page" : undefined} onClick={() => setTab(itemTab)}>
+          <button key={itemTab} type="button" className={tab === itemTab ? "active" : ""} aria-current={tab === itemTab ? "page" : undefined} onClick={() => {
+            setTab(itemTab);
+            const workout = data.activeWorkout;
+            if (itemTab === "workout" && !otherModalOpen && workout && rescueEligibleWorkoutIdRef.current === workout.id &&
+              dismissedRescueWorkoutIdRef.current !== workout.id && !sessionRescuePrompt &&
+              shouldOfferSessionRescue(workout, Date.now())) {
+              setSessionRescuePrompt({ workoutId: workout.id, offeredAt: Date.now() });
+            }
+          }}>
             <span aria-hidden="true">{icon}</span><small>{label}</small>
           </button>
         ))}
       </nav>
 
       {message ? <div className={`toast ${restRemaining !== null ? "with-rest" : ""}`} role="status">{message}</div> : null}
+
+      {sessionRescueWorkout && sessionRescuePrompt ? (
+        <Modal
+          eyebrow="SESSION RESCUE"
+          title="Unfinished workout found"
+          onClose={dismissSessionRescue}
+          initialFocus="primary"
+        >
+          <div className="session-rescue-copy">
+            <p><strong>{sessionRescueWorkout.name}</strong> has been inactive for {formatDuration(
+              sessionInactivityMs(sessionRescueWorkout, sessionRescuePrompt.offeredAt) / 1000,
+            )}.</p>
+            <p>{completedSetCount} of {totalSetCount} sets are complete. Nothing will be changed until you choose an action.</p>
+          </div>
+          <div className="session-rescue-actions">
+            <button className="primary-button" type="button" onClick={continueRescuedWorkout} data-modal-primary>
+              Continue workout
+            </button>
+            <button className="secondary-button" type="button" onClick={pauseRescuedWorkout}>
+              Pause timer
+            </button>
+            <button className="secondary-button" type="button" onClick={() => closeWorkoutSafely(sessionRescueWorkout.id, true)}>
+              Close safely
+            </button>
+          </div>
+          <small>Pause excludes the time since your last recorded activity. Close saves the workout to History; it never discards it.</small>
+        </Modal>
+      ) : null}
 
       {showBlankWorkout ? (
         <Modal eyebrow="START FROM SCRATCH" title="Blank workout" onClose={() => setShowBlankWorkout(false)}>
@@ -1662,6 +2476,174 @@ export default function StrongerApp() {
         />
       ) : null}
 
+      {showProgramBlockSetup ? (
+        <Modal eyebrow="PROGRAM LAB · SANDBOX" title="Copy a routine into a block" onClose={() => setShowProgramBlockSetup(false)}>
+          <form className="form-stack" onSubmit={createProgramBlock}>
+            <label htmlFor="program-source-routine">Routine to copy
+              <select id="program-source-routine" value={programBlockSourceId} onChange={(event) => setProgramBlockSourceId(event.target.value)} required>
+                {data.routines.map((routine) => <option key={routine.id} value={routine.id}>{routine.name}</option>)}
+              </select>
+            </label>
+            <label htmlFor="program-week-count">Block length
+              <select id="program-week-count" value={programBlockWeekCount} onChange={(event) => setProgramBlockWeekCount(Number(event.target.value))}>
+                {Array.from(
+                  { length: MAX_PROGRAM_BLOCK_WEEKS - MIN_PROGRAM_BLOCK_WEEKS + 1 },
+                  (_, index) => index + MIN_PROGRAM_BLOCK_WEEKS,
+                ).map((weeks) => <option key={weeks} value={weeks}>{weeks} weeks</option>)}
+              </select>
+            </label>
+            <div className="program-safety-note">
+              <strong>A snapshot is made now.</strong>
+              <p>Later edits to either copy stay separate. This experiment cannot start workouts or overwrite the source routine.</p>
+            </div>
+            <button className="primary-button" type="submit" disabled={!programBlockSourceId}>Create sandbox copy</button>
+          </form>
+        </Modal>
+      ) : null}
+
+      {programBlockDetail ? (
+        <Modal eyebrow="PROGRAM LAB · COPIED DATA" title={programBlockDetail.name} onClose={() => setProgramBlockDetailId(null)} wide initialFocus="close">
+          <div className="program-safety-note">
+            <strong>Preview only · created {formatHeaderDate(new Date(programBlockDetail.createdAt))}</strong>
+            <p>Percentages are manual planning math, not recommendations. No value here can change {programBlockDetail.sourceRoutineName} or an active workout.</p>
+          </div>
+          <div className="program-week-list">
+            {programBlockDetail.weeks.map((week, weekIndex) => (
+              <article className="program-week-card" key={week.id}>
+                <div className="program-week-heading">
+                  <div><small>WEEK {weekIndex + 1}</small><strong>{week.loadPercent}% of copied load</strong></div>
+                  <label htmlFor={`program-week-${week.id}`}>Load
+                    <select
+                      id={`program-week-${week.id}`}
+                      aria-label={`Week ${weekIndex + 1} copied load percentage`}
+                      value={week.loadPercent}
+                      onChange={(event) => setProgramWeekLoad(programBlockDetail.id, week.id, Number(event.target.value))}
+                    >
+                      {Array.from(
+                        { length: (MAX_PROGRAM_BLOCK_LOAD_PERCENT - MIN_PROGRAM_BLOCK_LOAD_PERCENT) / 5 + 1 },
+                        (_, index) => MIN_PROGRAM_BLOCK_LOAD_PERCENT + index * 5,
+                      ).map((percent) => (
+                        <option key={percent} value={percent}>{percent}%</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <details>
+                  <summary>Preview {programBlockDetail.exercises.length} exercises</summary>
+                  <div className="program-target-list">
+                    {programBlockDetail.exercises.map((exercise) => (
+                      <div key={exercise.id}>
+                        <span><strong>{exercise.name}</strong><small>{exercise.targetSets} sets × {exercise.targetReps} reps</small></span>
+                        <strong>{exercise.targetWeightKg > 0
+                          ? `${formatWeight(programBlockTargetWeight(exercise.targetWeightKg, week), unit)} ${unit}`
+                          : "Unloaded"}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              </article>
+            ))}
+          </div>
+          <div className="button-pair">
+            <button className="primary-button" type="button" onClick={() => setProgramBlockDetailId(null)}>Done</button>
+            <button className="secondary-button danger-text" type="button" onClick={() => deleteProgramBlock(programBlockDetail)}>Delete copy</button>
+          </div>
+        </Modal>
+      ) : null}
+
+      {plateCalculatorDraft && plateCalculatorResult ? (
+        <Modal
+          eyebrow="TEMPORARY TOOL · NO SET CHANGES"
+          title="Plate calculator"
+          onClose={() => setPlateCalculatorDraft(null)}
+          wide
+        >
+          <div className="plate-calculator-intro">
+            <p>Enter your target, bar weight, and available plate pairs. The result shows what to load on each side.</p>
+            <small>One pair = one plate per side. Add collars to the bar weight if needed.</small>
+          </div>
+
+          <div className="plate-calculator-loads">
+            <label htmlFor="plate-target-load">Target total ({plateCalculatorDraft.unit})
+              <NumericInput
+                id="plate-target-load"
+                value={plateCalculatorDraft.targetTotal}
+                onValueChange={(targetTotal) => setPlateCalculatorDraft((current) => current ? { ...current, targetTotal } : current)}
+                decimal
+                max={MAX_CALCULATOR_LOAD}
+                enterKeyHint="next"
+              />
+            </label>
+            <label htmlFor="plate-bar-weight">Bar weight ({plateCalculatorDraft.unit})
+              <NumericInput
+                id="plate-bar-weight"
+                value={plateCalculatorDraft.barWeight}
+                onValueChange={(barWeight) => setPlateCalculatorDraft((current) => current ? { ...current, barWeight } : current)}
+                decimal
+                max={MAX_CALCULATOR_LOAD}
+                enterKeyHint="done"
+              />
+            </label>
+          </div>
+
+          <fieldset className="plate-inventory">
+            <legend>Available matching pairs</legend>
+            <p>Enter complete pairs only.</p>
+            <div className="plate-inventory-grid">
+              {plateCalculatorDraft.inventory.map((item, index) => (
+                <label key={item.plateWeight} htmlFor={`plate-pairs-${index}`}>
+                  <span><strong>{formatPlateWeight(item.plateWeight)}</strong> {plateCalculatorDraft.unit}</span>
+                  <select
+                    id={`plate-pairs-${index}`}
+                    aria-label={`${formatPlateWeight(item.plateWeight)} ${plateCalculatorDraft.unit} plate pairs available`}
+                    value={item.availablePairs}
+                    onChange={(event) => {
+                      const availablePairs = Number(event.target.value);
+                      setPlateCalculatorDraft((current) => current ? {
+                        ...current,
+                        inventory: current.inventory.map((candidate, candidateIndex) => candidateIndex === index
+                          ? { ...candidate, availablePairs }
+                          : candidate),
+                      } : current);
+                    }}
+                  >
+                    {Array.from({ length: MAX_PLATE_PAIRS_PER_SIZE + 1 }, (_, count) => (
+                      <option key={count} value={count}>{count}</option>
+                    ))}
+                  </select>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <section className={`plate-result ${plateCalculatorResult.targetBelowBar ? "has-warning" : ""}`} aria-live="polite">
+            <small>LOAD ON THE BAR</small>
+            <strong>{formatPlateWeight(plateCalculatorResult.actualTotal)} <span>{plateCalculatorDraft.unit}</span></strong>
+            <p>{plateCalculatorResult.targetBelowBar
+              ? "Target is lighter than the entered bar. Use a lighter bar or raise the target."
+              : plateCalculatorResult.exact
+                ? "Exact target with the selected inventory."
+                : `Closest load without exceeding target: ${formatPlateWeight(plateCalculatorResult.actualTotal)} ${plateCalculatorDraft.unit} (${formatPlateWeight(plateCalculatorResult.shortfall)} ${plateCalculatorDraft.unit} under).`}</p>
+            <div className="plate-per-side">
+              <span>Each side</span>
+              {plateCalculatorResult.platesPerSide.length ? (
+                <ul>
+                  {plateCalculatorResult.platesPerSide.map((item) => (
+                    <li key={item.plateWeight}>{item.platesPerSide} × {formatPlateWeight(item.plateWeight)} {plateCalculatorDraft.unit}</li>
+                  ))}
+                </ul>
+              ) : <strong>Bar only · no plates per side</strong>}
+            </div>
+          </section>
+
+          <div className="program-safety-note plate-safety-note">
+            <strong>Verify before loading.</strong>
+            <p>Check the bar, plates, collars, and both sides before lifting. This tool never changes your workout data.</p>
+          </div>
+          <button className="primary-button full-width" type="button" onClick={() => setPlateCalculatorDraft(null)}>Done</button>
+        </Modal>
+      ) : null}
+
       {installGuide ? (
         <Modal eyebrow="FREE IPHONE INSTALL" title="Add Stronger to Home Screen" onClose={() => setInstallGuide(false)}>
           <ol className="install-steps">
@@ -1678,7 +2660,7 @@ export default function StrongerApp() {
       {historyDetail ? (
         <Modal eyebrow={formatDate(historyDetail.workoutDate).toUpperCase()} title={historyDetail.name} onClose={() => setHistoryDetail(null)} wide>
           <div className="detail-summary">
-            <div><small>DURATION</small><strong>{formatDuration(Math.max(0, ((historyDetail.finishedAt ?? historyDetail.startedAt) - historyDetail.startedAt) / 1000))}</strong></div>
+            <div><small>DURATION</small><strong>{formatDuration(workoutElapsedSeconds(historyDetail, now))}</strong></div>
             <div><small>SETS</small><strong>{completedSets(historyDetail).length}</strong></div>
             <div><small>VOLUME</small><strong>{formatVolume(workoutVolumeKg(historyDetail), unit)}</strong></div>
           </div>
@@ -1686,7 +2668,14 @@ export default function StrongerApp() {
             {historyDetail.exercises.map((exercise) => (
               <article key={exercise.id}>
                 <h3>{exercise.name}</h3>
-                <div>{exercise.sets.filter((set) => set.completed).length ? exercise.sets.filter((set) => set.completed).map((set, index) => <span key={set.id}>{index + 1}. {formatWeight(set.weightKg, unit)} {unit} × {set.reps}</span>) : <span>No completed sets</span>}</div>
+                <div>{exercise.sets.filter((set) => set.completed).length
+                  ? exercise.sets.filter((set) => set.completed).map((set, index) => (
+                    <span key={set.id}>
+                      {index + 1}. {formatWeight(set.weightKg, unit)} {unit} × {set.reps}
+                      {set.effort ? ` · ${formatSetEffort(set.effort)}` : ""}
+                    </span>
+                  ))
+                  : <span>No completed sets</span>}</div>
               </article>
             ))}
           </div>
@@ -1702,7 +2691,7 @@ export default function StrongerApp() {
           <div className="summary-mark" aria-hidden="true">✓</div>
           <p className="summary-copy">{summary.name} is now in your history and progress.</p>
           <div className="detail-summary">
-            <div><small>TIME</small><strong>{formatDuration(Math.max(0, ((summary.finishedAt ?? summary.startedAt) - summary.startedAt) / 1000))}</strong></div>
+            <div><small>TIME</small><strong>{formatDuration(workoutElapsedSeconds(summary, now))}</strong></div>
             <div><small>SETS</small><strong>{completedSets(summary).length}</strong></div>
             <div><small>VOLUME</small><strong>{formatVolume(workoutVolumeKg(summary), unit)}</strong></div>
           </div>

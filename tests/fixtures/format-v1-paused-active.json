@@ -1,0 +1,51 @@
+{
+  "kind": "stronger-backup",
+  "backupVersion": 1,
+  "formatVersion": 1,
+  "exportedAt": "2026-08-29T08:00:00.000Z",
+  "appVersion": "0.1.0",
+  "data": {
+    "formatVersion": 1,
+    "routines": [],
+    "activeWorkout": {
+      "id": "workout-fixture-paused",
+      "name": "Paused fixture",
+      "workoutDate": "2026-08-28",
+      "startedAt": 1787904000000,
+      "timerPausedAt": 1787907600000,
+      "timerPausedDurationMs": 600000,
+      "timerResumedAt": 1787905000000,
+      "exercises": [
+        {
+          "id": "exercise-fixture-paused",
+          "exerciseKey": "fixture-bench-press",
+          "name": "Fixture bench press",
+          "restSeconds": 90,
+          "sets": [
+            {
+              "id": "set-fixture-paused-complete",
+              "weightKg": 60,
+              "reps": 8,
+              "completed": true,
+              "completedAt": 1787905800000
+            },
+            {
+              "id": "set-fixture-paused-incomplete",
+              "weightKg": 60,
+              "reps": 8,
+              "completed": false
+            }
+          ]
+        }
+      ]
+    },
+    "history": [],
+    "customExercises": [],
+    "settings": {
+      "unit": "kg",
+      "defaultRestSeconds": 90,
+      "goal": "strength",
+      "weeklyDays": 4
+    }
+  }
+}
