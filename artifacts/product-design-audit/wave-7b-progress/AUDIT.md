@@ -1,7 +1,7 @@
 # Wave 7B Progress audit
 
-Audit date: 2026-08-29  
-Viewport: 390 × 844, Codex in-app browser  
+Audit date: 2026-08-29
+Viewport: 390 × 844, in-app browser
 Scope: Progress tab only
 
 ## Evidence captured before implementation
