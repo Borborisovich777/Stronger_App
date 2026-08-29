@@ -43,7 +43,11 @@ import {
   WorkoutSession,
   workoutVolumeKg,
 } from "./storage";
-import { BUILT_IN_EXERCISES } from "./exercises";
+import {
+  BUILT_IN_EXERCISES,
+  equipmentAlternativesFor,
+  equipmentForExercise,
+} from "./exercises";
 import { buildHistoryCsv } from "./historyCsv";
 import {
   effortHint,
@@ -524,6 +528,7 @@ function ExercisePicker({
   const [creatingCustom, setCreatingCustom] = useState(false);
   const [customName, setCustomName] = useState("");
   const [customStatus, setCustomStatus] = useState("");
+  const [alternativeForKey, setAlternativeForKey] = useState("");
 
   const availableCategories = EXERCISE_CATEGORY_ORDER.filter((candidate) =>
     catalog.some((exercise) => exercise.category === candidate),
@@ -627,17 +632,78 @@ function ExercisePicker({
       </p>
       {filtered.length ? (
         <div className="exercise-option-list">
-          {filtered.map((exercise) => (
-            <button
-              className="exercise-option"
-              key={exercise.exerciseKey}
-              type="button"
-              onClick={() => onSelect(exercise)}
-            >
-              <span><strong>{exercise.name}</strong><small>{exercise.category}</small></span>
-              <span aria-hidden="true">›</span>
-            </button>
-          ))}
+          {filtered.map((exercise) => {
+            const equipment = equipmentForExercise(exercise.exerciseKey);
+            const alternatives = equipmentAlternativesFor(exercise.exerciseKey);
+            const alternativesOpen = alternativeForKey === exercise.exerciseKey;
+
+            return (
+              <div className="exercise-option-shell" key={exercise.exerciseKey}>
+                <div className="exercise-option-row">
+                  <button
+                    className="exercise-option"
+                    type="button"
+                    aria-label={`Select ${exercise.name}`}
+                    onClick={() => onSelect(exercise)}
+                  >
+                    <span>
+                      <strong>{exercise.name}</strong>
+                      <small>{equipment ? `${exercise.category} · ${equipment}` : exercise.category}</small>
+                    </span>
+                    <span aria-hidden="true">›</span>
+                  </button>
+                  {alternatives.length ? (
+                    <button
+                      className="equipment-alternative-trigger"
+                      type="button"
+                      aria-expanded={alternativesOpen}
+                      aria-controls={`equipment-alternatives-${exercise.exerciseKey}`}
+                      onClick={() => setAlternativeForKey(alternativesOpen ? "" : exercise.exerciseKey)}
+                    >
+                      Alternatives
+                    </button>
+                  ) : null}
+                </div>
+                {alternativesOpen ? (
+                  <section
+                    className="equipment-alternatives"
+                    id={`equipment-alternatives-${exercise.exerciseKey}`}
+                    aria-label={`Different-equipment alternatives for ${exercise.name}`}
+                  >
+                    <div className="equipment-alternatives-heading">
+                      <div>
+                        <small>{alternatives[0].movementLabel.toUpperCase()}</small>
+                        <strong>Different equipment</strong>
+                      </div>
+                      <button className="small-button" type="button" onClick={() => setAlternativeForKey("")}>Close</button>
+                    </div>
+                    <p>Same movement pattern, different equipment. Loads and difficulty are not equivalent.</p>
+                    <div className="equipment-alternative-list">
+                      {alternatives.map((alternative) => (
+                        <button
+                          className="equipment-alternative-option"
+                          key={alternative.exerciseKey}
+                          type="button"
+                          onClick={() => {
+                            setAlternativeForKey("");
+                            onSelect({
+                              exerciseKey: alternative.exerciseKey,
+                              name: alternative.name,
+                              category: alternative.category,
+                            });
+                          }}
+                        >
+                          <span><strong>{alternative.name}</strong><small>{alternative.equipment}</small></span>
+                          <span>Choose</span>
+                        </button>
+                      ))}
+                    </div>
+                    <small>Choosing only selects this exercise. Saved workouts stay unchanged.</small>
+                  </section>
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div className="exercise-picker-empty" role="status">

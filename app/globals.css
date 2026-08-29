@@ -2593,6 +2593,18 @@ small {
   gap: 8px;
 }
 
+.exercise-option-shell {
+  display: grid;
+  gap: 8px;
+}
+
+.exercise-option-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 8px;
+}
+
 .exercise-option {
   display: grid;
   width: 100%;
@@ -2626,6 +2638,87 @@ small {
 .exercise-option > span:last-child {
   color: var(--muted);
   font-size: 1.45rem;
+}
+
+.equipment-alternative-trigger {
+  min-width: 92px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.equipment-alternative-trigger[aria-expanded="true"] {
+  border-color: var(--accent-strong);
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.equipment-alternatives {
+  display: grid;
+  padding: 13px;
+  gap: 10px;
+  border: 1px solid var(--accent-strong);
+  border-radius: 14px;
+  background: var(--accent-soft);
+}
+
+.equipment-alternatives-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.equipment-alternatives-heading > div,
+.equipment-alternative-option > span:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.equipment-alternatives-heading small,
+.equipment-alternative-option small {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.equipment-alternatives > p,
+.equipment-alternatives > small {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.equipment-alternative-list {
+  display: grid;
+  gap: 7px;
+}
+
+.equipment-alternative-option {
+  display: flex;
+  width: 100%;
+  min-height: 46px;
+  padding: 7px 10px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+}
+
+.equipment-alternative-option > span:last-child {
+  color: var(--ink-soft);
+  font-size: 0.74rem;
+  font-weight: 800;
 }
 
 .exercise-picker-empty {

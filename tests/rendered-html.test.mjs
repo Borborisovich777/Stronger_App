@@ -133,6 +133,10 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(app, /Export workout CSV/);
   assert.match(app, /CSV cannot be imported/);
   assert.match(app, /buildHistoryCsv\(data\.history\)/);
+  assert.match(app, /Different-equipment alternatives for/);
+  assert.match(app, /Same movement pattern, different equipment/);
+  assert.match(app, /Loads and difficulty are not equivalent/);
+  assert.match(app, /Saved workouts stay unchanged/);
 
   assert.match(storage, /Math\.round\(value \* 100\) \/ 100/);
   assert.match(storage, /if \(!Number\.isFinite\(value\)\) return 0/);
@@ -209,6 +213,11 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(historyCsv, /session\.exercises\.flatMap/);
   assert.doesNotMatch(historyCsv, /saveData|setData|replaceData|startWorkout|activeWorkout/);
 
+  assert.match(exercises, /export function equipmentAlternativesFor/);
+  assert.match(exercises, /usedEquipment\.has\(profile\.equipment\)/);
+  assert.match(exercises, /if \(alternatives\.length === 3\) break/);
+  assert.doesNotMatch(exercises, /saveData|setData|replaceData|startWorkout|activeWorkout/);
+
   const catalogEntries = [...exercises.matchAll(/\{ exerciseKey: "([^"]+)", name: "([^"]+)", category: "([^"]+)" \}/g)];
   assert.equal(catalogEntries.length, 50);
   assert.equal(new Set(catalogEntries.map((entry) => entry[1])).size, catalogEntries.length);
@@ -239,6 +248,8 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(styles, /\.progress-period-tabs\s*\{/);
   assert.match(styles, /\.exercise-volume-list\s*\{/);
   assert.match(styles, /\.backup-csv-button\s*\{/);
+  assert.match(styles, /\.equipment-alternative-trigger\s*\{/);
+  assert.match(styles, /\.equipment-alternative-option\s*\{/);
 
   assert.match(serviceWorker, /self\.registration\.scope/);
   assert.match(serviceWorker, /v5-exercise-library/);
