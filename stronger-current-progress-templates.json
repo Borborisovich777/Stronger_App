@@ -1,0 +1,231 @@
+{
+  "formatVersion": 1,
+  "exportedAt": "2026-08-23T00:00:00.000Z",
+  "appVersion": "0.1.0",
+  "data": {
+    "formatVersion": 1,
+    "routines": [
+      {
+        "id": "routine-current-chest",
+        "name": "Chest — Current Progress",
+        "exercises": [
+          {
+            "id": "current-chest-bench-press",
+            "exerciseKey": "barbell-bench-press",
+            "name": "Barbell Bench Press",
+            "targetSets": 3,
+            "targetWeightKg": 50,
+            "targetReps": 12,
+            "restSeconds": 120
+          },
+          {
+            "id": "current-chest-incline-bench-press",
+            "exerciseKey": "incline-barbell-bench-press",
+            "name": "Incline Bench Press (45 kg top set)",
+            "targetSets": 3,
+            "targetWeightKg": 40,
+            "targetReps": 10,
+            "restSeconds": 120
+          },
+          {
+            "id": "current-chest-incline-dumbbell-press",
+            "exerciseKey": "incline-dumbbell-press",
+            "name": "Incline Dumbbell Press (per dumbbell)",
+            "targetSets": 3,
+            "targetWeightKg": 14,
+            "targetReps": 10,
+            "restSeconds": 90
+          },
+          {
+            "id": "current-chest-assisted-dips",
+            "exerciseKey": "assisted-bar-dips",
+            "name": "Assisted Bar Dips (17 kg assistance)",
+            "targetSets": 3,
+            "targetWeightKg": 17,
+            "targetReps": 10,
+            "restSeconds": 90
+          },
+          {
+            "id": "current-chest-machine-fly",
+            "exerciseKey": "machine-chest-fly",
+            "name": "Machine Chest Fly",
+            "targetSets": 3,
+            "targetWeightKg": 52.5,
+            "targetReps": 10,
+            "restSeconds": 60
+          }
+        ]
+      },
+      {
+        "id": "routine-current-arms",
+        "name": "Arms & Shoulders — Current Progress",
+        "exercises": [
+          {
+            "id": "current-arms-shoulder-press",
+            "exerciseKey": "machine-shoulder-press",
+            "name": "Machine Shoulder Press",
+            "targetSets": 3,
+            "targetWeightKg": 45,
+            "targetReps": 10,
+            "restSeconds": 90
+          },
+          {
+            "id": "current-arms-dumbbell-curl",
+            "exerciseKey": "dumbbell-biceps-curl-5-5-5",
+            "name": "Dumbbell Biceps Curl (per dumbbell, 5-5-5)",
+            "targetSets": 3,
+            "targetWeightKg": 15,
+            "targetReps": 15,
+            "restSeconds": 60
+          },
+          {
+            "id": "current-arms-triceps-push-bench",
+            "exerciseKey": "triceps-push-bench",
+            "name": "Triceps Push Bench",
+            "targetSets": 3,
+            "targetWeightKg": 15,
+            "targetReps": 12,
+            "restSeconds": 60
+          },
+          {
+            "id": "current-arms-overhead-triceps-extension",
+            "exerciseKey": "overhead-triceps-extension",
+            "name": "Overhead Triceps Extension",
+            "targetSets": 3,
+            "targetWeightKg": 7.5,
+            "targetReps": 12,
+            "restSeconds": 60
+          },
+          {
+            "id": "current-arms-machine-curl",
+            "exerciseKey": "machine-biceps-curl",
+            "name": "Machine Biceps Curl",
+            "targetSets": 3,
+            "targetWeightKg": 37.5,
+            "targetReps": 14,
+            "restSeconds": 60
+          },
+          {
+            "id": "current-arms-bench-overhead-extension",
+            "exerciseKey": "bench-supported-overhead-triceps-extension",
+            "name": "Bench-Supported Overhead Triceps Extension",
+            "targetSets": 3,
+            "targetWeightKg": 8,
+            "targetReps": 10,
+            "restSeconds": 60
+          }
+        ]
+      },
+      {
+        "id": "routine-current-legs",
+        "name": "Legs — Current Progress",
+        "exercises": [
+          {
+            "id": "current-legs-smith-squat",
+            "exerciseKey": "smith-machine-squat",
+            "name": "Smith Machine Squat",
+            "targetSets": 3,
+            "targetWeightKg": 30,
+            "targetReps": 10,
+            "restSeconds": 120
+          },
+          {
+            "id": "current-legs-leg-press",
+            "exerciseKey": "leg-press",
+            "name": "Leg Press",
+            "targetSets": 3,
+            "targetWeightKg": 60,
+            "targetReps": 10,
+            "restSeconds": 120
+          },
+          {
+            "id": "current-legs-romanian-squat",
+            "exerciseKey": "romanian-squat",
+            "name": "Romanian Squat (bodyweight)",
+            "targetSets": 3,
+            "targetWeightKg": 0,
+            "targetReps": 10,
+            "restSeconds": 90
+          },
+          {
+            "id": "current-legs-seated-curl",
+            "exerciseKey": "seated-leg-curl",
+            "name": "Seated Leg Curl",
+            "targetSets": 3,
+            "targetWeightKg": 61,
+            "targetReps": 12,
+            "restSeconds": 60
+          },
+          {
+            "id": "current-legs-extension",
+            "exerciseKey": "leg-extension",
+            "name": "Leg Extension",
+            "targetSets": 3,
+            "targetWeightKg": 52.5,
+            "targetReps": 10,
+            "restSeconds": 60
+          },
+          {
+            "id": "current-legs-smith-calf-raise",
+            "exerciseKey": "smith-machine-calf-raise",
+            "name": "Smith Machine Calf Raise",
+            "targetSets": 3,
+            "targetWeightKg": 40,
+            "targetReps": 12,
+            "restSeconds": 60
+          }
+        ]
+      },
+      {
+        "id": "routine-current-back",
+        "name": "Back — Current Progress",
+        "exercises": [
+          {
+            "id": "current-back-smith-pull-ups",
+            "exerciseKey": "smith-pull-ups",
+            "name": "Smith Pull-Ups (10-second hold)",
+            "targetSets": 3,
+            "targetWeightKg": 0,
+            "targetReps": 10,
+            "restSeconds": 120
+          },
+          {
+            "id": "current-back-lat-pulldown",
+            "exerciseKey": "lat-pulldown",
+            "name": "Lat Pulldown",
+            "targetSets": 3,
+            "targetWeightKg": 63,
+            "targetReps": 10,
+            "restSeconds": 90
+          },
+          {
+            "id": "current-back-reverse-chest-fly",
+            "exerciseKey": "reverse-machine-chest-fly",
+            "name": "Reverse Machine Chest Fly",
+            "targetSets": 3,
+            "targetWeightKg": 37.5,
+            "targetReps": 10,
+            "restSeconds": 60
+          },
+          {
+            "id": "current-back-reverse-curl",
+            "exerciseKey": "back-reverse-curl",
+            "name": "Back Reverse-Curl",
+            "targetSets": 3,
+            "targetWeightKg": 10,
+            "targetReps": 10,
+            "restSeconds": 60
+          }
+        ]
+      }
+    ],
+    "activeWorkout": null,
+    "history": [],
+    "settings": {
+      "unit": "kg",
+      "defaultRestSeconds": 90,
+      "goal": "muscle",
+      "weeklyDays": 4
+    }
+  }
+}
