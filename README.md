@@ -597,6 +597,8 @@ Available scripts:
 
 The staged R&D safety gate is documented in [`docs/WAVE_0_PROTECTION.md`](docs/WAVE_0_PROTECTION.md). Complete its production-backup check before beginning Wave 1.
 
+The product research, competitor findings, feature rationale, and staged rollout are summarized in the [`Stronger R&D Feature Roadmap`](Stronger_R%26D_Feature_Roadmap.pptx) presentation. Each implemented wave also has a concise decision record in the `docs` folder.
+
 ## Publish with free HTTPS
 
 This repository includes `.github/workflows/deploy-pages.yml`. Every push to `main` validates the app, builds the static `dist` folder, and publishes it with GitHub Pages.
