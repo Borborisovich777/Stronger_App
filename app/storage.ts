@@ -1,5 +1,15 @@
+export const CURRENT_FORMAT_VERSION = 1 as const;
+export const BACKUP_KIND = "stronger-backup" as const;
+export const BACKUP_FORMAT_VERSION = 1 as const;
+
 export type WeightUnit = "kg" | "lb";
 export type TrainingGoal = "strength" | "muscle" | "fitness";
+export type EffortScale = "rpe" | "rir";
+
+export type SetEffort = {
+  scale: EffortScale;
+  value: number;
+};
 
 export type WorkoutSet = {
   id: string;
@@ -7,6 +17,7 @@ export type WorkoutSet = {
   reps: number;
   completed: boolean;
   completedAt?: number;
+  effort?: SetEffort;
 };
 
 export type WorkoutExercise = {
@@ -33,6 +44,21 @@ export type Routine = {
   exercises: RoutineExercise[];
 };
 
+export type ProgramBlockWeek = {
+  id: string;
+  loadPercent: number;
+};
+
+export type ProgramBlock = {
+  id: string;
+  name: string;
+  createdAt: number;
+  sourceRoutineId: string;
+  sourceRoutineName: string;
+  exercises: RoutineExercise[];
+  weeks: ProgramBlockWeek[];
+};
+
 export type WorkoutSession = {
   id: string;
   name: string;
@@ -41,6 +67,9 @@ export type WorkoutSession = {
   finishedAt?: number;
   sourceRoutineId?: string;
   restEndsAt?: number;
+  timerPausedAt?: number;
+  timerPausedDurationMs?: number;
+  timerResumedAt?: number;
   exercises: WorkoutExercise[];
 };
 
@@ -49,6 +78,8 @@ export type StrongerSettings = {
   defaultRestSeconds: number;
   goal: TrainingGoal;
   weeklyDays: number;
+  effortScale?: EffortScale | "off";
+  nextSetPreview?: boolean;
 };
 
 export type CustomExercise = {
@@ -57,8 +88,9 @@ export type CustomExercise = {
 };
 
 export type StrongerData = {
-  formatVersion: 1;
+  formatVersion: typeof CURRENT_FORMAT_VERSION;
   routines: Routine[];
+  programBlocks?: ProgramBlock[];
   activeWorkout: WorkoutSession | null;
   history: WorkoutSession[];
   customExercises: CustomExercise[];
@@ -69,8 +101,89 @@ const DB_NAME = "stronger-gym-tracker";
 const STORE_NAME = "app-state";
 const DATA_KEY = "stronger-data";
 const FALLBACK_KEY = "stronger-data-fallback";
+const FALLBACK_WRITE_LOCK = "stronger-data-fallback-write";
+const STORAGE_METADATA_KEY = "_strongerStorage";
+const STORAGE_METADATA_VERSION = 1;
+
+export const MAX_ROUTINES = 200;
+export const MAX_PROGRAM_BLOCKS = 50;
+export const MIN_PROGRAM_BLOCK_WEEKS = 2;
+export const MAX_PROGRAM_BLOCK_WEEKS = 12;
+export const MIN_PROGRAM_BLOCK_LOAD_PERCENT = 50;
+export const MAX_PROGRAM_BLOCK_LOAD_PERCENT = 120;
+export const MAX_CUSTOM_EXERCISES = 1_000;
+export const MAX_HISTORY_SESSIONS = 10_000;
+export const MAX_EXERCISES_PER_ITEM = 100;
+export const MAX_SETS_PER_EXERCISE = 100;
+export const MAX_TOTAL_SETS_PER_ITEM = 500;
+const MIN_TARGET_SETS = 1;
+const MAX_TARGET_SETS = 20;
+export const MAX_WEIGHT_KG = 100_000;
+const MAX_REPS = 100_000;
+const MAX_REST_SECONDS = 86_400;
+const MAX_TIMESTAMP = 8_640_000_000_000_000;
 
 let writeQueue: Promise<void> = Promise.resolve();
+let lastSavedAt = 0;
+let queuedExpectedSavedAt = 0;
+let queuedExpectedFingerprint: string | null = null;
+let confirmedPrimarySavedAt = 0;
+let confirmedPrimaryFingerprint: string | null = null;
+let primaryWriteUnavailable = false;
+
+type StoredSnapshot = {
+  data: StrongerData;
+  savedAt: number;
+  basedOnSavedAt: number | null;
+  basedOnFingerprint: string | null;
+  primaryBaseSavedAt: number | null;
+  primaryBaseFingerprint: string | null;
+  fingerprint: string;
+  storedValue: Record<string, unknown>;
+};
+
+type SnapshotLineage = Pick<StoredSnapshot,
+  "savedAt" |
+  "basedOnSavedAt" |
+  "basedOnFingerprint" |
+  "primaryBaseSavedAt" |
+  "primaryBaseFingerprint" |
+  "fingerprint"
+>;
+type PendingSnapshot = SnapshotLineage & Pick<StoredSnapshot, "storedValue">;
+
+let queuedExpectedLineage: SnapshotLineage | null = null;
+
+function dataFingerprint(data: StrongerData): string {
+  const serialized = JSON.stringify(data);
+  const mask = 0xffff_ffff_ffff_ffffn;
+  const prime = 0x0000_0100_0000_01b3n;
+  let first = 0xcbf2_9ce4_8422_2325n;
+  let second = 0x8422_2325_cbf2_9ce4n;
+  for (let index = 0; index < serialized.length; index += 1) {
+    const code = serialized.charCodeAt(index);
+    for (const byte of [code & 0xff, code >>> 8]) {
+      const value = BigInt(byte);
+      first = ((first ^ value) * prime) & mask;
+      second = ((second * prime) ^ value) & mask;
+    }
+  }
+  return `${first.toString(16).padStart(16, "0")}${second.toString(16).padStart(16, "0")}`;
+}
+
+export class StrongerDataRecoveryError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "StrongerDataRecoveryError";
+  }
+}
+
+export class StrongerDataConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "StrongerDataConflictError";
+  }
+}
 
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -86,16 +199,106 @@ function openDatabase(): Promise<IDBDatabase> {
   });
 }
 
+function hasIndexedDatabase(): boolean {
+  return typeof indexedDB !== "undefined";
+}
+
+function hasFallbackWriteLock(): boolean {
+  return typeof navigator !== "undefined" && typeof navigator.locks?.request === "function";
+}
+
+async function withFallbackWriteLock<T>(action: () => T | Promise<T>): Promise<T> {
+  if (typeof navigator === "undefined" || !navigator.locks?.request) {
+    throw new StrongerDataRecoveryError(
+      "This browser cannot safely coordinate emergency workout storage across tabs.",
+    );
+  }
+  return navigator.locks.request(FALLBACK_WRITE_LOCK, { mode: "exclusive" }, async () => action());
+}
+
 function transact<T>(mode: IDBTransactionMode, action: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
   return openDatabase().then(
     (database) =>
       new Promise<T>((resolve, reject) => {
-        const transaction = database.transaction(STORE_NAME, mode);
-        const request = action(transaction.objectStore(STORE_NAME));
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-        transaction.oncomplete = () => database.close();
-        transaction.onerror = () => reject(transaction.error);
+        const rejectAndClose = (error: unknown) => {
+          database.close();
+          reject(error);
+        };
+        let transaction: IDBTransaction;
+        let request: IDBRequest<T>;
+        try {
+          transaction = database.transaction(STORE_NAME, mode);
+          request = action(transaction.objectStore(STORE_NAME));
+        } catch (error) {
+          rejectAndClose(error);
+          return;
+        }
+        request.onerror = () => rejectAndClose(request.error ?? new Error("The storage request failed."));
+        transaction.oncomplete = () => {
+          database.close();
+          resolve(request.result);
+        };
+        transaction.onerror = () => rejectAndClose(transaction.error ?? new Error("The storage transaction failed."));
+        transaction.onabort = () => rejectAndClose(transaction.error ?? new Error("The storage transaction was aborted."));
+      }),
+  );
+}
+
+function putIfCurrentRevisionMatches(
+  storedValue: Record<string, unknown>,
+  expectedSavedAt: number,
+  expectedFingerprint: string | null,
+): Promise<IDBValidKey> {
+  return openDatabase().then(
+    (database) =>
+      new Promise<IDBValidKey>((resolve, reject) => {
+        let transaction: IDBTransaction;
+        let store: IDBObjectStore;
+        let putResult: IDBValidKey | undefined;
+        let abortReason: unknown;
+        const rejectAndClose = (error: unknown) => {
+          database.close();
+          reject(error);
+        };
+        try {
+          transaction = database.transaction(STORE_NAME, "readwrite");
+          store = transaction.objectStore(STORE_NAME);
+          const readRequest = store.get(DATA_KEY);
+          readRequest.onerror = () => rejectAndClose(readRequest.error ?? new Error("The storage revision could not be read."));
+          readRequest.onsuccess = () => {
+            const current = readRequest.result === undefined ? null : decodeStoredSnapshot(readRequest.result);
+            if (readRequest.result !== undefined && !current) {
+              abortReason = new StrongerDataRecoveryError("Stored workout data changed into an unsupported format.");
+              transaction.abort();
+              return;
+            }
+            if ((current?.savedAt ?? 0) !== expectedSavedAt ||
+              (current?.fingerprint ?? null) !== expectedFingerprint) {
+              abortReason = new StrongerDataConflictError("Workout data changed in another tab. Reload before saving again.");
+              transaction.abort();
+              return;
+            }
+            try {
+              const putRequest = store.put(storedValue, DATA_KEY);
+              putRequest.onsuccess = () => {
+                putResult = putRequest.result;
+              };
+              putRequest.onerror = () => rejectAndClose(putRequest.error ?? new Error("The storage write failed."));
+            } catch (error) {
+              abortReason = error;
+              transaction.abort();
+            }
+          };
+        } catch (error) {
+          rejectAndClose(error);
+          return;
+        }
+        transaction.oncomplete = () => {
+          database.close();
+          resolve(putResult ?? DATA_KEY);
+        };
+        transaction.onerror = () => rejectAndClose(transaction.error ?? abortReason ?? new Error("The storage transaction failed."));
+        transaction.onabort = () => rejectAndClose(abortReason ?? transaction.error ?? new Error("The storage transaction was aborted."));
       }),
   );
 }
@@ -121,11 +324,19 @@ function routineExercise(
 
 export function createDefaultData(): StrongerData {
   return {
-    formatVersion: 1,
+    formatVersion: CURRENT_FORMAT_VERSION,
     activeWorkout: null,
-    settings: { unit: "kg", defaultRestSeconds: 90, goal: "strength", weeklyDays: 4 },
+    settings: {
+      unit: "kg",
+      defaultRestSeconds: 90,
+      goal: "strength",
+      weeklyDays: 4,
+      effortScale: "off",
+      nextSetPreview: false,
+    },
     history: [],
     customExercises: [],
+    programBlocks: [],
     routines: [
       {
         id: "routine-push",
@@ -164,51 +375,147 @@ export function createDefaultData(): StrongerData {
   };
 }
 
-function hasValidStrongerDataShape(value: unknown): boolean {
+function nonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function numberInRange(value: unknown, maximum: number): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= maximum;
+}
+
+function integerInRange(value: unknown, maximum: number): value is number {
+  return numberInRange(value, maximum) && Number.isInteger(value);
+}
+
+function optionalIntegerInRange(value: unknown, maximum: number): boolean {
+  return value === undefined || integerInRange(value, maximum);
+}
+
+function uniqueStrings(values: string[]): boolean {
+  return new Set(values).size === values.length;
+}
+
+function validDateKey(dateKey: unknown): boolean {
+  if (typeof dateKey !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return false;
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
+function validSetEffort(effort: unknown): effort is SetEffort {
+  if (!effort || typeof effort !== "object") return false;
+  const item = effort as Partial<SetEffort>;
+  if (item.scale === "rpe") {
+    return typeof item.value === "number" && Number.isFinite(item.value) &&
+      item.value >= 6 && item.value <= 10 && Number.isInteger(item.value * 2);
+  }
+  return item.scale === "rir" && integerInRange(item.value, 10);
+}
+
+function validSet(set: unknown, enforceResourceLimits = true): set is WorkoutSet {
+  if (!set || typeof set !== "object") return false;
+  const item = set as Partial<WorkoutSet>;
+  return nonEmptyString(item.id) &&
+    numberInRange(item.weightKg, enforceResourceLimits ? MAX_WEIGHT_KG : Number.MAX_VALUE) &&
+    integerInRange(item.reps, MAX_REPS) &&
+    typeof item.completed === "boolean" &&
+    optionalIntegerInRange(item.completedAt, MAX_TIMESTAMP) &&
+    (item.effort === undefined || validSetEffort(item.effort));
+}
+
+function validWorkoutExercise(exercise: unknown, enforceResourceLimits = true): exercise is WorkoutExercise {
+  if (!exercise || typeof exercise !== "object") return false;
+  const item = exercise as Partial<WorkoutExercise>;
+  return nonEmptyString(item.id) &&
+    nonEmptyString(item.exerciseKey) &&
+    typeof item.name === "string" &&
+    integerInRange(item.restSeconds, MAX_REST_SECONDS) &&
+    Array.isArray(item.sets) &&
+    (!enforceResourceLimits || item.sets.length <= MAX_SETS_PER_EXERCISE) &&
+    item.sets.every((set) => validSet(set, enforceResourceLimits)) &&
+    uniqueStrings(item.sets.map((set) => set.id));
+}
+
+function validSession(session: unknown, enforceResourceLimits = true): session is WorkoutSession {
+  if (!session || typeof session !== "object") return false;
+  const item = session as Partial<WorkoutSession>;
+  if (!nonEmptyString(item.id) || typeof item.name !== "string" || !validDateKey(item.workoutDate) ||
+    !integerInRange(item.startedAt, MAX_TIMESTAMP) || !optionalIntegerInRange(item.finishedAt, MAX_TIMESTAMP) ||
+    (item.sourceRoutineId !== undefined && !nonEmptyString(item.sourceRoutineId)) ||
+    !optionalIntegerInRange(item.restEndsAt, MAX_TIMESTAMP) ||
+    !optionalIntegerInRange(item.timerPausedAt, MAX_TIMESTAMP) ||
+    !optionalIntegerInRange(item.timerPausedDurationMs, MAX_TIMESTAMP) ||
+    !optionalIntegerInRange(item.timerResumedAt, MAX_TIMESTAMP) || !Array.isArray(item.exercises) ||
+    (enforceResourceLimits && item.exercises.length > MAX_EXERCISES_PER_ITEM) ||
+    !item.exercises.every((exercise) => validWorkoutExercise(exercise, enforceResourceLimits))) return false;
+  return (!enforceResourceLimits ||
+      item.exercises.reduce((total, exercise) => total + exercise.sets.length, 0) <= MAX_TOTAL_SETS_PER_ITEM) &&
+    uniqueStrings(item.exercises.map((exercise) => exercise.id)) &&
+    uniqueStrings(item.exercises.flatMap((exercise) => exercise.sets.map((set) => set.id)));
+}
+
+function validRoutine(routine: unknown, enforceResourceLimits = true): routine is Routine {
+  if (!routine || typeof routine !== "object") return false;
+  const item = routine as Partial<Routine>;
+  if (!nonEmptyString(item.id) || typeof item.name !== "string" || !Array.isArray(item.exercises) ||
+    (enforceResourceLimits && item.exercises.length > MAX_EXERCISES_PER_ITEM)) return false;
+  const exercisesValid = item.exercises.every((exercise) => {
+    if (!exercise || typeof exercise !== "object") return false;
+    const routineItem = exercise as Partial<RoutineExercise>;
+    return nonEmptyString(routineItem.id) &&
+      nonEmptyString(routineItem.exerciseKey) &&
+      typeof routineItem.name === "string" &&
+      integerInRange(routineItem.targetSets, MAX_TARGET_SETS) &&
+      routineItem.targetSets >= MIN_TARGET_SETS &&
+      numberInRange(routineItem.targetWeightKg, enforceResourceLimits ? MAX_WEIGHT_KG : Number.MAX_VALUE) &&
+      integerInRange(routineItem.targetReps, MAX_REPS) &&
+      integerInRange(routineItem.restSeconds, MAX_REST_SECONDS);
+  });
+  return exercisesValid &&
+    (!enforceResourceLimits ||
+      item.exercises.reduce((total, exercise) => total + exercise.targetSets, 0) <= MAX_TOTAL_SETS_PER_ITEM) &&
+    uniqueStrings(item.exercises.map((exercise) => exercise.id));
+}
+
+function validProgramBlock(block: unknown, enforceResourceLimits = true): block is ProgramBlock {
+  if (!block || typeof block !== "object") return false;
+  const item = block as Partial<ProgramBlock>;
+  if (!nonEmptyString(item.id) || typeof item.name !== "string" ||
+    !integerInRange(item.createdAt, MAX_TIMESTAMP) || !nonEmptyString(item.sourceRoutineId) ||
+    typeof item.sourceRoutineName !== "string" || !Array.isArray(item.exercises) ||
+    !Array.isArray(item.weeks) || item.weeks.length < MIN_PROGRAM_BLOCK_WEEKS ||
+    item.weeks.length > MAX_PROGRAM_BLOCK_WEEKS) return false;
+  if (!validRoutine({ id: item.id, name: item.name, exercises: item.exercises }, enforceResourceLimits)) return false;
+  return item.weeks.every((week) => Boolean(week) && typeof week === "object" &&
+      nonEmptyString(week.id) && integerInRange(week.loadPercent, MAX_PROGRAM_BLOCK_LOAD_PERCENT) &&
+      week.loadPercent >= MIN_PROGRAM_BLOCK_LOAD_PERCENT && week.loadPercent % 5 === 0) &&
+    uniqueStrings(item.weeks.map((week) => week.id));
+}
+
+function hasValidStrongerDataShape(value: unknown, enforceResourceLimits = true): boolean {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<StrongerData>;
   const settings = candidate.settings as Partial<StrongerSettings> | undefined;
-  const validNumber = (number: unknown) => typeof number === "number" && Number.isFinite(number) && number >= 0;
-  const validSet = (set: unknown) => {
-    if (!set || typeof set !== "object") return false;
-    const item = set as Partial<WorkoutSet>;
-    return typeof item.id === "string" && validNumber(item.weightKg) && validNumber(item.reps) && typeof item.completed === "boolean";
-  };
-  const validWorkoutExercise = (exercise: unknown) => {
-    if (!exercise || typeof exercise !== "object") return false;
-    const item = exercise as Partial<WorkoutExercise>;
-    return typeof item.id === "string" && typeof item.exerciseKey === "string" && typeof item.name === "string" && validNumber(item.restSeconds) && Array.isArray(item.sets) && item.sets.every(validSet);
-  };
-  const validSession = (session: unknown) => {
-    if (!session || typeof session !== "object") return false;
-    const item = session as Partial<WorkoutSession>;
-    return typeof item.id === "string" && typeof item.name === "string" && /^\d{4}-\d{2}-\d{2}$/.test(item.workoutDate ?? "") && validNumber(item.startedAt) && Array.isArray(item.exercises) && item.exercises.every(validWorkoutExercise);
-  };
-  const validRoutine = (routine: unknown) => {
-    if (!routine || typeof routine !== "object") return false;
-    const item = routine as Partial<Routine>;
-    return typeof item.id === "string" && typeof item.name === "string" && Array.isArray(item.exercises) && item.exercises.every((exercise) => {
-      if (!exercise || typeof exercise !== "object") return false;
-      const routineItem = exercise as Partial<RoutineExercise>;
-      return typeof routineItem.id === "string" && typeof routineItem.exerciseKey === "string" && typeof routineItem.name === "string" && validNumber(routineItem.targetSets) && validNumber(routineItem.targetWeightKg) && validNumber(routineItem.targetReps) && validNumber(routineItem.restSeconds);
-    });
-  };
-  return (
-    candidate.formatVersion === 1 &&
-    Array.isArray(candidate.routines) &&
-    candidate.routines.every(validRoutine) &&
-    Array.isArray(candidate.history) &&
-    candidate.history.every(validSession) &&
-    (candidate.activeWorkout === null || validSession(candidate.activeWorkout)) &&
-    !!settings &&
-    (settings.unit === "kg" || settings.unit === "lb") &&
-    validNumber(settings.defaultRestSeconds) &&
-    (settings.goal === "strength" || settings.goal === "muscle" || settings.goal === "fitness") &&
-    typeof settings.weeklyDays === "number" &&
-    Number.isInteger(settings.weeklyDays) &&
-    (settings.weeklyDays ?? 0) >= 1 &&
-    (settings.weeklyDays ?? 0) <= 7
-  );
+  if (candidate.formatVersion !== CURRENT_FORMAT_VERSION ||
+    !Array.isArray(candidate.routines) || (enforceResourceLimits && candidate.routines.length > MAX_ROUTINES) ||
+    !candidate.routines.every((routine) => validRoutine(routine, enforceResourceLimits)) ||
+    (candidate.programBlocks !== undefined && (!Array.isArray(candidate.programBlocks) ||
+      (enforceResourceLimits && candidate.programBlocks.length > MAX_PROGRAM_BLOCKS) ||
+      !candidate.programBlocks.every((block) => validProgramBlock(block, enforceResourceLimits)))) ||
+    !Array.isArray(candidate.history) || (enforceResourceLimits && candidate.history.length > MAX_HISTORY_SESSIONS) ||
+    !candidate.history.every((session) => validSession(session, enforceResourceLimits)) ||
+    (candidate.activeWorkout !== null && !validSession(candidate.activeWorkout, enforceResourceLimits)) || !settings ||
+    (settings.unit !== "kg" && settings.unit !== "lb") ||
+    !integerInRange(settings.defaultRestSeconds, MAX_REST_SECONDS) ||
+    (settings.goal !== "strength" && settings.goal !== "muscle" && settings.goal !== "fitness") ||
+    !integerInRange(settings.weeklyDays, 7) || settings.weeklyDays < 1 ||
+    (settings.effortScale !== undefined && settings.effortScale !== "off" &&
+      settings.effortScale !== "rpe" && settings.effortScale !== "rir") ||
+    (settings.nextSetPreview !== undefined && typeof settings.nextSetPreview !== "boolean")) return false;
+  const sessions = candidate.activeWorkout ? [candidate.activeWorkout, ...candidate.history] : candidate.history;
+  return uniqueStrings(candidate.routines.map((routine) => routine.id)) &&
+    uniqueStrings((candidate.programBlocks ?? []).map((block) => block.id)) &&
+    uniqueStrings(sessions.map((session) => session.id));
 }
 
 function isCustomExercise(value: unknown): value is CustomExercise {
@@ -225,59 +532,464 @@ function isCustomExercise(value: unknown): value is CustomExercise {
 export function isStrongerData(value: unknown): value is StrongerData {
   if (!hasValidStrongerDataShape(value)) return false;
   const candidate = value as Partial<StrongerData>;
-  return Array.isArray(candidate.customExercises) && candidate.customExercises.every(isCustomExercise);
+  return Array.isArray(candidate.customExercises) &&
+    candidate.customExercises.length <= MAX_CUSTOM_EXERCISES &&
+    candidate.customExercises.every(isCustomExercise) &&
+    uniqueStrings(candidate.customExercises.map((exercise) => exercise.exerciseKey));
 }
 
-export function normalizeStrongerData(value: unknown): StrongerData | null {
-  if (!hasValidStrongerDataShape(value)) return null;
+function normalizeVersionOne(value: unknown, enforceResourceLimits = true): StrongerData | null {
+  if (!hasValidStrongerDataShape(value, enforceResourceLimits)) return null;
   const candidate = value as Omit<StrongerData, "customExercises"> & { customExercises?: unknown };
   if (candidate.customExercises !== undefined && !Array.isArray(candidate.customExercises)) return null;
-  if (Array.isArray(candidate.customExercises) && !candidate.customExercises.every(isCustomExercise)) return null;
+  if (Array.isArray(candidate.customExercises) &&
+    ((enforceResourceLimits && candidate.customExercises.length > MAX_CUSTOM_EXERCISES) ||
+      !candidate.customExercises.every(isCustomExercise) ||
+      !uniqueStrings(candidate.customExercises.map((exercise) => exercise.exerciseKey)))) return null;
+  const normalizedCandidate = { ...candidate } as Record<string, unknown>;
+  delete normalizedCandidate[STORAGE_METADATA_KEY];
   return {
-    ...candidate,
+    ...normalizedCandidate,
     customExercises: candidate.customExercises
       ? candidate.customExercises.map((exercise) => ({ ...exercise }))
       : [],
   } as StrongerData;
 }
 
+export function migrateStrongerData(value: unknown): StrongerData | null {
+  if (!value || typeof value !== "object") return null;
+  switch ((value as { formatVersion?: unknown }).formatVersion) {
+    case 1:
+      return normalizeVersionOne(value);
+    default:
+      return null;
+  }
+}
+
+function migrateStoredStrongerData(value: unknown): StrongerData | null {
+  if (!value || typeof value !== "object") return null;
+  switch ((value as { formatVersion?: unknown }).formatVersion) {
+    case 1:
+      return normalizeVersionOne(value, false);
+    default:
+      return null;
+  }
+}
+
+export function isWithinSafeResourceLimits(data: StrongerData): boolean {
+  return migrateStrongerData(data) !== null;
+}
+
+export function normalizeStrongerData(value: unknown): StrongerData | null {
+  return migrateStrongerData(value);
+}
+
+export function normalizeStrongerBackup(value: unknown): StrongerData | null {
+  if (value && typeof value === "object") {
+    const candidate = value as Record<string, unknown>;
+    const hasIdentityFields = "kind" in candidate || "backupVersion" in candidate;
+    if (hasIdentityFields &&
+      (candidate.kind !== BACKUP_KIND || candidate.backupVersion !== BACKUP_FORMAT_VERSION)) return null;
+  }
+  const rawData = migrateStrongerData(value);
+  if (rawData) return rawData;
+  if (!value || typeof value !== "object" || !("data" in value)) return null;
+  const envelope = value as Record<string, unknown> & { data: unknown };
+  const data = migrateStrongerData(envelope.data);
+  if (!data || envelope.formatVersion !== data.formatVersion) return null;
+  const hasNewEnvelopeFields = "kind" in envelope || "backupVersion" in envelope;
+  if (hasNewEnvelopeFields &&
+    (envelope.kind !== BACKUP_KIND || envelope.backupVersion !== BACKUP_FORMAT_VERSION)) return null;
+  return data;
+}
+
+function decodeStoredSnapshot(value: unknown): StoredSnapshot | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const storedValue = value as Record<string, unknown>;
+  const metadata = storedValue[STORAGE_METADATA_KEY];
+  let savedAt = 0;
+  let basedOnSavedAt: number | null = null;
+  let basedOnFingerprint: string | null = null;
+  let primaryBaseSavedAt: number | null = null;
+  let primaryBaseFingerprint: string | null = null;
+  if (metadata !== undefined) {
+    if (!metadata || typeof metadata !== "object") return null;
+    const storageMetadata = metadata as {
+      formatVersion?: unknown;
+      savedAt?: unknown;
+      basedOnSavedAt?: unknown;
+      basedOnFingerprint?: unknown;
+      primaryBaseSavedAt?: unknown;
+      primaryBaseFingerprint?: unknown;
+    };
+    const validStoredFingerprint = (fingerprint: unknown) =>
+      fingerprint === undefined || fingerprint === null ||
+      (typeof fingerprint === "string" && /^[0-9a-f]{32}$/.test(fingerprint));
+    if (storageMetadata.formatVersion !== STORAGE_METADATA_VERSION ||
+      !integerInRange(storageMetadata.savedAt, MAX_TIMESTAMP) ||
+      (storageMetadata.basedOnSavedAt !== undefined &&
+        !integerInRange(storageMetadata.basedOnSavedAt, MAX_TIMESTAMP)) ||
+      !validStoredFingerprint(storageMetadata.basedOnFingerprint) ||
+      (storageMetadata.primaryBaseSavedAt !== undefined &&
+        !integerInRange(storageMetadata.primaryBaseSavedAt, MAX_TIMESTAMP)) ||
+      !validStoredFingerprint(storageMetadata.primaryBaseFingerprint)) return null;
+    savedAt = storageMetadata.savedAt;
+    basedOnSavedAt = typeof storageMetadata.basedOnSavedAt === "number" ? storageMetadata.basedOnSavedAt : null;
+    basedOnFingerprint = typeof storageMetadata.basedOnFingerprint === "string"
+      ? storageMetadata.basedOnFingerprint
+      : null;
+    primaryBaseSavedAt = typeof storageMetadata.primaryBaseSavedAt === "number"
+      ? storageMetadata.primaryBaseSavedAt
+      : basedOnSavedAt;
+    primaryBaseFingerprint = typeof storageMetadata.primaryBaseFingerprint === "string"
+      ? storageMetadata.primaryBaseFingerprint
+      : basedOnFingerprint;
+    if ((basedOnSavedAt !== null && basedOnSavedAt > savedAt) ||
+      (primaryBaseSavedAt !== null && primaryBaseSavedAt > savedAt)) return null;
+  }
+  const rawData = { ...storedValue };
+  delete rawData[STORAGE_METADATA_KEY];
+  const data = migrateStoredStrongerData(rawData);
+  return data ? {
+    data,
+    savedAt,
+    basedOnSavedAt,
+    basedOnFingerprint,
+    primaryBaseSavedAt,
+    primaryBaseFingerprint,
+    fingerprint: dataFingerprint(data),
+    storedValue,
+  } : null;
+}
+
+function createStoredSnapshot(
+  data: StrongerData,
+  basedOnSavedAt: number,
+  basedOnFingerprint: string | null,
+  primaryBaseSavedAt: number,
+  primaryBaseFingerprint: string | null,
+): Pick<StoredSnapshot,
+  "savedAt" |
+  "basedOnSavedAt" |
+  "basedOnFingerprint" |
+  "primaryBaseSavedAt" |
+  "primaryBaseFingerprint" |
+  "fingerprint" |
+  "storedValue"
+> {
+  const normalized = migrateStrongerData(data);
+  if (!normalized) throw new Error("Refusing to save invalid Stronger data.");
+  lastSavedAt = Math.max(Date.now(), lastSavedAt + 1);
+  const storedValue = {
+    ...structuredClone(normalized),
+    [STORAGE_METADATA_KEY]: {
+      formatVersion: STORAGE_METADATA_VERSION,
+      savedAt: lastSavedAt,
+      basedOnSavedAt,
+      basedOnFingerprint,
+      primaryBaseSavedAt,
+      primaryBaseFingerprint,
+    },
+  };
+  return {
+    savedAt: lastSavedAt,
+    basedOnSavedAt,
+    basedOnFingerprint,
+    primaryBaseSavedAt,
+    primaryBaseFingerprint,
+    fingerprint: dataFingerprint(normalized),
+    storedValue,
+  };
+}
+
+function readFallbackSnapshot(): StoredSnapshot | null {
+  const fallbackText = window.localStorage.getItem(FALLBACK_KEY);
+  if (fallbackText === null) return null;
+  let fallbackValue: unknown;
+  try {
+    fallbackValue = JSON.parse(fallbackText);
+  } catch {
+    throw new StrongerDataRecoveryError("The emergency workout-data copy is not valid JSON.");
+  }
+  const fallback = decodeStoredSnapshot(fallbackValue);
+  if (!fallback) {
+    throw new StrongerDataRecoveryError("The emergency workout-data copy is not a supported Stronger format.");
+  }
+  return fallback;
+}
+
+function snapshotDescendsFrom(descendant: SnapshotLineage, ancestor: StoredSnapshot): boolean {
+  return (descendant.basedOnSavedAt === ancestor.savedAt &&
+      descendant.basedOnFingerprint === ancestor.fingerprint) ||
+    (descendant.primaryBaseSavedAt === ancestor.savedAt &&
+      descendant.primaryBaseFingerprint === ancestor.fingerprint);
+}
+
+function assertFallbackCompatible(
+  fallback: StoredSnapshot | null,
+  expectedLineage: SnapshotLineage | null,
+): void {
+  if (!fallback || fallback.fingerprint === expectedLineage?.fingerprint) return;
+  if (expectedLineage && snapshotDescendsFrom(expectedLineage, fallback)) return;
+  throw new StrongerDataConflictError("Workout data changed in another tab. Reload before saving again.");
+}
+
+function rebaseEmergencySnapshot(
+  snapshot: Pick<StoredSnapshot, "primaryBaseSavedAt" | "primaryBaseFingerprint" | "storedValue">,
+  primaryBaseSavedAt: number,
+  primaryBaseFingerprint: string | null,
+): void {
+  const metadata = snapshot.storedValue[STORAGE_METADATA_KEY] as {
+    primaryBaseSavedAt: number;
+    primaryBaseFingerprint: string | null;
+  };
+  metadata.primaryBaseSavedAt = primaryBaseSavedAt;
+  metadata.primaryBaseFingerprint = primaryBaseFingerprint;
+  snapshot.primaryBaseSavedAt = primaryBaseSavedAt;
+  snapshot.primaryBaseFingerprint = primaryBaseFingerprint;
+}
+
+function mirrorPrimaryToFallback(storedValue: Record<string, unknown>): void {
+  try {
+    window.localStorage.setItem(FALLBACK_KEY, JSON.stringify(storedValue));
+  } catch {
+    try {
+      window.localStorage.removeItem(FALLBACK_KEY);
+    } catch {
+      // The confirmed primary remains intact; a later load will pause if it cannot read the stale fallback safely.
+    }
+  }
+}
+
 export async function loadData(): Promise<StrongerData> {
   if (typeof window === "undefined") return createDefaultData();
-  try {
-    if ("indexedDB" in window) {
-      const saved = await transact<unknown>("readonly", (store) => store.get(DATA_KEY));
-      const normalized = normalizeStrongerData(saved);
-      if (normalized) return normalized;
+  const hasIndexedDb = hasIndexedDatabase();
+  let primaryValue: unknown;
+  let primaryReadFailed = false;
+  if (hasIndexedDb) {
+    try {
+      primaryValue = await transact<unknown>("readonly", (store) => store.get(DATA_KEY));
+    } catch {
+      primaryReadFailed = true;
     }
-  } catch {
-    // Fall through to the emergency localStorage copy below.
   }
+
+  let fallbackText: string | null = null;
+  let fallbackReadFailed = false;
   try {
-    const fallback = window.localStorage.getItem(FALLBACK_KEY);
-    if (fallback) {
-      const parsed: unknown = JSON.parse(fallback);
-      const normalized = normalizeStrongerData(parsed);
-      if (normalized) return normalized;
-    }
+    fallbackText = window.localStorage.getItem(FALLBACK_KEY);
   } catch {
-    // A malformed fallback must not prevent Stronger from starting cleanly.
+    fallbackReadFailed = true;
   }
-  return createDefaultData();
+
+  if (primaryReadFailed) {
+    throw new StrongerDataRecoveryError("Workout storage could not be read safely.");
+  }
+
+  const primary = primaryValue === undefined ? null : decodeStoredSnapshot(primaryValue);
+  if (primaryValue !== undefined && !primary) {
+    throw new StrongerDataRecoveryError("Stored workout data is not a supported Stronger format.");
+  }
+
+  let fallbackValue: unknown;
+  let fallbackUnavailable = fallbackReadFailed;
+  if (!fallbackUnavailable && fallbackText !== null) {
+    try {
+      fallbackValue = JSON.parse(fallbackText);
+    } catch {
+      fallbackUnavailable = true;
+    }
+  }
+  const fallback = fallbackUnavailable || fallbackText === null ? null : decodeStoredSnapshot(fallbackValue);
+  if (!fallbackUnavailable && fallbackText !== null && !fallback) {
+    fallbackUnavailable = true;
+  }
+  if (fallbackUnavailable) {
+    if (primary) {
+      lastSavedAt = Math.max(lastSavedAt, primary.savedAt);
+      queuedExpectedSavedAt = primary.savedAt;
+      queuedExpectedFingerprint = primary.fingerprint;
+      queuedExpectedLineage = primary;
+      confirmedPrimarySavedAt = primary.savedAt;
+      confirmedPrimaryFingerprint = primary.fingerprint;
+      primaryWriteUnavailable = false;
+      return primary.data;
+    }
+    throw new StrongerDataRecoveryError("The emergency workout-data copy is not a supported Stronger format.");
+  }
+
+  lastSavedAt = Math.max(lastSavedAt, primary?.savedAt ?? 0, fallback?.savedAt ?? 0);
+  let selected = primary;
+  if (fallback && !primary) {
+    selected = fallback;
+  } else if (fallback && primary && fallback.fingerprint !== primary.fingerprint) {
+    const fallbackDescendsFromPrimary = snapshotDescendsFrom(fallback, primary);
+    const primaryDescendsFromFallback = snapshotDescendsFrom(primary, fallback);
+    if (fallbackDescendsFromPrimary && !primaryDescendsFromFallback) {
+      selected = fallback;
+    } else if (!primaryDescendsFromFallback || fallbackDescendsFromPrimary) {
+      throw new StrongerDataRecoveryError("Stored workout copies are divergent branches and require recovery.");
+    }
+  } else if (fallback && primary && fallback.savedAt > primary.savedAt) {
+    selected = fallback;
+  }
+  if (!selected) {
+    queuedExpectedSavedAt = 0;
+    queuedExpectedFingerprint = null;
+    queuedExpectedLineage = null;
+    confirmedPrimarySavedAt = 0;
+    confirmedPrimaryFingerprint = null;
+    primaryWriteUnavailable = false;
+    return createDefaultData();
+  }
+  queuedExpectedSavedAt = selected.savedAt;
+  queuedExpectedFingerprint = selected.fingerprint;
+  queuedExpectedLineage = selected;
+  confirmedPrimarySavedAt = selected === primary ? selected.savedAt : primary?.savedAt ?? 0;
+  confirmedPrimaryFingerprint = selected === primary ? selected.fingerprint : primary?.fingerprint ?? null;
+
+  if (selected === fallback && hasIndexedDb) {
+    try {
+      await putIfCurrentRevisionMatches(
+        selected.storedValue,
+        primary?.savedAt ?? 0,
+        primary?.fingerprint ?? null,
+      );
+      confirmedPrimarySavedAt = selected.savedAt;
+      confirmedPrimaryFingerprint = selected.fingerprint;
+      primaryWriteUnavailable = false;
+    } catch (error) {
+      if (error instanceof StrongerDataConflictError || error instanceof StrongerDataRecoveryError) throw error;
+      primaryWriteUnavailable = true;
+      // The newer emergency copy remains authoritative and available for the next launch.
+    }
+  } else {
+    primaryWriteUnavailable = false;
+  }
+  return selected.data;
 }
 
 export function saveData(data: StrongerData): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
-  const snapshot = structuredClone(data);
+  const expectedSavedAt = queuedExpectedSavedAt;
+  const expectedFingerprint = queuedExpectedFingerprint;
+  const expectedLineage = queuedExpectedLineage;
+  let snapshot: PendingSnapshot;
+  try {
+    snapshot = createStoredSnapshot(
+      data,
+      expectedSavedAt,
+      expectedFingerprint,
+      confirmedPrimarySavedAt,
+      confirmedPrimaryFingerprint,
+    );
+  } catch (error) {
+    return Promise.reject(error);
+  }
+  queuedExpectedSavedAt = snapshot.savedAt;
+  queuedExpectedFingerprint = snapshot.fingerprint;
+  queuedExpectedLineage = snapshot;
   writeQueue = writeQueue.catch(() => undefined).then(async () => {
-    try {
-      if ("indexedDB" in window) {
-        await transact<IDBValidKey>("readwrite", (store) => store.put(snapshot, DATA_KEY));
+    const saveWhileLocked = async () => {
+      const fallback = readFallbackSnapshot();
+      assertFallbackCompatible(fallback, expectedLineage);
+      if (hasIndexedDatabase() && !primaryWriteUnavailable) {
+        try {
+          await putIfCurrentRevisionMatches(snapshot.storedValue, expectedSavedAt, expectedFingerprint);
+          confirmedPrimarySavedAt = snapshot.savedAt;
+          confirmedPrimaryFingerprint = snapshot.fingerprint;
+          primaryWriteUnavailable = false;
+          mirrorPrimaryToFallback(snapshot.storedValue);
+          return;
+        } catch (error) {
+          if (error instanceof StrongerDataConflictError || error instanceof StrongerDataRecoveryError) throw error;
+          primaryWriteUnavailable = true;
+        }
+      }
+      rebaseEmergencySnapshot(snapshot, confirmedPrimarySavedAt, confirmedPrimaryFingerprint);
+      window.localStorage.setItem(FALLBACK_KEY, JSON.stringify(snapshot.storedValue));
+    };
+
+    if (hasFallbackWriteLock()) {
+      await withFallbackWriteLock(saveWhileLocked);
+      return;
+    }
+    if (hasIndexedDatabase() && !primaryWriteUnavailable && readFallbackSnapshot() === null) {
+      await putIfCurrentRevisionMatches(snapshot.storedValue, expectedSavedAt, expectedFingerprint);
+      confirmedPrimarySavedAt = snapshot.savedAt;
+      confirmedPrimaryFingerprint = snapshot.fingerprint;
+      return;
+    }
+    throw new StrongerDataRecoveryError(
+      "This browser cannot safely coordinate workout storage across tabs.",
+    );
+  });
+  return writeQueue;
+}
+
+export function replaceData(
+  data: StrongerData,
+  options: { allowRecoveryOverwrite?: boolean } = {},
+): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  const expectedSavedAt = queuedExpectedSavedAt;
+  const expectedFingerprint = queuedExpectedFingerprint;
+  const expectedLineage = queuedExpectedLineage;
+  let snapshot: PendingSnapshot;
+  try {
+    snapshot = createStoredSnapshot(
+      data,
+      expectedSavedAt,
+      expectedFingerprint,
+      confirmedPrimarySavedAt,
+      confirmedPrimaryFingerprint,
+    );
+  } catch (error) {
+    return Promise.reject(error);
+  }
+  queuedExpectedSavedAt = snapshot.savedAt;
+  queuedExpectedFingerprint = snapshot.fingerprint;
+  queuedExpectedLineage = snapshot;
+  writeQueue = writeQueue.catch(() => undefined).then(async () => {
+    const replaceWhileLocked = async () => {
+      const fallback = options.allowRecoveryOverwrite ? null : readFallbackSnapshot();
+      if (!options.allowRecoveryOverwrite) {
+        assertFallbackCompatible(fallback, expectedLineage);
+      }
+      if (hasIndexedDatabase()) {
+        if (options.allowRecoveryOverwrite) {
+          await transact<IDBValidKey>("readwrite", (store) => store.put(snapshot.storedValue, DATA_KEY));
+        } else {
+          await putIfCurrentRevisionMatches(snapshot.storedValue, expectedSavedAt, expectedFingerprint);
+        }
+        confirmedPrimarySavedAt = snapshot.savedAt;
+        confirmedPrimaryFingerprint = snapshot.fingerprint;
+        primaryWriteUnavailable = false;
+        mirrorPrimaryToFallback(snapshot.storedValue);
         return;
       }
-    } catch {
-      // The small localStorage fallback keeps the app usable if IndexedDB is unavailable.
+      rebaseEmergencySnapshot(snapshot, confirmedPrimarySavedAt, confirmedPrimaryFingerprint);
+      window.localStorage.setItem(FALLBACK_KEY, JSON.stringify(snapshot.storedValue));
+    };
+
+    if (hasFallbackWriteLock()) {
+      await withFallbackWriteLock(replaceWhileLocked);
+      return;
     }
-    window.localStorage.setItem(FALLBACK_KEY, JSON.stringify(snapshot));
+    if (hasIndexedDatabase() && (options.allowRecoveryOverwrite || readFallbackSnapshot() === null)) {
+      if (options.allowRecoveryOverwrite) {
+        await transact<IDBValidKey>("readwrite", (store) => store.put(snapshot.storedValue, DATA_KEY));
+      } else {
+        await putIfCurrentRevisionMatches(snapshot.storedValue, expectedSavedAt, expectedFingerprint);
+      }
+      confirmedPrimarySavedAt = snapshot.savedAt;
+      confirmedPrimaryFingerprint = snapshot.fingerprint;
+      primaryWriteUnavailable = false;
+      return;
+    }
+    throw new StrongerDataRecoveryError(
+      "This browser cannot safely coordinate workout storage across tabs.",
+    );
   });
   return writeQueue;
 }

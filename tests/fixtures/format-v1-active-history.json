@@ -1,0 +1,112 @@
+{
+  "formatVersion": 1,
+  "exportedAt": "2026-08-28T08:30:00.000Z",
+  "appVersion": "0.1.0",
+  "data": {
+    "formatVersion": 1,
+    "routines": [
+      {
+        "id": "routine-fixture-full-body",
+        "name": "Fixture Full Body",
+        "exercises": [
+          {
+            "id": "routine-exercise-fixture-row",
+            "exerciseKey": "fixture-cable-row",
+            "name": "Fixture Cable Row",
+            "targetSets": 3,
+            "targetWeightKg": 42.5,
+            "targetReps": 10,
+            "restSeconds": 90
+          }
+        ]
+      }
+    ],
+    "activeWorkout": {
+      "id": "workout-fixture-active",
+      "name": "Fixture Full Body",
+      "workoutDate": "2026-08-28",
+      "startedAt": 1787904000000,
+      "sourceRoutineId": "routine-fixture-full-body",
+      "restEndsAt": 1787904990000,
+      "exercises": [
+        {
+          "id": "workout-exercise-fixture-row",
+          "exerciseKey": "fixture-cable-row",
+          "name": "Fixture Cable Row",
+          "restSeconds": 90,
+          "sets": [
+            {
+              "id": "set-fixture-complete",
+              "weightKg": 42.5,
+              "reps": 10,
+              "completed": true,
+              "completedAt": 1787904900000
+            },
+            {
+              "id": "set-fixture-incomplete",
+              "weightKg": 42.5,
+              "reps": 0,
+              "completed": false
+            }
+          ]
+        }
+      ]
+    },
+    "history": [
+      {
+        "id": "workout-fixture-newer",
+        "name": "Fixture Pull",
+        "workoutDate": "2026-08-26",
+        "startedAt": 1787731200000,
+        "finishedAt": 1787734800000,
+        "exercises": [
+          {
+            "id": "workout-exercise-fixture-newer",
+            "exerciseKey": "fixture-cable-row",
+            "name": "Fixture Cable Row",
+            "restSeconds": 90,
+            "sets": [
+              {
+                "id": "set-fixture-newer",
+                "weightKg": 45,
+                "reps": 8,
+                "completed": true,
+                "completedAt": 1787733000000
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "workout-fixture-older",
+        "name": "Fixture Pull",
+        "workoutDate": "2026-08-22",
+        "startedAt": 1787385600000,
+        "finishedAt": 1787389200000,
+        "exercises": [
+          {
+            "id": "workout-exercise-fixture-older",
+            "exerciseKey": "fixture-cable-row",
+            "name": "Fixture Cable Row",
+            "restSeconds": 90,
+            "sets": [
+              {
+                "id": "set-fixture-older",
+                "weightKg": 40,
+                "reps": 10,
+                "completed": true,
+                "completedAt": 1787387400000
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "settings": {
+      "unit": "lb",
+      "defaultRestSeconds": 90,
+      "goal": "muscle",
+      "weeklyDays": 4
+    }
+  }
+}

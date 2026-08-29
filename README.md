@@ -21,15 +21,17 @@ Your workout records stay in the browser storage on your device. Stronger does n
 - Custom exercises saved to your personal library
 - Editable active workouts
 - Quick decimal weight, reps, and set completion
+- Optional read-only next-set previews with visible evidence
 - Previous results shown beside new sets
 - Foreground workout timer with an optional per-exercise rest timer
 - Searchable workout history
 - Duplicate a past workout for today
 - Best weight, estimated one-rep max, volume, and trend views
 - Kilograms and pounds
+- Temporary plate calculator with bounded pair inventory
 - Persistent light and dark appearance modes
 - Fixed workout header and bottom navigation for long sessions
-- Local JSON backup and restore
+- Local JSON backup and restore, plus readable workout CSV export
 - No account, ads, subscription, or server-side workout database
 
 # User manual
@@ -155,6 +157,14 @@ An unfinished workout is saved locally as you make changes. If Stronger is close
 
 Closing the app is not the same as finishing the workout. Use **Finish workout** when the session is complete so that it becomes part of History and Progress.
 
+If a persisted workout has no recorded activity for six hours, Stronger opens **Session Rescue** when the app loads or returns to the foreground. It never changes the workout automatically:
+
+- **Continue workout** keeps the current session and timer as-is.
+- **Pause timer** freezes duration at the last completed set or explicit resume and clears an obsolete rest countdown. Resuming later excludes paused time without rewriting workout or set timestamps.
+- **Close safely** asks for confirmation, then saves the workout to History at its last recorded activity. Incomplete sets remain visible but do not count toward Progress.
+
+Closing the rescue sheet postpones the decision until the next app launch. It does not save, finish, or discard anything.
+
 ## Edit an active workout
 
 Training plans often change at the gym. During an active session, you can:
@@ -168,6 +178,19 @@ Training plans often change at the gym. During an active session, you can:
 Use the explicit **Move up** and **Move down** controls when changing exercise order. Reordering does not depend on dragging, which makes it more reliable on a phone.
 
 Edits are saved locally as you work.
+
+## Experimental program blocks
+
+Wave 3A adds a **Program lab** below the routine list. It is available when no workout is active and works only on copied data:
+
+1. Choose **Create a program copy**.
+2. Select a source routine and a block length from 2–12 weeks.
+3. Review the copied targets for each week.
+4. Optionally change a week’s load percentage from 50–120% in five-point steps.
+
+Every week begins at a neutral 100% of the copied routine. Percentages are user-entered arithmetic previews, not coaching recommendations. Sets, reps, exercise order, and rest settings remain exactly as copied.
+
+A program copy cannot start a workout, update its source routine, or change history and Progress. Editing or deleting the copy affects only the sandbox. Later changes to the live routine also do not rewrite the snapshot. Program copies remain local and are included in Stronger backups.
 
 ## Log a set
 
@@ -193,6 +216,32 @@ Tap a completed set again if it was marked by mistake.
 Previous values come from completed workout history for the same exercise. A new or renamed exercise may not show a previous result until it has been completed in a workout.
 
 Workout progress updates as sets and exercises are completed.
+
+### Optional RPE or RIR
+
+Effort tracking is off by default. Turn it on in **Settings → Effort tracking** and choose one scale:
+
+- **RPE:** 6–10 in half steps. RPE 10 means maximal effort; lower values mean more left in reserve.
+- **RIR:** 0–10 whole reps. RIR 0 means no reps were left; higher values mean more left in reserve.
+
+The optional selector appears only after a set is marked complete. Each saved entry keeps its original scale, so changing the setting later does not reinterpret history. Turning effort tracking off hides the selectors without deleting recorded values. Marking a set incomplete removes its effort entry because the set is no longer recorded as performed.
+
+RPE and RIR are subjective notes only in Wave 2A. They do not change weights, reps, routines, Progress calculations, or future workouts, and they do not create automatic coaching suggestions.
+
+### Optional next-set previews
+
+Wave 6A adds an opt-in, read-only prompt. Turn on **Settings → Next-set previews** to allow it; the setting is off by default.
+
+A preview appears only when all of these conditions are true:
+
+- There is an unfinished next set with a positive planned load and rep count.
+- The immediately preceding completed set today met or exceeded that planned load and reps.
+- The latest saved History session containing completed sets for the same exercise also has a set that met or exceeded the plan. A newer miss cannot be skipped in favor of an older success.
+- If effort tracking is enabled, today's effort must be entered before a preview can appear. If either evidence set has effort recorded, it is no higher than RPE 8.5 or no lower than RIR 2. Missing historical effort is treated as unknown, not as proof that the set was easy.
+
+The preview shows both evidence sets and one small possible increment: 2.5 kg when displaying kilograms or 5 lb when displaying pounds. It has no apply button and does not change the next set, routine, History, or Progress. If the prompt is useful, edit the next set manually; otherwise ignore it or turn the setting off.
+
+This arithmetic rule cannot assess fatigue, pain, technique, equipment, sleep, or readiness. It is not a requirement to add load and is not medical or coaching advice.
 
 ## Rest timer
 
@@ -261,6 +310,16 @@ Estimated one-rep max is a planning signal, not a tested maximum or medical reco
 
 New exercises will not show a useful trend until enough completed workouts exist.
 
+### Weekly review
+
+Wave 4A adds a read-only summary at the top of **Progress**:
+
+- **Sessions:** finished History entries from Monday through Sunday that contain at least one completed set, compared with **Settings → Weekly days**.
+- **Recent best weights:** exercises whose heaviest completed set with at least one rep this week exceeds every comparable weight logged before the week began. A first logged result establishes a baseline and is not labeled as a new best.
+- **Next in routine order:** the routine after the latest completed routine that still exists in the saved routine list. Blank workouts do not move the rotation.
+
+The card also repeats the saved training goal as context without interpreting it. The review is recalculated from existing local data. It does not store a score, modify history, count an unfinished active workout, schedule a session, or start the displayed routine.
+
 ## Units
 
 Choose kilograms or pounds in Settings.
@@ -271,6 +330,19 @@ Choose kilograms or pounds in Settings.
 - Converted pound values may be rounded for practical display.
 
 Before entering a value, confirm that the unit label matches the plates or equipment you are using.
+
+### Temporary plate calculator
+
+Open **Settings → Plate calculator** to check how a target total can be loaded with the bar and matching plate pairs available to you.
+
+1. Confirm the displayed unit.
+2. Enter the target total and the labeled bar weight.
+3. For each plate size, select how many complete pairs are available. One pair means one matching plate for each side.
+4. Read the total load and the plate list for each side.
+
+The calculator chooses the closest load it can make without exceeding the target and never invents more pairs than you entered. When two combinations make the same load, it uses the one with fewer plates. If the target is below the entered bar, it stops at the bar and shows a warning.
+
+The tool is temporary: closing it clears its inputs. It has no apply button and cannot change a set, workout, routine, History, Progress, setting, or backup. Collars are excluded unless you include their weight in the bar field. Always verify the bar label, plate markings, collars, and both sides before lifting.
 
 # Backup and restore
 
@@ -289,11 +361,17 @@ Do not rely on iCloud to preserve PWA storage. Export a backup regularly.
 ## Export a backup
 
 1. Open **Settings**.
-2. Choose **Export data**.
+2. Choose **Export JSON**.
 3. Save the generated JSON file to the Files app, iCloud Drive, or another location you control.
 4. Keep at least one recent copy outside Stronger.
 
 A backup may contain built-in selections, custom exercise names, workout dates, weights, reps, and settings. Treat it as personal data.
+
+### Export workout CSV
+
+Choose **Export workout CSV** when you want a readable copy of saved History for a spreadsheet. The CSV keeps history order and includes one row per saved set, including whether the set was completed, its canonical kilogram value, reps, optional RPE or RIR, timestamps, and stable exercise keys. A saved workout with no sets receives one workout-only row so it is not silently omitted.
+
+CSV is not a backup and cannot be imported into Stronger. It excludes the active unfinished workout, routines, program copies, custom-exercise definitions, and settings. Keep exporting JSON separately for complete recovery.
 
 Good times to export include:
 
@@ -310,7 +388,7 @@ Import is **replace-only**. It does not merge two workout libraries.
 
 1. Export the current data first.
 2. Open **Settings**.
-3. Choose **Import data**.
+3. Choose **Import JSON**.
 4. Select a Stronger JSON backup.
 5. Read the replacement warning carefully.
 6. Confirm only if you want the imported file to replace all current local data.
@@ -428,7 +506,7 @@ Check that:
 - Safari website data was not cleared.
 - The iPhone was not reset or restored without the relevant browser data.
 
-If a valid export exists, use **Import data**. Remember that import replaces current local data.
+If a valid export exists, use **Import JSON**. Remember that import replaces current local data.
 
 ## The rest timer did not alert me
 
@@ -511,9 +589,13 @@ Available scripts:
 - `npm run dev` — start the local development server
 - `npm run lint` — run ESLint
 - `npm run typecheck` — run TypeScript’s full type checker
-- `npm test` — build and run the rendered HTML test
+- `npm run test:data` — run executable schema, migration, backup, unit, and recovery tests
+- `npm run test:shell` — verify the built static shell and deployment contracts
+- `npm test` — run data tests, build the app, and verify the static shell
 - `npm run build` — create a production build
 - `npm run preview` — preview the production build locally
+
+The staged R&D safety gate is documented in [`docs/WAVE_0_PROTECTION.md`](docs/WAVE_0_PROTECTION.md). Complete its production-backup check before beginning Wave 1.
 
 ## Publish with free HTTPS
 
@@ -551,6 +633,8 @@ Before considering a release ready:
 - An active workout survives refresh and relaunch.
 - Unit changes preserve equivalent stored values.
 - History deletion updates Progress correctly.
+- Program sandbox changes survive relaunch without changing their source routine.
+- Next-set previews are off by default, require matching evidence, and never change the planned set.
 - A valid import replaces data only after confirmation.
 - An invalid import leaves existing data intact.
 - Reset requires strong confirmation.

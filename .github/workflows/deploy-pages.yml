@@ -30,8 +30,10 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Build static app
-        run: npm run build
+      - name: Lint source
+        run: npm run lint
+      - name: Verify data safety and build static app
+        run: npm test
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact

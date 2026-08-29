@@ -9,7 +9,9 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "npm run build && node --test tests/rendered-html.test.mjs",
+    "test:data": "node --test tests/storage.test.mjs tests/session-rescue.test.mjs tests/effort.test.mjs tests/program-blocks.test.mjs tests/weekly-review.test.mjs tests/overall-progress.test.mjs tests/plate-calculator.test.mjs tests/next-set-preview.test.mjs tests/history-csv.test.mjs",
+    "test:shell": "node --test tests/rendered-html.test.mjs",
+    "test": "npm run test:data && npm run build && npm run test:shell",
     "lint": "eslint . --ignore-pattern dist",
     "typecheck": "tsc --noEmit"
   },
