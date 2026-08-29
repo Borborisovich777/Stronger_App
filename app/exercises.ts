@@ -6,6 +6,15 @@ export type BuiltInExercise = {
   category: ExerciseCategory;
 };
 
+export type ExerciseEquipment = "Barbell" | "Dumbbells" | "Cable" | "Machine" | "Bodyweight";
+
+type AlternativeProfile = {
+  exerciseKey: string;
+  equipment: ExerciseEquipment;
+  movementPattern: string;
+  movementLabel: string;
+};
+
 export const BUILT_IN_EXERCISES: BuiltInExercise[] = [
   { exerciseKey: "bench-press", name: "Bench press", category: "Chest" },
   { exerciseKey: "incline-dumbbell-press", name: "Incline dumbbell press", category: "Chest" },
@@ -58,3 +67,57 @@ export const BUILT_IN_EXERCISES: BuiltInExercise[] = [
   { exerciseKey: "ab-wheel-rollout", name: "Ab-wheel rollout", category: "Core" },
   { exerciseKey: "russian-twist", name: "Russian twist", category: "Core" },
 ];
+
+const ALTERNATIVE_PROFILES: AlternativeProfile[] = [
+  { exerciseKey: "bench-press", equipment: "Barbell", movementPattern: "horizontal-press", movementLabel: "Horizontal press" },
+  { exerciseKey: "dumbbell-bench-press", equipment: "Dumbbells", movementPattern: "horizontal-press", movementLabel: "Horizontal press" },
+  { exerciseKey: "chest-press-machine", equipment: "Machine", movementPattern: "horizontal-press", movementLabel: "Horizontal press" },
+  { exerciseKey: "push-up", equipment: "Bodyweight", movementPattern: "horizontal-press", movementLabel: "Horizontal press" },
+  { exerciseKey: "cable-fly", equipment: "Cable", movementPattern: "chest-fly", movementLabel: "Chest fly" },
+  { exerciseKey: "pec-deck", equipment: "Machine", movementPattern: "chest-fly", movementLabel: "Chest fly" },
+  { exerciseKey: "barbell-row", equipment: "Barbell", movementPattern: "horizontal-row", movementLabel: "Horizontal row" },
+  { exerciseKey: "seated-cable-row", equipment: "Cable", movementPattern: "horizontal-row", movementLabel: "Horizontal row" },
+  { exerciseKey: "one-arm-dumbbell-row", equipment: "Dumbbells", movementPattern: "horizontal-row", movementLabel: "Horizontal row" },
+  { exerciseKey: "lat-pulldown", equipment: "Cable", movementPattern: "vertical-pull", movementLabel: "Vertical pull" },
+  { exerciseKey: "pull-up", equipment: "Bodyweight", movementPattern: "vertical-pull", movementLabel: "Vertical pull" },
+  { exerciseKey: "back-squat", equipment: "Barbell", movementPattern: "squat", movementLabel: "Squat pattern" },
+  { exerciseKey: "front-squat", equipment: "Barbell", movementPattern: "squat", movementLabel: "Squat pattern" },
+  { exerciseKey: "goblet-squat", equipment: "Dumbbells", movementPattern: "squat", movementLabel: "Squat pattern" },
+  { exerciseKey: "leg-press", equipment: "Machine", movementPattern: "squat", movementLabel: "Squat pattern" },
+];
+
+export type EquipmentAlternative = BuiltInExercise & {
+  equipment: ExerciseEquipment;
+  movementLabel: string;
+};
+
+function profileForExercise(exerciseKey: string): AlternativeProfile | undefined {
+  return ALTERNATIVE_PROFILES.find((profile) => profile.exerciseKey === exerciseKey);
+}
+
+export function equipmentForExercise(exerciseKey: string): ExerciseEquipment | null {
+  return profileForExercise(exerciseKey)?.equipment ?? null;
+}
+
+export function equipmentAlternativesFor(exerciseKey: string): EquipmentAlternative[] {
+  const selected = profileForExercise(exerciseKey);
+  if (!selected) return [];
+
+  const usedEquipment = new Set<ExerciseEquipment>([selected.equipment]);
+  const alternatives: EquipmentAlternative[] = [];
+
+  for (const profile of ALTERNATIVE_PROFILES) {
+    if (profile.exerciseKey === selected.exerciseKey ||
+      profile.movementPattern !== selected.movementPattern ||
+      usedEquipment.has(profile.equipment)) continue;
+
+    const exercise = BUILT_IN_EXERCISES.find((candidate) => candidate.exerciseKey === profile.exerciseKey);
+    if (!exercise) continue;
+
+    usedEquipment.add(profile.equipment);
+    alternatives.push({ ...exercise, equipment: profile.equipment, movementLabel: profile.movementLabel });
+    if (alternatives.length === 3) break;
+  }
+
+  return alternatives;
+}

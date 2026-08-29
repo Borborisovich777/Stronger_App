@@ -18,6 +18,7 @@ Your workout records stay in the browser storage on your device. Stronger does n
 - Works offline after the first successful online load
 - Starter Push, Pull, and Legs routines
 - Searchable library of 50 built-in exercises
+- Explicit different-equipment alternatives for selected movement patterns
 - Custom exercises saved to your personal library
 - Editable active workouts
 - Quick decimal weight, reps, and set completion
@@ -128,6 +129,12 @@ To add an exercise that is not included:
 The custom exercise is saved immediately to the **Custom** category and can be reused in later workouts and routines. Names are checked without regard to capitalization or extra spaces. If the name already exists, Stronger selects the existing exercise instead of creating a duplicate.
 
 Each library exercise has a stable internal identity. Reusing the same library entry lets Previous and Progress connect results across workouts. Renaming an exercise inside a particular routine or active workout changes that displayed copy; when possible, reuse the library entry rather than typing a different lift over an unrelated one.
+
+### Equipment alternatives
+
+Some built-in exercise rows include **Alternatives**. Open it when the planned equipment is unavailable. Stronger shows up to three curated exercises with the same broad movement pattern and different equipment.
+
+Loads and difficulty are not equivalent between machines, free weights, cables, and bodyweight movements. Choosing an alternative only selects it in the current add-exercise flow. It never replaces an existing exercise or changes saved routines, workouts, or History. Unsupported and custom exercises do not receive automatic suggestions.
 
 ## Start a workout
 
