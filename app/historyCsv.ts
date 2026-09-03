@@ -20,6 +20,9 @@ const CSV_HEADERS = [
   "exercise_id",
   "set_id",
   "source_routine_id",
+  "set_type",
+  "drop_set_of",
+  "drop_order",
 ] as const;
 
 type CsvValue = string | number | null | undefined;
@@ -70,6 +73,11 @@ export function buildHistoryCsv(history: WorkoutSession[]): string {
         exercise.id,
         set.id,
         session.sourceRoutineId ?? "",
+        set.dropSetOf ? "drop" : "working",
+        set.dropSetOf ?? "",
+        set.dropSetOf
+          ? exercise.sets.slice(0, setIndex).filter((candidate) => candidate.dropSetOf === set.dropSetOf).length + 1
+          : "",
       ])),
     );
 
@@ -83,6 +91,7 @@ export function buildHistoryCsv(history: WorkoutSession[]): string {
       session.id,
       "", "",
       session.sourceRoutineId ?? "",
+      "", "", "",
     ])];
   });
 

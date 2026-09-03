@@ -18,6 +18,8 @@ export type WorkoutSet = {
   completed: boolean;
   completedAt?: number;
   effort?: SetEffort;
+  /** The working-set id when this row continues that set after a load reduction. */
+  dropSetOf?: string;
 };
 
 export type WorkoutExercise = {
@@ -70,6 +72,7 @@ export type WorkoutSession = {
   timerPausedAt?: number;
   timerPausedDurationMs?: number;
   timerResumedAt?: number;
+  longSessionCheckState?: "pending" | "confirmed";
   exercises: WorkoutExercise[];
 };
 
@@ -420,20 +423,47 @@ function validSet(set: unknown, enforceResourceLimits = true): set is WorkoutSet
     integerInRange(item.reps, MAX_REPS) &&
     typeof item.completed === "boolean" &&
     optionalIntegerInRange(item.completedAt, MAX_TIMESTAMP) &&
-    (item.effort === undefined || validSetEffort(item.effort));
+    (item.effort === undefined || validSetEffort(item.effort)) &&
+    (item.dropSetOf === undefined || nonEmptyString(item.dropSetOf));
+}
+
+export function isValidDropWeightTransition(previousWeightKg: number, dropWeightKg: number): boolean {
+  if (!Number.isFinite(previousWeightKg) || !Number.isFinite(dropWeightKg) ||
+    previousWeightKg < 0 || dropWeightKg < 0) return false;
+  return previousWeightKg === 0
+    ? dropWeightKg === 0
+    : dropWeightKg < previousWeightKg;
 }
 
 function validWorkoutExercise(exercise: unknown, enforceResourceLimits = true): exercise is WorkoutExercise {
   if (!exercise || typeof exercise !== "object") return false;
   const item = exercise as Partial<WorkoutExercise>;
-  return nonEmptyString(item.id) &&
+  if (!(nonEmptyString(item.id) &&
     nonEmptyString(item.exerciseKey) &&
     typeof item.name === "string" &&
     integerInRange(item.restSeconds, MAX_REST_SECONDS) &&
     Array.isArray(item.sets) &&
     (!enforceResourceLimits || item.sets.length <= MAX_SETS_PER_EXERCISE) &&
     item.sets.every((set) => validSet(set, enforceResourceLimits)) &&
-    uniqueStrings(item.sets.map((set) => set.id));
+    uniqueStrings(item.sets.map((set) => set.id)))) return false;
+
+  const roots = new Map<string, WorkoutSet>();
+  let activeRootId: string | undefined;
+  let previous: WorkoutSet | undefined;
+  for (const set of item.sets) {
+    if (!set.dropSetOf) {
+      roots.set(set.id, set);
+      activeRootId = set.id;
+    } else {
+      const root = roots.get(set.dropSetOf);
+      if (!root || root.dropSetOf || activeRootId !== set.dropSetOf) return false;
+      if (set.completed && !previous?.completed) return false;
+      if (set.completed && set.reps > 0 && (root.reps <= 0 || !previous || previous.reps <= 0)) return false;
+      if (set.completed && previous && !isValidDropWeightTransition(previous.weightKg, set.weightKg)) return false;
+    }
+    previous = set;
+  }
+  return true;
 }
 
 function validSession(session: unknown, enforceResourceLimits = true): session is WorkoutSession {
@@ -445,7 +475,9 @@ function validSession(session: unknown, enforceResourceLimits = true): session i
     !optionalIntegerInRange(item.restEndsAt, MAX_TIMESTAMP) ||
     !optionalIntegerInRange(item.timerPausedAt, MAX_TIMESTAMP) ||
     !optionalIntegerInRange(item.timerPausedDurationMs, MAX_TIMESTAMP) ||
-    !optionalIntegerInRange(item.timerResumedAt, MAX_TIMESTAMP) || !Array.isArray(item.exercises) ||
+    !optionalIntegerInRange(item.timerResumedAt, MAX_TIMESTAMP) ||
+    (item.longSessionCheckState !== undefined && item.longSessionCheckState !== "pending" &&
+      item.longSessionCheckState !== "confirmed") || !Array.isArray(item.exercises) ||
     (enforceResourceLimits && item.exercises.length > MAX_EXERCISES_PER_ITEM) ||
     !item.exercises.every((exercise) => validWorkoutExercise(exercise, enforceResourceLimits))) return false;
   return (!enforceResourceLimits ||
@@ -1020,11 +1052,16 @@ export function formatWeight(weightKg: number, unit: WeightUnit): string {
 }
 
 export function completedSets(session: WorkoutSession): WorkoutSet[] {
-  return session.exercises.flatMap((exercise) => exercise.sets.filter((set) => set.completed));
+  return session.exercises.flatMap((exercise) =>
+    exercise.sets.filter((set) => set.completed && set.reps > 0 && !set.dropSetOf));
+}
+
+export function completedSetSegments(session: WorkoutSession): WorkoutSet[] {
+  return session.exercises.flatMap((exercise) => exercise.sets.filter((set) => set.completed && set.reps > 0));
 }
 
 export function workoutVolumeKg(session: WorkoutSession): number {
-  return completedSets(session).reduce((total, set) => total + set.weightKg * set.reps, 0);
+  return completedSetSegments(session).reduce((total, set) => total + set.weightKg * set.reps, 0);
 }
 
 export function estimatedOneRepMax(weightKg: number, reps: number): number {

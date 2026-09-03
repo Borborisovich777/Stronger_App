@@ -45,15 +45,15 @@ export function weekRange(referenceDateKey: string): { startDate: string; endDat
 
 function completedExerciseSets(session: WorkoutSession) {
   return session.exercises.flatMap((exercise) => exercise.sets
-    .filter((set) => set.completed && set.reps > 0)
+    .filter((set) => set.completed && set.reps > 0 && !set.dropSetOf)
     .map((set) => ({ exercise, set })));
 }
 
 function hasCompletedSet(session: WorkoutSession): boolean {
-  return session.exercises.some((exercise) => exercise.sets.some((set) => set.completed));
+  return completedExerciseSets(session).length > 0;
 }
 
-function nextRoutineInRotation(history: WorkoutSession[], routines: Routine[]): Routine | null {
+export function nextRoutineInRotation(history: WorkoutSession[], routines: Routine[]): Routine | null {
   if (!routines.length) return null;
   const routineIds = new Set(routines.map((routine) => routine.id));
   const latestRoutineSession = history

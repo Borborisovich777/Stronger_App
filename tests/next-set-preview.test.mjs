@@ -162,3 +162,21 @@ test("supports a pound-sized increment and refuses to cross the maximum", () => 
   );
   assert.equal(nextSetPreview.buildNextSetPreview(active, history, 2.5, 61), null);
 });
+
+test("drop continuations do not shift working-set progression evidence", () => {
+  const active = exercise([
+    set("today-1", 60, 8, true),
+    { ...set("today-drop", 45, 7, true), dropSetOf: "today-1" },
+    set("today-2", 60, 8, false),
+  ]);
+  const history = [session("prior", 20, [
+    set("prior-1", 60, 8, true),
+    { ...set("prior-drop", 45, 6, true), dropSetOf: "prior-1" },
+  ])];
+  const result = nextSetPreview.buildNextSetPreview(active, history, 2.5, 100_000);
+
+  assert.equal(result?.nextSetId, "today-2");
+  assert.equal(result?.nextSetNumber, 2);
+  assert.equal(result?.todayEvidence.weightKg, 60);
+  assert.equal(result?.historyEvidence.weightKg, 60);
+});

@@ -22,6 +22,7 @@ Your workout records stay in the browser storage on your device. Stronger does n
 - Custom exercises saved to your personal library
 - Editable active workouts
 - Quick decimal weight, reps, and set completion
+- Linked drop-set continuations with editable 20% load-reduction suggestions
 - Optional read-only next-set previews with visible evidence
 - Previous results shown beside new sets
 - Foreground workout timer with an optional per-exercise rest timer
@@ -73,7 +74,7 @@ Stronger stores weights internally in kilograms and converts them for display wh
 
 Open **Settings → Appearance** and use the switch to choose light or dark mode. Stronger remembers this appearance on the current installation. Dark mode keeps the same cream, charcoal, lime, and red palette; it only remaps those colors for a darker canvas.
 
-The header and bottom navigation remain fixed while you scroll. During an active workout, the header keeps the workout timer visible, while the footer keeps Workout, History, Progress, and Settings within thumb reach. Page content includes extra safe-area spacing so these controls do not cover the first or last workout actions.
+The header and bottom navigation remain fixed while you scroll. The navigation is attached directly to the visible viewport rather than to an individual page, which prevents short screens such as an empty or filtered History view from lifting it above the iPhone Home indicator. During an active workout, the compact current-workout bar also stays directly below the header, keeping the workout name and **Edit/Done** control available while you move between exercises. The header keeps the workout timer visible, while the footer keeps Workout, History, Progress, and Settings within thumb reach. Page content includes extra safe-area spacing so these controls do not cover the first or last workout actions.
 
 ## Navigation
 
@@ -164,6 +165,18 @@ An unfinished workout is saved locally as you make changes. If Stronger is close
 
 Closing the app is not the same as finishing the workout. Use **Finish workout** when the session is complete so that it becomes part of History and Progress.
 
+### Three-hour workout check
+
+When an active workout reaches three hours, Stronger automatically pauses its timer and opens a **3-Hour Check** asking whether you are still working out. This is based on active workout time, so time already spent paused does not count toward the three-hour limit.
+
+- **Continue workout** resumes the timer. Time spent answering the check is excluded, and Stronger will not ask again during that workout.
+- **Finish workout** uses the normal finish flow and saves the workout to History. Incomplete sets still require confirmation and do not count toward Progress.
+- Closing the check leaves the workout paused. The Workout screen continues to show **Continue workout** and **Finish workout** until you decide.
+
+If iPhone suspends the app while the limit is reached, Stronger pauses the workout at three active hours when it loads or returns to the foreground. Any running rest countdown is cleared, while all logged sets remain unchanged. A reload while the decision is pending reopens the check and keeps the workout paused. After you choose **Continue workout**, the saved confirmation prevents another three-hour prompt for that workout.
+
+### Inactivity rescue
+
 If a persisted workout has no recorded activity for six hours, Stronger opens **Session Rescue** when the app loads or returns to the foreground. It never changes the workout automatically:
 
 - **Continue workout** keeps the current session and timer as-is.
@@ -183,6 +196,8 @@ Training plans often change at the gym. During an active session, you can:
 - Mark a completed set incomplete again
 
 Use the explicit **Move up** and **Move down** controls when changing exercise order. Reordering does not depend on dragging, which makes it more reliable on a phone.
+
+Each exercise card starts open. Tap the arrow in its upper-right corner to fold its sets and tap **Expand [exercise name]** to open them again. The compact card still shows completed sets and the rest setting while folded. Folding is only a temporary screen preference: it does not remove sets, change completion, or alter saved workout data, and cards open again after a reload or new workout.
 
 Edits are saved locally as you work.
 
@@ -223,6 +238,25 @@ Tap a completed set again if it was marked by mistake.
 Previous values come from completed workout history for the same exercise. A new or renamed exercise may not show a previous result until it has been completed in a workout.
 
 Workout progress updates as sets and exercises are completed.
+
+## Log a drop set
+
+A drop set stays attached to one normal working set instead of inflating the working-set count.
+
+1. Under the working set you want to continue, tap **+ Add drop**.
+2. Stronger inserts **D1** directly below that set and suggests 80% of the preceding segment’s weight.
+3. Adjust the suggested weight if needed, enter the reps actually performed, then mark the drop complete.
+4. To continue reducing the load, tap **+ Add another drop** under the latest continuation. Each new suggestion is calculated from that latest drop, not from the original working set.
+
+Drops must be completed in order. For a positive external load, each completed drop must be lighter than the segment before it. A bodyweight exercise recorded at 0 kg or 0 lb remains at zero; enter the reps to document the continuation. Missing reps, an unfinished preceding segment, or an invalid load keeps the drop incomplete and moves focus to the field that needs attention.
+
+The normal rest countdown starts only after the last segment in the chain. Adding another drop cancels a countdown that already started. If an edit makes a completed drop invalid, that drop and later continuations reopen and their completion-only time and effort notes are cleared; entered weights are not recalculated.
+
+Use **Remove** while editing to delete one drop. Later drops remain attached and are renumbered. Removing the parent working set removes all of its drops in the same confirmed action. **+ Add set** always copies the latest normal working-set target, never the reduced drop weight.
+
+If you finish while a drop is incomplete, Stronger asks for confirmation. The unfinished entry remains visible in that workout’s History detail as **Incomplete**, but it does not count toward sets, drops, reps, volume, records, or Progress.
+
+In Workout, History, summaries, and Progress, the parent counts as one working set and continuations are shown separately as drops. Completed drop reps and `weight × reps` contribute to training totals, but drops do not set best-weight records, estimated one-rep max records, or next-set suggestions. Duplicating a saved workout keeps the drop structure with fresh internal IDs and resets every entry to incomplete. JSON backup preserves the full structure; workout CSV identifies each row with `set_type`, `drop_set_of`, and `drop_order`.
 
 ### Optional RPE or RIR
 
@@ -278,6 +312,8 @@ Do not finish a workout merely to close the app. An active workout can be resume
 
 The History screen lists completed workouts with useful session information such as date, workout name, duration, exercises, and volume.
 
+On iPhone, the bottom navigation stays anchored to the viewport while the History screen scrolls, including when the list is short or empty. It temporarily hides while the History search keyboard is open and waits for the viewport to return to full height before reappearing, preventing it from floating above the keyboard.
+
 You can:
 
 - Search completed workouts
@@ -302,30 +338,33 @@ Export a backup first if the workout may be needed later.
 
 ## Progress
 
-Open **Progress** and select an exercise to see its available records and trends.
+Open **Progress** for a plain-language summary instead of a dense statistics dashboard.
 
-Metrics include:
+1. Choose **Week**, **Month**, or **All time**.
+2. Use the **Live** label and date range to confirm exactly which days are included. Week and Month compare with the same number of elapsed days in the previous week or month.
+3. Read the lead sentence for the number of completed workouts in that period.
+4. On **Week**, use the single progress bar to compare completed workouts with **Settings → Weekly days**.
+5. Read **Training dose** as one compact summary: working sets, total reps, drop continuations, external-load volume, tracked workout time, and working sets by primary exercise category. The previous matched period and its dates appear directly below the current values.
+6. Review up to three **Getting stronger** rows. Each row shows the exercise's heaviest completed working set in the selected period and a short comparison such as **New best**, **+2.5 kg**, **Same as last week**, or **No comparison yet**.
+7. Tap an exercise row or **See all exercises** only when you want the exercise records for the selected period.
+8. Tap **Next in your routine** to return to Workout. This opens the Workout tab; it never starts or replaces a workout automatically.
 
-- **Best weight:** the heaviest completed logged set
-- **Estimated one-rep max (e1RM):** a calculated estimate based on weight and reps
-- **Volume:** weight multiplied by reps across completed sets
-- **Trend bars:** a simple view of changes across workouts
+Only finished History entries and completed sets with at least one rep contribute to the summary. If a current workout already contains completed work, Progress says **Active workout not included yet** until that workout is finished and saved.
 
-Only completed workout data contributes to progress.
+A drop-set continuation is shown under **Drops**, not **Working sets**. Its reps and external-load volume are included, but it cannot create a heaviest-set or estimated-one-rep-max record. Bodyweight work recorded at 0 kg still counts in sets and reps; the external-load volume deliberately excludes body mass. Built-in exercises use their primary library category, while custom exercises remain **Unclassified** rather than being assigned a guessed category.
 
-Estimated one-rep max is a planning signal, not a tested maximum or medical recommendation. Rep speed, technique, fatigue, equipment, and exercise variation can all affect the estimate.
+A first logged result is a starting point, not a claimed improvement. On Week, **New best** means the heaviest completed working set exceeds every comparable weight recorded before the week began. A positive number compares the selected period with its matching previous period.
 
-New exercises will not show a useful trend until enough completed workouts exist.
+### Advanced exercise details
 
-### Weekly review
+Tap **See all exercises** to reveal the optional detail for the currently selected Week, Month, or All-time period:
 
-Wave 4A adds a read-only summary at the top of **Progress**:
+- **Heaviest set:** the heaviest completed logged working set
+- **Estimated one-rep max:** a calculated estimate based on weight and reps
+- **Training volume:** weight multiplied by reps across completed set segments
+- **Recent trend:** the heaviest completed working set from each recent workout
 
-- **Sessions:** finished History entries from Monday through Sunday that contain at least one completed set, compared with **Settings → Weekly days**.
-- **Recent best weights:** exercises whose heaviest completed set with at least one rep this week exceeds every comparable weight logged before the week began. A first logged result establishes a baseline and is not labeled as a new best.
-- **Next in routine order:** the routine after the latest completed routine that still exists in the saved routine list. Blank workouts do not move the rotation.
-
-The card also repeats the saved training goal as context without interpreting it. The review is recalculated from existing local data. It does not store a score, modify history, count an unfinished active workout, schedule a session, or start the displayed routine.
+Estimated one-rep max is a planning signal, not a tested maximum or medical recommendation. Rep speed, technique, fatigue, equipment, and exercise variation can all affect the estimate. New exercises will not show a useful trend until enough completed workouts exist.
 
 ## Units
 

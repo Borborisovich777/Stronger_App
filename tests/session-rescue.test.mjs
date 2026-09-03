@@ -62,6 +62,59 @@ test("session rescue uses a six-hour inactivity boundary", () => {
   assert.equal(rescue.shouldOfferSessionRescue(active, latest - 1), false, "future clock values must read as recent");
 });
 
+test("long-session check starts at three active hours", () => {
+  const active = workout();
+  const threshold = rescue.LONG_SESSION_CHECK_MS;
+
+  assert.equal(rescue.shouldOfferLongSessionCheck(null, startedAt + threshold), false);
+  assert.equal(rescue.shouldOfferLongSessionCheck(active, startedAt + threshold - 1), false);
+  assert.equal(rescue.shouldOfferLongSessionCheck(active, startedAt + threshold), true);
+});
+
+test("long-session safety pause freezes at three hours and clears rest without mutation", () => {
+  const active = workout();
+  const before = structuredClone(active);
+  const detectedAt = startedAt + 8 * 60 * 60 * 1000;
+  const paused = rescue.pauseForLongSessionCheck(active, detectedAt);
+
+  assert.deepEqual(active, before);
+  assert.equal(paused.timerPausedAt, startedAt + rescue.LONG_SESSION_CHECK_MS);
+  assert.equal(paused.longSessionCheckState, "pending");
+  assert.equal(paused.restEndsAt, undefined);
+  assert.equal(rescue.workoutElapsedSeconds(paused, detectedAt), 3 * 60 * 60);
+  assert.equal(rescue.shouldOfferLongSessionCheck(paused, detectedAt), true);
+});
+
+test("confirmed long sessions resume once and do not prompt again", () => {
+  const active = workout();
+  const paused = rescue.pauseForLongSessionCheck(active, startedAt + rescue.LONG_SESSION_CHECK_MS);
+  const resumedAt = startedAt + 4 * 60 * 60 * 1000;
+  const resumed = rescue.confirmLongSessionContinuation(paused, resumedAt);
+
+  assert.equal(resumed.timerPausedAt, undefined);
+  assert.equal(resumed.timerResumedAt, resumedAt);
+  assert.equal(resumed.timerPausedDurationMs, 60 * 60 * 1000);
+  assert.equal(resumed.longSessionCheckState, "confirmed");
+  assert.equal(rescue.workoutElapsedSeconds(resumed, resumedAt), 3 * 60 * 60);
+  assert.equal(rescue.shouldOfferLongSessionCheck(resumed, resumedAt + 24 * 60 * 60 * 1000), false);
+  assert.equal(rescue.pauseForLongSessionCheck(resumed, resumedAt + 24 * 60 * 60 * 1000), resumed);
+  assert.equal(rescue.shouldOfferSessionRescue(
+    resumed,
+    resumedAt + rescue.SESSION_RESCUE_INACTIVITY_MS,
+  ), true, "the six-hour inactivity rescue must remain available after confirmation");
+});
+
+test("earlier paused time does not count toward the three-hour check", () => {
+  const active = { ...workout(), timerPausedAt: startedAt + 60 * 60 * 1000 };
+  const resumed = rescue.resumeWorkoutTimer(active, startedAt + 2 * 60 * 60 * 1000);
+
+  assert.equal(rescue.shouldOfferLongSessionCheck(resumed, startedAt + 4 * 60 * 60 * 1000 - 1), false);
+  assert.equal(rescue.shouldOfferLongSessionCheck(resumed, startedAt + 4 * 60 * 60 * 1000), true);
+  const paused = rescue.pauseForLongSessionCheck(resumed, startedAt + 6 * 60 * 60 * 1000);
+  assert.equal(paused.timerPausedAt, startedAt + 4 * 60 * 60 * 1000);
+  assert.equal(rescue.workoutElapsedSeconds(paused, paused.timerPausedAt), 3 * 60 * 60);
+});
+
 test("only completed-set timestamps extend the latest trustworthy activity", () => {
   const active = workout();
 
@@ -110,12 +163,16 @@ test("a second pause cannot double-count an earlier paused gap", () => {
 });
 
 test("finishing a paused workout preserves its frozen duration", () => {
-  const paused = rescue.pauseWorkoutTimer(workout(), startedAt + 24 * 60 * 60 * 1000);
+  const paused = {
+    ...rescue.pauseWorkoutTimer(workout(), startedAt + 24 * 60 * 60 * 1000),
+    longSessionCheckState: "pending",
+  };
   const finished = rescue.finishWorkoutTimer(paused, startedAt + 48 * 60 * 60 * 1000);
 
   assert.equal(finished.finishedAt, paused.timerPausedAt);
   assert.equal(finished.timerPausedAt, undefined);
   assert.equal(finished.timerResumedAt, undefined);
+  assert.equal(finished.longSessionCheckState, undefined);
   assert.equal(finished.restEndsAt, undefined);
   assert.equal(rescue.workoutElapsedSeconds(finished, finished.finishedAt), 30 * 60);
 });

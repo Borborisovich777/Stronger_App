@@ -24,7 +24,7 @@ test("builds a static Stronger shell for the GitHub Pages project path", async (
 });
 
 test("ships scoped install metadata and an offline shell", async () => {
-  const [manifestText, serviceWorker, app, storage, sessionRescue, effort, programBlocks, weeklyReview, overallProgress, plateCalculator, nextSetPreview, historyCsv, exercises, styles, packageText, workflow] = await Promise.all([
+  const [manifestText, serviceWorker, app, storage, sessionRescue, effort, programBlocks, weeklyReview, overallProgress, reportMetrics, plateCalculator, nextSetPreview, historyCsv, dropSets, exercises, styles, packageText, workflow] = await Promise.all([
     readFile(new URL("dist/manifest.webmanifest", projectRoot), "utf8"),
     readFile(new URL("dist/sw.js", projectRoot), "utf8"),
     readFile(new URL("app/StrongerApp.tsx", projectRoot), "utf8"),
@@ -34,9 +34,11 @@ test("ships scoped install metadata and an offline shell", async () => {
     readFile(new URL("app/programBlocks.ts", projectRoot), "utf8"),
     readFile(new URL("app/weeklyReview.ts", projectRoot), "utf8"),
     readFile(new URL("app/overallProgress.ts", projectRoot), "utf8"),
+    readFile(new URL("app/reportMetrics.ts", projectRoot), "utf8"),
     readFile(new URL("app/plateCalculator.ts", projectRoot), "utf8"),
     readFile(new URL("app/nextSetPreview.ts", projectRoot), "utf8"),
     readFile(new URL("app/historyCsv.ts", projectRoot), "utf8"),
+    readFile(new URL("app/dropSets.ts", projectRoot), "utf8"),
     readFile(new URL("app/exercises.ts", projectRoot), "utf8"),
     readFile(new URL("app/globals.css", projectRoot), "utf8"),
     readFile(new URL("package.json", projectRoot), "utf8"),
@@ -76,6 +78,12 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(app, /type="text"[\s\S]*inputMode=\{decimal \? "decimal" : "numeric"\}/);
   assert.match(app, /exercise\.restSeconds > 0/);
   assert.match(app, /exercise\.restSeconds === 0 \? "Rest timer off"/);
+  assert.match(app, /insertDropSegment/);
+  assert.match(app, /isValidDropWeightTransition/);
+  assert.match(app, /restEndsAt: invalidatedCompletedWork \? undefined : workout\.restEndsAt/);
+  assert.match(app, /Add drop \$\{currentDropNumber \+ 1\} to \$\{exercise\.name\}, set \$\{setNumber\}/);
+  assert.match(app, /history-incomplete-segment/);
+  assert.match(app, /Incomplete \(no reps recorded\)/);
   assert.match(app, /window\.scrollTo\(\{ top: 0, left: 0, behavior: "auto" \}\)/);
   assert.match(app, /function ExercisePicker/);
   assert.match(app, /\+ Create custom exercise/);
@@ -89,10 +97,20 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(app, /isReplacingData/);
   assert.match(app, /Export current data/);
   assert.match(app, /isWithinSafeResourceLimits/);
-  assert.match(app, /title="Unfinished workout found"/);
+  assert.match(app, /Unfinished workout found/);
   assert.match(app, /Continue workout/);
   assert.match(app, /Pause timer/);
   assert.match(app, /Close safely/);
+  assert.match(app, /reason: "long-session"/);
+  assert.match(app, /3-HOUR CHECK/);
+  assert.match(app, /Still working out\?/);
+  assert.match(app, /pauseForLongSessionCheck/);
+  assert.match(app, /confirmLongSessionContinuation/);
+  assert.match(app, /Closing this check keeps the workout paused/);
+  assert.match(app, /descriptionId="session-rescue-description session-rescue-note"/);
+  assert.match(app, /long-session-continue/);
+  assert.match(app, /Close and keep workout paused/);
+  assert.match(app, /type DismissedRescuePrompt = Pick<SessionRescuePrompt, "workoutId" \| "reason">/);
   assert.match(app, /data-modal-primary/);
   assert.match(app, /disabled={workoutTimerPaused}/);
   assert.match(app, /function startWorkout[\s\S]*?rescueEligibleWorkoutIdRef\.current = workout\.id/);
@@ -107,18 +125,24 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(app, /Preview only/);
   assert.match(app, /cannot start workouts or overwrite the source routine/);
   assert.match(app, /programBlocks: \[\.\.\.\(current\.programBlocks \?\? \[\]\), block\]/);
-  assert.match(app, /Weekly review/);
-  assert.match(app, /Overall progress/);
-  assert.match(app, /ALL COMPLETED WORKOUTS/);
-  assert.match(app, /Overall progress period/);
+  assert.match(app, /You trained/);
+  assert.match(app, /No workouts logged/);
+  assert.match(app, /Progress period/);
   assert.match(app, /aria-pressed=\{progressPeriod === period\}/);
-  assert.match(app, /Volume by exercise/);
-  assert.match(app, /Strength by exercise/);
-  assert.match(app, /Weight × reps from completed sets/);
-  assert.match(app, /Compared with/);
-  assert.match(app, /READ-ONLY · THIS WEEK/);
-  assert.match(app, /Nothing is scheduled or started/);
-  assert.match(app, /Saved goal:/);
+  assert.match(app, /\["week", "month", "all"\]/);
+  assert.match(app, /All time/);
+  assert.match(app, /GETTING STRONGER/);
+  assert.match(app, /See all exercises/);
+  assert.match(app, /aria-expanded=\{showProgressDetails\}/);
+  assert.match(app, /NEXT IN YOUR ROUTINE/);
+  assert.match(app, /Open Workout/);
+  assert.match(app, /progressDetailPeriodLabel/);
+  assert.match(app, /TRAINING DOSE/);
+  assert.match(app, /Active workout not included yet/);
+  assert.match(app, /PRIMARY CATEGORY COVERAGE/);
+  assert.match(app, /Previous matched period/);
+  assert.match(app, /HEAVIEST SET/);
+  assert.match(app, /Drop segments are not used for best-weight records/);
   assert.match(app, /role="progressbar"/);
   assert.match(app, /Plate calculator/);
   assert.match(app, /TEMPORARY TOOL · NO SET CHANGES/);
@@ -154,12 +178,14 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(storage, /timerPausedAt\?: number/);
   assert.match(storage, /timerPausedDurationMs\?: number/);
   assert.match(storage, /timerResumedAt\?: number/);
+  assert.match(storage, /longSessionCheckState\?: "pending" \| "confirmed"/);
   assert.match(storage, /effort\?: SetEffort/);
   assert.match(storage, /effortScale\?: EffortScale \| "off"/);
   assert.match(storage, /nextSetPreview\?: boolean/);
   assert.match(storage, /nextSetPreview: false/);
   assert.match(storage, /typeof settings\.nextSetPreview !== "boolean"/);
   assert.match(storage, /validSetEffort/);
+  assert.match(storage, /export function isValidDropWeightTransition/);
   assert.match(storage, /programBlocks\?: ProgramBlock\[\]/);
   assert.match(storage, /validProgramBlock/);
   assert.match(storage, /MAX_PROGRAM_BLOCKS = 50/);
@@ -170,7 +196,10 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.doesNotMatch(transactionSource, /request\.onsuccess\s*=\s*\(\)\s*=>\s*resolve/);
 
   assert.match(sessionRescue, /SESSION_RESCUE_INACTIVITY_MS = 6 \* 60 \* 60 \* 1000/);
+  assert.match(sessionRescue, /LONG_SESSION_CHECK_MS = 3 \* 60 \* 60 \* 1000/);
   assert.match(sessionRescue, /latestWorkoutActivityAt/);
+  assert.match(sessionRescue, /shouldOfferLongSessionCheck/);
+  assert.match(sessionRescue, /longSessionCheckState: "pending"/);
   assert.match(sessionRescue, /pauseWorkoutTimer/);
   assert.match(sessionRescue, /resumeWorkoutTimer/);
   assert.match(sessionRescue, /finishWorkoutTimer/);
@@ -189,13 +218,20 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(weeklyReview, /nextRoutineInRotation/);
   assert.doesNotMatch(weeklyReview, /saveData|setData|startWorkout|activeWorkout/);
 
-  assert.match(overallProgress, /set\.completed && set\.reps > 0/);
+  assert.match(overallProgress, /deriveReportMetrics/);
   assert.match(overallProgress, /totalVolumeKg/);
-  assert.match(overallProgress, /exerciseKeys\.size/);
   assert.match(overallProgress, /progressPeriodRanges/);
   assert.match(overallProgress, /previousRange/);
   assert.match(overallProgress, /previousVolumeKg/);
-  assert.doesNotMatch(overallProgress, /saveData|setData|startWorkout|activeWorkout|estimatedOneRepMax/);
+  assert.doesNotMatch(overallProgress, /saveData|setData|startWorkout|estimatedOneRepMax/);
+
+  assert.match(reportMetrics, /set\.completed && set\.reps > 0/);
+  assert.match(reportMetrics, /externalLoadVolumeKg/);
+  assert.match(reportMetrics, /activeWorkoutExcluded/);
+  assert.match(reportMetrics, /mixedEffortScales/);
+  assert.match(reportMetrics, /categoryModel: "primary-built-in-only"/);
+  assert.match(reportMetrics, /rollingReportRanges/);
+  assert.doesNotMatch(reportMetrics, /saveData|setData|startWorkout/);
 
   assert.match(plateCalculator, /MAX_PLATE_PAIRS_PER_SIZE = 10/);
   assert.match(plateCalculator, /nextLoad > perSideTargetUnits/);
@@ -211,7 +247,15 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(historyCsv, /spreadsheetSafeText/);
   assert.match(historyCsv, /set\.completed \? "yes" : "no"/);
   assert.match(historyCsv, /session\.exercises\.flatMap/);
+  assert.match(historyCsv, /"set_type"/);
+  assert.match(historyCsv, /"drop_set_of"/);
+  assert.match(historyCsv, /"drop_order"/);
   assert.doesNotMatch(historyCsv, /saveData|setData|replaceData|startWorkout|activeWorkout/);
+
+  assert.match(dropSets, /DEFAULT_DROP_PERCENT = 20/);
+  assert.match(dropSets, /insertDropSegment/);
+  assert.match(dropSets, /dropSetOf: groupId/);
+  assert.match(dropSets, /removeSetWithContinuations/);
 
   assert.match(exercises, /export function equipmentAlternativesFor/);
   assert.match(exercises, /usedEquipment\.has\(profile\.equipment\)/);
@@ -230,23 +274,49 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(styles, /--touch-target:\s*44px/);
   assert.match(styles, /--action-height:\s*46px/);
   assert.match(styles, /--primary-action-height:\s*48px/);
-  assert.match(styles, /body\s*\{[^}]*font-size:\s*15px;/s);
+  assert.match(styles, /body\s*\{[^}]*font-size:\s*14px;/s);
+  assert.match(styles, /input,\s*select,\s*textarea\s*\{[^}]*font-size:\s*16px;/s);
   assert.doesNotMatch(styles, /--font-geist-sans/);
   assert.match(styles, /:root\[data-theme="dark"\]/);
   assert.match(styles, /\.topbar\s*\{[^}]*position:\s*fixed;/s);
+  assert.match(styles, /\.workout-heading\s*\{[^}]*position:\s*sticky;[^}]*top:\s*calc\(68px \+ env\(safe-area-inset-top\)\);/s);
+  assert.match(styles, /\.workout-heading\s*\{[^}]*z-index:\s*40;/s);
+  assert.match(styles, /\.workout-editing-surface input,[\s\S]*scroll-margin-top:\s*calc\(170px \+ env\(safe-area-inset-top\)\);/);
   assert.match(styles, /\.bottom-nav\s*\{[^}]*position:\s*fixed;/s);
-  assert.match(styles, /\.bottom-nav\s*\{[^}]*padding:\s*5px 8px max\(5px, env\(safe-area-inset-bottom\)\);/s);
+  assert.match(styles, /\.bottom-nav\s*\{[^}]*right:\s*0;[^}]*bottom:\s*0;[^}]*left:\s*0;[^}]*margin-inline:\s*auto;/s);
+  assert.match(styles, /\.bottom-nav\s*\{[^}]*padding:\s*5px 8px max\(5px, env\(safe-area-inset-bottom, 0px\)\);/s);
+  assert.match(styles, /\.bottom-nav\s*\{[^}]*transform:\s*none;/s);
+  assert.match(styles, /\.bottom-nav\[hidden\]\s*\{[^}]*display:\s*none;/s);
+  assert.match(styles, /\.bottom-nav\.is-history-searching\s*\{[^}]*visibility:\s*hidden;[^}]*opacity:\s*0;[^}]*pointer-events:\s*none;/s);
+  assert.match(app, /createPortal\(<nav/);
+  assert.match(app, /document\.body\)/);
+  assert.match(app, /const \[historySearchFocused, setHistorySearchFocused\] = useState\(false\);/);
+  assert.match(app, /const \[historyKeyboardOpen, setHistoryKeyboardOpen\] = useState\(false\);/);
+  assert.match(app, /window\.visualViewport/);
+  assert.match(app, /viewport\.addEventListener\("resize", syncKeyboardInset\)/);
+  assert.match(app, /onFocus=\{\(\) => setHistorySearchFocused\(true\)\}/);
+  assert.match(app, /onBlur=\{\(\) => setHistorySearchFocused\(false\)\}/);
+  assert.match(app, /tab === "history" && \(historySearchFocused \|\| historyKeyboardOpen\)/);
+  assert.match(app, /hidden=\{otherModalOpen \|\| Boolean\(sessionRescueWorkout && sessionRescuePrompt\)\}/);
+  assert.match(app, /const \[collapsedExerciseIds, setCollapsedExerciseIds\] = useState<Set<string>>/);
+  assert.match(app, /aria-expanded=\{exerciseExpanded\}/);
+  assert.match(app, /aria-controls=\{exercisePanelId\}/);
+  assert.match(app, /className="exercise-panel" hidden=\{!exerciseExpanded\}/);
+  assert.match(styles, /\.exercise-disclosure\s*\{[^}]*width:\s*var\(--touch-target\);[^}]*height:\s*var\(--touch-target\);/s);
+  assert.match(styles, /\.exercise-panel\[hidden\]\s*\{[^}]*display:\s*none;/s);
   assert.match(styles, /\.toast\s*\{[^}]*bottom:\s*calc\(84px \+ env\(safe-area-inset-bottom\)\);/s);
   assert.doesNotMatch(styles, /\.toast\s*\{[^}]*top:/s);
   assert.match(styles, /scroll-padding-top:\s*calc\(82px \+ env\(safe-area-inset-top\)\)/);
   assert.match(styles, /\.program-week-heading select\s*\{[^}]*min-height:\s*44px;/s);
-  assert.match(styles, /\.weekly-review-track\s*\{[^}]*height:\s*12px;/s);
+  assert.match(styles, /\.progress-goal-track\s*\{[^}]*height:\s*12px;/s);
   assert.match(styles, /\.plate-inventory-grid select\s*\{[^}]*min-height:\s*44px;/s);
   assert.match(styles, /\.plate-result\s*\{/);
   assert.match(styles, /\.next-set-preview\s*\{/);
-  assert.match(styles, /\.overall-progress-card\s*\{/);
+  assert.match(styles, /\.set-continuation-row button\s*\{[^}]*min-height:\s*var\(--touch-target\);/s);
+  assert.match(styles, /\.progress-story-card\s*\{/);
   assert.match(styles, /\.progress-period-tabs\s*\{/);
-  assert.match(styles, /\.exercise-volume-list\s*\{/);
+  assert.match(styles, /\.progress-strength-list\s*\{/);
+  assert.match(styles, /\.progress-next-card\s*\{/);
   assert.match(styles, /\.backup-csv-button\s*\{/);
   assert.match(styles, /\.equipment-alternative-trigger\s*\{/);
   assert.match(styles, /\.equipment-alternative-option\s*\{/);

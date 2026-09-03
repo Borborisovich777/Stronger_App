@@ -72,7 +72,7 @@ test("exports stable human-readable rows for complete and incomplete saved sets"
 
   const rows = parseCsv(historyCsv.buildHistoryCsv(history));
   assert.equal(rows.length, 3);
-  assert.equal(rows[0].length, 19);
+  assert.equal(rows[0].length, 22);
   assert.deepEqual(rows[0].slice(0, 12), [
     "workout_date", "workout_name", "duration_seconds", "exercise_name", "exercise_key",
     "exercise_order", "set_order", "completed", "weight_kg", "reps", "effort_scale", "effort_value",
@@ -115,4 +115,40 @@ test("empty history produces a UTF-8 header-only file", () => {
   assert.equal(csv.charCodeAt(0), 0xFEFF);
   assert.equal(rows.length, 1);
   assert.equal(rows[0][0], "workout_date");
+});
+
+test("exports drop continuations with their parent and within-set order", () => {
+  const rows = parseCsv(historyCsv.buildHistoryCsv([session({
+    id: "drop-workout",
+    name: "Drop day",
+    date: "2026-09-03",
+    startedAt: 100,
+    finishedAt: 200,
+    exercises: [{
+      id: "exercise-1",
+      exerciseKey: "curl",
+      name: "Curl",
+      restSeconds: 90,
+      sets: [
+        { id: "root", weightKg: 20, reps: 8, completed: true },
+        {
+          id: "drop-1",
+          weightKg: 16,
+          reps: 6,
+          completed: true,
+          completedAt: 150,
+          effort: { scale: "rir", value: 2 },
+          dropSetOf: "root",
+        },
+        { id: "drop-2", weightKg: 12.8, reps: 5, completed: true, dropSetOf: "root" },
+      ],
+    }],
+  })]));
+
+  assert.deepEqual(rows[0].slice(19), ["set_type", "drop_set_of", "drop_order"]);
+  assert.deepEqual(rows[1].slice(19), ["working", "", ""]);
+  assert.deepEqual(rows[2].slice(19), ["drop", "root", "1"]);
+  assert.deepEqual(rows[2].slice(10, 12), ["RIR", "2"]);
+  assert.equal(rows[2][14], "1970-01-01T00:00:00.150Z");
+  assert.deepEqual(rows[3].slice(19), ["drop", "root", "2"]);
 });

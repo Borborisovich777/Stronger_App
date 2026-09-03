@@ -45,7 +45,7 @@ function latestComparableSession(
   let latest: { session: WorkoutSession; exercise: WorkoutExercise; timestamp: number } | null = null;
   for (const session of history) {
     const exercise = session.exercises.find((candidate) => candidate.exerciseKey === exerciseKey);
-    if (!exercise?.sets.some((set) => set.completed)) continue;
+    if (!exercise?.sets.some((set) => set.completed && !set.dropSetOf)) continue;
     const timestamp = session.finishedAt ?? session.startedAt;
     if (!latest || timestamp > latest.timestamp) latest = { session, exercise, timestamp };
   }
@@ -62,13 +62,14 @@ export function buildNextSetPreview(
   if (!Number.isFinite(incrementKg) || incrementKg <= 0 ||
     !Number.isFinite(maximumWeightKg) || maximumWeightKg <= 0) return null;
 
-  const nextSetIndex = exercise.sets.findIndex((set) => !set.completed);
+  const workingSets = exercise.sets.filter((set) => !set.dropSetOf);
+  const nextSetIndex = workingSets.findIndex((set) => !set.completed);
   if (nextSetIndex <= 0) return null;
-  const nextSet = exercise.sets[nextSetIndex];
+  const nextSet = workingSets[nextSetIndex];
   if (!Number.isFinite(nextSet.weightKg) || nextSet.weightKg <= 0 ||
     !Number.isInteger(nextSet.reps) || nextSet.reps <= 0) return null;
 
-  const precedingSet = [...exercise.sets.slice(0, nextSetIndex)].reverse()
+  const precedingSet = [...workingSets.slice(0, nextSetIndex)].reverse()
     .find((set) => set.completed);
   if (!precedingSet || (requireCurrentEffort && !precedingSet.effort) ||
     !meetsPlan(precedingSet, nextSet.weightKg, nextSet.reps)) return null;
@@ -76,6 +77,7 @@ export function buildNextSetPreview(
   const comparable = latestComparableSession(history, exercise.exerciseKey);
   if (!comparable) return null;
   const qualifyingHistorySet = comparable.exercise.sets
+    .filter((set) => !set.dropSetOf)
     .filter((set) => meetsPlan(set, nextSet.weightKg, nextSet.reps))
     .sort((first, second) => first.weightKg - second.weightKg || second.reps - first.reps)[0];
   if (!qualifyingHistorySet) return null;

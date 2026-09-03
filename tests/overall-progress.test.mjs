@@ -6,6 +6,15 @@ import ts from "typescript";
 const projectRoot = new URL("../", import.meta.url);
 
 async function importOverallProgressModule() {
+  const reportSource = await readFile(new URL("app/reportMetrics.ts", projectRoot), "utf8");
+  const reportTranspiled = ts.transpileModule(reportSource, {
+    compilerOptions: {
+      module: ts.ModuleKind.ESNext,
+      target: ts.ScriptTarget.ES2022,
+    },
+    fileName: "reportMetrics.ts",
+  });
+  const reportUrl = `data:text/javascript;base64,${Buffer.from(reportTranspiled.outputText).toString("base64")}`;
   const source = await readFile(new URL("app/overallProgress.ts", projectRoot), "utf8");
   const transpiled = ts.transpileModule(source, {
     compilerOptions: {
@@ -14,7 +23,8 @@ async function importOverallProgressModule() {
     },
     fileName: "overallProgress.ts",
   });
-  return import(`data:text/javascript;base64,${Buffer.from(transpiled.outputText).toString("base64")}`);
+  const linkedSource = transpiled.outputText.replace('from "./reportMetrics"', `from "${reportUrl}"`);
+  return import(`data:text/javascript;base64,${Buffer.from(linkedSource).toString("base64")}`);
 }
 
 const overallProgress = await importOverallProgressModule();
@@ -36,6 +46,7 @@ function session({ id, date, timestamp, exercises }) {
         weightKg: set.weight,
         reps: set.reps ?? 5,
         completed: set.completed ?? true,
+        ...(set.dropSetOf ? { dropSetOf: set.dropSetOf } : {}),
       })),
     })),
   };
@@ -187,6 +198,7 @@ test("period progress compares totals and per-exercise volume with the prior mat
       completedSets: 1,
       volumeKg: 500,
       bestWeightKg: 50,
+      previousBestWeightKg: 50,
       previousCompletedSets: 1,
       previousVolumeKg: 400,
     },
@@ -196,6 +208,7 @@ test("period progress compares totals and per-exercise volume with the prior mat
       completedSets: 1,
       volumeKg: 500,
       bestWeightKg: 100,
+      previousBestWeightKg: 80,
       previousCompletedSets: 1,
       previousVolumeKg: 400,
     },
@@ -216,4 +229,87 @@ test("all-time progress has no artificial comparison period", () => {
   assert.equal(progress.previous, null);
   assert.equal(progress.previousRange, null);
   assert.equal(progress.exercises[0].previousVolumeKg, 0);
+  assert.equal(progress.exercises[0].previousBestWeightKg, null);
+});
+
+test("period exercise comparisons distinguish heavier, equal, and no-baseline lifts", () => {
+  const history = [
+    session({ id: "current-bench", date: "2026-09-03", timestamp: 600, exercises: [{ key: "bench", name: "Bench press", sets: [{ weight: 85, reps: 5 }] }] }),
+    session({ id: "current-squat", date: "2026-09-02", timestamp: 500, exercises: [{ key: "squat", name: "Back squat", sets: [{ weight: 100, reps: 5 }] }] }),
+    session({ id: "current-curl", date: "2026-09-01", timestamp: 400, exercises: [{ key: "curl", name: "Dumbbell curl", sets: [{ weight: 12, reps: 10 }] }] }),
+    session({ id: "previous-bench", date: "2026-08-27", timestamp: 300, exercises: [{ key: "bench", name: "Bench press", sets: [{ weight: 80, reps: 5 }] }] }),
+    session({ id: "previous-squat", date: "2026-08-26", timestamp: 200, exercises: [{ key: "squat", name: "Back squat", sets: [{ weight: 100, reps: 5 }] }] }),
+  ];
+  const before = structuredClone(history);
+  const progress = overallProgress.buildPeriodProgress(history, "week", "2026-09-03");
+  const byExercise = new Map(progress.exercises.map((exercise) => [exercise.exerciseKey, exercise]));
+
+  assert.equal(byExercise.get("bench").bestWeightKg, 85);
+  assert.equal(byExercise.get("bench").previousBestWeightKg, 80);
+  assert.equal(byExercise.get("squat").bestWeightKg, 100);
+  assert.equal(byExercise.get("squat").previousBestWeightKg, 100);
+  assert.equal(byExercise.get("curl").bestWeightKg, 12);
+  assert.equal(byExercise.get("curl").previousBestWeightKg, null);
+  assert.deepEqual(
+    progress.exercises
+      .filter((exercise) => exercise.previousBestWeightKg !== null && exercise.bestWeightKg > exercise.previousBestWeightKg)
+      .map((exercise) => exercise.exerciseKey),
+    ["bench"],
+  );
+  assert.deepEqual(history, before, "weekly comparison derivation must not mutate workout history");
+});
+
+test("period best-weight comparisons ignore incomplete, zero-rep, and drop segments", () => {
+  const history = [
+    session({
+      id: "current-bench",
+      date: "2026-09-03",
+      timestamp: 400,
+      exercises: [{ key: "bench", name: "Bench press", sets: [
+        { weight: 85, reps: 5 },
+        { weight: 120, reps: 5, completed: false },
+        { weight: 130, reps: 0 },
+        { weight: 95, reps: 3, dropSetOf: "current-bench-set-0-0" },
+      ] }],
+    }),
+    session({
+      id: "previous-bench",
+      date: "2026-08-27",
+      timestamp: 300,
+      exercises: [{ key: "bench", name: "Bench press", sets: [
+        { weight: 80, reps: 5 },
+        { weight: 140, reps: 5, completed: false },
+        { weight: 150, reps: 0 },
+        { weight: 90, reps: 3, dropSetOf: "previous-bench-set-0-0" },
+      ] }],
+    }),
+  ];
+  const before = structuredClone(history);
+  const progress = overallProgress.buildPeriodProgress(history, "week", "2026-09-03");
+
+  assert.equal(progress.exercises[0].bestWeightKg, 85);
+  assert.equal(progress.exercises[0].previousBestWeightKg, 80);
+  assert.deepEqual(history, before, "best-weight comparison must not mutate workout history");
+});
+
+test("drop segments add volume without inflating working-set counts or best weight", () => {
+  const history = [session({
+    id: "drop-session",
+    date: "2026-09-03",
+    timestamp: 700,
+    exercises: [{ key: "curl", name: "Curl", sets: [
+      { weight: 20, reps: 8 },
+      { weight: 16, reps: 6, dropSetOf: "drop-session-set-0-0" },
+      { weight: 12, reps: 5, dropSetOf: "drop-session-set-0-0" },
+    ] }],
+  })];
+  const progress = overallProgress.buildOverallProgress(history);
+  const period = overallProgress.buildPeriodProgress(history, "all", "2026-09-03");
+
+  assert.equal(progress.completedSets, 1);
+  assert.equal(progress.totalVolumeKg, 316);
+  assert.equal(period.exercises[0].completedSets, 1);
+  assert.equal(period.exercises[0].volumeKg, 316);
+  assert.equal(period.exercises[0].bestWeightKg, 20);
+  assert.equal(period.exercises[0].previousBestWeightKg, null);
 });
