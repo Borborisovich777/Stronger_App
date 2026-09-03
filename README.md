@@ -21,6 +21,7 @@ Your workout records stay in the browser storage on your device. Stronger does n
 - Explicit different-equipment alternatives for selected movement patterns
 - Custom exercises saved to your personal library
 - Editable active workouts
+- Long-press drag ordering for active-workout exercises
 - Quick decimal weight, reps, and set completion
 - Linked drop-set continuations with editable 20% load-reduction suggestions
 - Optional read-only next-set previews with visible evidence
@@ -195,7 +196,9 @@ Training plans often change at the gym. During an active session, you can:
 - Change weight and reps
 - Mark a completed set incomplete again
 
-Use the explicit **Move up** and **Move down** controls when changing exercise order. Reordering does not depend on dragging, which makes it more reliable on a phone.
+To change the order, press and hold the move grip at the left of an exercise heading. When the **Moving exercise** card appears, drag up or down and release at the new position. Keep holding near the top or bottom of the screen to scroll through a longer workout. A quick tap does not move anything.
+
+The **Move up** and **Move down** buttons remain available in **Edit** mode as a precise alternative and for assistive technology. With a hardware keyboard focused on the move grip, use the Up Arrow or Down Arrow key. Reordering changes only the active workout and preserves its sets, completion status, and folded or open state.
 
 Each exercise card starts open. Tap the arrow in its upper-right corner to fold its sets and tap **Expand [exercise name]** to open them again. The compact card still shows completed sets and the rest setting while folded. Folding is only a temporary screen preference: it does not remove sets, change completion, or alter saved workout data, and cards open again after a reload or new workout.
 

@@ -24,7 +24,7 @@ test("builds a static Stronger shell for the GitHub Pages project path", async (
 });
 
 test("ships scoped install metadata and an offline shell", async () => {
-  const [manifestText, serviceWorker, app, storage, sessionRescue, effort, programBlocks, weeklyReview, overallProgress, reportMetrics, plateCalculator, nextSetPreview, historyCsv, dropSets, exercises, styles, packageText, workflow] = await Promise.all([
+  const [manifestText, serviceWorker, app, storage, sessionRescue, effort, programBlocks, weeklyReview, overallProgress, reportMetrics, plateCalculator, nextSetPreview, historyCsv, dropSets, exerciseReorder, exercises, styles, packageText, workflow] = await Promise.all([
     readFile(new URL("dist/manifest.webmanifest", projectRoot), "utf8"),
     readFile(new URL("dist/sw.js", projectRoot), "utf8"),
     readFile(new URL("app/StrongerApp.tsx", projectRoot), "utf8"),
@@ -39,6 +39,7 @@ test("ships scoped install metadata and an offline shell", async () => {
     readFile(new URL("app/nextSetPreview.ts", projectRoot), "utf8"),
     readFile(new URL("app/historyCsv.ts", projectRoot), "utf8"),
     readFile(new URL("app/dropSets.ts", projectRoot), "utf8"),
+    readFile(new URL("app/exerciseReorder.ts", projectRoot), "utf8"),
     readFile(new URL("app/exercises.ts", projectRoot), "utf8"),
     readFile(new URL("app/globals.css", projectRoot), "utf8"),
     readFile(new URL("package.json", projectRoot), "utf8"),
@@ -302,8 +303,24 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(app, /aria-expanded=\{exerciseExpanded\}/);
   assert.match(app, /aria-controls=\{exercisePanelId\}/);
   assert.match(app, /className="exercise-panel" hidden=\{!exerciseExpanded\}/);
+  assert.match(app, /Hold the left-hand move grip, then drag to change the order/);
+  assert.match(app, /onPointerDown=\{\(event\) => beginExerciseReorder\(exercise, event\)\}/);
+  assert.match(app, /onPointerMove=\{moveExerciseReorder\}/);
+  assert.match(app, /onPointerUp=\{finishExerciseReorder\}/);
+  assert.match(app, /onPointerCancel=\{resetExerciseReorder\}/);
+  assert.match(app, /onLostPointerCapture=/);
+  assert.match(app, /movedBeyondLongPressTolerance/);
+  assert.match(app, /aria-keyshortcuts="ArrowUp ArrowDown"/);
+  assert.match(app, /data-workout-exercise-id=\{exercise\.id\}/);
+  assert.match(exerciseReorder, /EXERCISE_LONG_PRESS_MS = 450/);
+  assert.match(exerciseReorder, /export function reorderItemsById/);
   assert.match(styles, /\.exercise-disclosure\s*\{[^}]*width:\s*var\(--touch-target\);[^}]*height:\s*var\(--touch-target\);/s);
   assert.match(styles, /\.exercise-panel\[hidden\]\s*\{[^}]*display:\s*none;/s);
+  assert.match(styles, /\.exercise-reorder-handle\.set-number\s*\{[^}]*touch-action:\s*none;/s);
+  assert.match(styles, /\.exercise-reorder-handle\.set-number\s*\{[^}]*width:\s*var\(--touch-target\);[^}]*height:\s*var\(--touch-target\);/s);
+  assert.match(styles, /\.workout-exercise-card\.is-reorder-target-before\s*\{/);
+  assert.match(styles, /\.workout-exercise-card\.is-reorder-target-after\s*\{/);
+  assert.match(styles, /\.exercise-reorder-preview\s*\{[^}]*position:\s*fixed;/s);
   assert.match(styles, /\.toast\s*\{[^}]*bottom:\s*calc\(84px \+ env\(safe-area-inset-bottom\)\);/s);
   assert.doesNotMatch(styles, /\.toast\s*\{[^}]*top:/s);
   assert.match(styles, /scroll-padding-top:\s*calc\(82px \+ env\(safe-area-inset-top\)\)/);

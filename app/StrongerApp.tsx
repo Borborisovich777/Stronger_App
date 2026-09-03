@@ -1,6 +1,16 @@
 "use client";
 
-import { ChangeEvent, FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  FormEvent,
+  KeyboardEvent as ReactKeyboardEvent,
+  PointerEvent as ReactPointerEvent,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import {
   BACKUP_FORMAT_VERSION,
@@ -51,6 +61,12 @@ import {
   equipmentForExercise,
 } from "./exercises";
 import { buildHistoryCsv } from "./historyCsv";
+import {
+  EXERCISE_LONG_PRESS_MS,
+  movedBeyondLongPressTolerance,
+  reorderItemsById,
+  type ReorderPlacement,
+} from "./exerciseReorder";
 import {
   completedDropSegments,
   dropNumber,
@@ -114,6 +130,25 @@ type PlateCalculatorDraft = {
   targetTotal: number;
   barWeight: number;
   inventory: PlateInventoryItem[];
+};
+type ExerciseReorderPreview = {
+  sourceId: string;
+  sourceName: string;
+  targetId: string;
+  placement: ReorderPlacement;
+};
+type ExerciseReorderGesture = ExerciseReorderPreview & {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  activationX: number;
+  activationY: number;
+  currentX: number;
+  currentY: number;
+  active: boolean;
+  hasMovedAfterActivation: boolean;
+  pressTimer: number | null;
+  handle: HTMLButtonElement;
 };
 
 const THEME_STORAGE_KEY = "stronger-theme";
@@ -995,6 +1030,7 @@ export default function StrongerApp() {
   const [message, setMessage] = useState("");
   const [editingWorkout, setEditingWorkout] = useState(false);
   const [collapsedExerciseIds, setCollapsedExerciseIds] = useState<Set<string>>(() => new Set());
+  const [exerciseReorderPreview, setExerciseReorderPreview] = useState<ExerciseReorderPreview | null>(null);
   const [showBlankWorkout, setShowBlankWorkout] = useState(false);
   const [blankName, setBlankName] = useState("Workout");
   const [showExerciseModal, setShowExerciseModal] = useState(false);
@@ -1023,6 +1059,9 @@ export default function StrongerApp() {
   const dismissedRescuePromptRef = useRef<DismissedRescuePrompt | null>(null);
   const deferredRescueCheckRef = useRef(false);
   const progressDetailsRef = useRef<HTMLDivElement>(null);
+  const exerciseReorderGestureRef = useRef<ExerciseReorderGesture | null>(null);
+  const exerciseReorderPreviewRef = useRef<HTMLDivElement>(null);
+  const exerciseReorderAutoScrollRef = useRef<number | null>(null);
 
   const activeWorkout = data.activeWorkout;
   const unit = data.settings.unit;
@@ -1096,6 +1135,63 @@ export default function StrongerApp() {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [tab, activeWorkout?.id]);
+
+  useEffect(() => {
+    const cancelReorder = () => {
+      const gesture = exerciseReorderGestureRef.current;
+      exerciseReorderGestureRef.current = null;
+      if (gesture?.pressTimer !== null && gesture?.pressTimer !== undefined) {
+        window.clearTimeout(gesture.pressTimer);
+      }
+      if (exerciseReorderAutoScrollRef.current !== null) {
+        window.cancelAnimationFrame(exerciseReorderAutoScrollRef.current);
+        exerciseReorderAutoScrollRef.current = null;
+      }
+      if (gesture?.handle.hasPointerCapture?.(gesture.pointerId)) {
+        gesture.handle.releasePointerCapture(gesture.pointerId);
+      }
+      document.body.classList.remove("is-reordering-exercises");
+      setExerciseReorderPreview(null);
+    };
+    const cancelWhenHidden = () => {
+      if (document.visibilityState === "hidden") cancelReorder();
+    };
+    window.addEventListener("blur", cancelReorder);
+    document.addEventListener("visibilitychange", cancelWhenHidden);
+    return () => {
+      window.removeEventListener("blur", cancelReorder);
+      document.removeEventListener("visibilitychange", cancelWhenHidden);
+      const gesture = exerciseReorderGestureRef.current;
+      if (gesture?.pressTimer !== null && gesture?.pressTimer !== undefined) {
+        window.clearTimeout(gesture.pressTimer);
+      }
+      if (exerciseReorderAutoScrollRef.current !== null) {
+        window.cancelAnimationFrame(exerciseReorderAutoScrollRef.current);
+      }
+      exerciseReorderGestureRef.current = null;
+      exerciseReorderAutoScrollRef.current = null;
+      document.body.classList.remove("is-reordering-exercises");
+    };
+  }, []);
+
+  useEffect(() => {
+    const gesture = exerciseReorderGestureRef.current;
+    const reorderContextUnavailable = tab !== "workout" || !activeWorkout || workoutTimerPaused ||
+      otherModalOpen || Boolean(sessionRescueWorkout && sessionRescuePrompt);
+    if (!gesture || !reorderContextUnavailable) return;
+
+    exerciseReorderGestureRef.current = null;
+    if (gesture.pressTimer !== null) window.clearTimeout(gesture.pressTimer);
+    if (exerciseReorderAutoScrollRef.current !== null) {
+      window.cancelAnimationFrame(exerciseReorderAutoScrollRef.current);
+      exerciseReorderAutoScrollRef.current = null;
+    }
+    if (gesture.handle.hasPointerCapture?.(gesture.pointerId)) {
+      gesture.handle.releasePointerCapture(gesture.pointerId);
+    }
+    document.body.classList.remove("is-reordering-exercises");
+    setExerciseReorderPreview(null);
+  }, [activeWorkout, otherModalOpen, sessionRescuePrompt, sessionRescueWorkout, tab, workoutTimerPaused]);
 
   useEffect(() => {
     const viewport = window.visualViewport;
@@ -1556,6 +1652,210 @@ export default function StrongerApp() {
 
   function moveExercise(index: number, direction: -1 | 1) {
     updateActive((workout) => ({ ...workout, exercises: moveItem(workout.exercises, index, index + direction) }));
+  }
+
+  function positionExerciseReorderPreview(clientY: number) {
+    const preview = exerciseReorderPreviewRef.current;
+    if (!preview) return;
+    const minimumTop = 82;
+    const maximumTop = Math.max(minimumTop, window.innerHeight - 150);
+    preview.style.top = `${Math.min(maximumTop, Math.max(minimumTop, clientY - 72))}px`;
+  }
+
+  function updateExerciseReorderTarget(clientX: number, clientY: number) {
+    const gesture = exerciseReorderGestureRef.current;
+    if (!gesture?.active) return;
+    gesture.currentX = clientX;
+    gesture.currentY = clientY;
+    positionExerciseReorderPreview(clientY);
+
+    const cards = Array.from(document.querySelectorAll<HTMLElement>("[data-workout-exercise-id]"));
+    const candidates = cards.filter((card) => card.dataset.workoutExerciseId !== gesture.sourceId);
+    if (!candidates.length) return;
+
+    const nextCard = candidates.find((card) => {
+      const bounds = card.getBoundingClientRect();
+      return clientY < bounds.top + bounds.height / 2;
+    });
+    const targetCard = nextCard ?? candidates[candidates.length - 1];
+    const targetId = targetCard.dataset.workoutExerciseId;
+    if (!targetId) return;
+    const placement: ReorderPlacement = nextCard ? "before" : "after";
+    if (gesture.targetId === targetId && gesture.placement === placement) return;
+
+    gesture.targetId = targetId;
+    gesture.placement = placement;
+    setExerciseReorderPreview({
+      sourceId: gesture.sourceId,
+      sourceName: gesture.sourceName,
+      targetId,
+      placement,
+    });
+  }
+
+  function startExerciseReorderAutoScroll() {
+    if (exerciseReorderAutoScrollRef.current !== null) return;
+    const scroll = () => {
+      exerciseReorderAutoScrollRef.current = null;
+      const gesture = exerciseReorderGestureRef.current;
+      if (!gesture?.active) return;
+
+      const topEdge = 88;
+      const bottomEdge = window.innerHeight - 88;
+      let scrollBy = 0;
+      if (gesture.currentY < topEdge) {
+        scrollBy = -Math.min(18, Math.max(4, Math.ceil((topEdge - gesture.currentY) / 7)));
+      } else if (gesture.currentY > bottomEdge) {
+        scrollBy = Math.min(18, Math.max(4, Math.ceil((gesture.currentY - bottomEdge) / 7)));
+      }
+      if (scrollBy !== 0) {
+        const previousScrollY = window.scrollY;
+        window.scrollBy(0, scrollBy);
+        if (window.scrollY !== previousScrollY) {
+          updateExerciseReorderTarget(gesture.currentX, gesture.currentY);
+        }
+      }
+      exerciseReorderAutoScrollRef.current = window.requestAnimationFrame(scroll);
+    };
+    exerciseReorderAutoScrollRef.current = window.requestAnimationFrame(scroll);
+  }
+
+  function resetExerciseReorder() {
+    const gesture = exerciseReorderGestureRef.current;
+    exerciseReorderGestureRef.current = null;
+    if (gesture?.pressTimer !== null && gesture?.pressTimer !== undefined) {
+      window.clearTimeout(gesture.pressTimer);
+    }
+    if (exerciseReorderAutoScrollRef.current !== null) {
+      window.cancelAnimationFrame(exerciseReorderAutoScrollRef.current);
+      exerciseReorderAutoScrollRef.current = null;
+    }
+    if (gesture?.handle.hasPointerCapture?.(gesture.pointerId)) {
+      gesture.handle.releasePointerCapture(gesture.pointerId);
+    }
+    document.body.classList.remove("is-reordering-exercises");
+    setExerciseReorderPreview(null);
+  }
+
+  function beginExerciseReorder(
+    exercise: WorkoutExercise,
+    event: ReactPointerEvent<HTMLButtonElement>,
+  ) {
+    if (!event.isPrimary || event.button !== 0 || !activeWorkout ||
+      activeWorkout.exercises.length < 2 || workoutTimerPaused) return;
+    resetExerciseReorder();
+
+    const handle = event.currentTarget;
+    const pointerId = event.pointerId;
+    handle.setPointerCapture?.(pointerId);
+    const gesture: ExerciseReorderGesture = {
+      sourceId: exercise.id,
+      sourceName: exercise.name,
+      targetId: exercise.id,
+      placement: "before",
+      pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      activationX: event.clientX,
+      activationY: event.clientY,
+      currentX: event.clientX,
+      currentY: event.clientY,
+      active: false,
+      hasMovedAfterActivation: false,
+      pressTimer: null,
+      handle,
+    };
+    exerciseReorderGestureRef.current = gesture;
+    gesture.pressTimer = window.setTimeout(() => {
+      const pending = exerciseReorderGestureRef.current;
+      if (!pending || pending.pointerId !== pointerId) return;
+      pending.active = true;
+      pending.activationX = pending.currentX;
+      pending.activationY = pending.currentY;
+      pending.hasMovedAfterActivation = false;
+      pending.pressTimer = null;
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      document.body.classList.add("is-reordering-exercises");
+      updateExerciseReorderTarget(pending.currentX, pending.currentY);
+      window.requestAnimationFrame(() => positionExerciseReorderPreview(pending.currentY));
+    }, EXERCISE_LONG_PRESS_MS);
+  }
+
+  function moveExerciseReorder(event: ReactPointerEvent<HTMLButtonElement>) {
+    const gesture = exerciseReorderGestureRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+    if (!gesture.active && movedBeyondLongPressTolerance(
+      gesture.startX,
+      gesture.startY,
+      event.clientX,
+      event.clientY,
+    )) {
+      resetExerciseReorder();
+      return;
+    }
+    gesture.currentX = event.clientX;
+    gesture.currentY = event.clientY;
+    if (!gesture.active) return;
+    event.preventDefault();
+    if (!gesture.hasMovedAfterActivation && movedBeyondLongPressTolerance(
+      gesture.activationX,
+      gesture.activationY,
+      event.clientX,
+      event.clientY,
+      4,
+    )) {
+      gesture.hasMovedAfterActivation = true;
+      startExerciseReorderAutoScroll();
+    }
+    updateExerciseReorderTarget(event.clientX, event.clientY);
+  }
+
+  function finishExerciseReorder(event: ReactPointerEvent<HTMLButtonElement>) {
+    const gesture = exerciseReorderGestureRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+    if (!gesture.active) {
+      resetExerciseReorder();
+      return;
+    }
+    event.preventDefault();
+    if (tab !== "workout" || workoutTimerPaused || otherModalOpen ||
+      Boolean(sessionRescueWorkout && sessionRescuePrompt)) {
+      resetExerciseReorder();
+      return;
+    }
+    const exercises = activeWorkout?.exercises;
+    const reordered = exercises
+      ? reorderItemsById(exercises, gesture.sourceId, gesture.targetId, gesture.placement)
+      : exercises;
+    const newIndex = reordered?.findIndex((exercise) => exercise.id === gesture.sourceId) ?? -1;
+    const sourceName = gesture.sourceName;
+    resetExerciseReorder();
+    if (!exercises || !reordered || reordered === exercises || newIndex < 0) {
+      setMessage("Exercise order unchanged.");
+      return;
+    }
+    updateActive((workout) => ({
+      ...workout,
+      exercises: reorderItemsById(workout.exercises, gesture.sourceId, gesture.targetId, gesture.placement),
+    }));
+    setMessage(`${sourceName} moved to exercise ${newIndex + 1}.`);
+  }
+
+  function reorderExerciseWithKeyboard(
+    exercise: WorkoutExercise,
+    exerciseIndex: number,
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+  ) {
+    const direction = event.key === "ArrowUp" ? -1 : event.key === "ArrowDown" ? 1 : 0;
+    if (!direction) return;
+    event.preventDefault();
+    const destination = exerciseIndex + direction;
+    if (!activeWorkout || destination < 0 || destination >= activeWorkout.exercises.length) {
+      setMessage(`${exercise.name} is already at the ${direction < 0 ? "top" : "bottom"}.`);
+      return;
+    }
+    moveExercise(exerciseIndex, direction);
+    setMessage(`${exercise.name} moved to exercise ${destination + 1}.`);
   }
 
   function removeExercise(exercise: WorkoutExercise) {
@@ -2176,6 +2476,12 @@ export default function StrongerApp() {
                 <div className="progress-track" aria-hidden="true"><span style={{ width: `${progressPercent}%` }} /></div>
               </section>
 
+              {activeWorkout.exercises.length > 1 ? (
+                <p className="exercise-reorder-hint" id="exercise-reorder-hint">
+                  <span aria-hidden="true">↕</span> Hold the left-hand move grip, then drag to change the order.
+                </p>
+              ) : null}
+
               {activeWorkout.exercises.length ? activeWorkout.exercises.map((exercise, exerciseIndex) => {
                 const exerciseComplete = exercise.sets.length > 0 && exercise.sets.every((set) => set.completed);
                 const exerciseWorkingSets = workingSets(exercise);
@@ -2184,6 +2490,10 @@ export default function StrongerApp() {
                 const exerciseCompletedDropCount = exerciseDropSegments.filter((set) => set.completed && set.reps > 0).length;
                 const exerciseExpanded = !collapsedExerciseIds.has(exercise.id);
                 const exercisePanelId = `exercise-panel-${exercise.id}`;
+                const isReorderSource = exerciseReorderPreview?.sourceId === exercise.id;
+                const reorderTargetClass = exerciseReorderPreview?.targetId === exercise.id
+                  ? `is-reorder-target-${exerciseReorderPreview.placement}`
+                  : "";
                 const nextSetPreview = nextSetPreviewEnabled
                   ? buildNextSetPreview(
                     exercise,
@@ -2194,10 +2504,36 @@ export default function StrongerApp() {
                   )
                   : null;
                 return (
-                  <article className={`exercise-card ${exerciseComplete ? "exercise-complete" : ""} ${exerciseExpanded ? "" : "is-collapsed"}`} key={exercise.id}>
+                  <article
+                    className={`exercise-card workout-exercise-card ${exerciseComplete ? "exercise-complete" : ""} ${exerciseExpanded ? "" : "is-collapsed"} ${isReorderSource ? "is-reorder-source" : ""} ${reorderTargetClass}`}
+                    data-workout-exercise-id={exercise.id}
+                    key={exercise.id}
+                  >
                     <header className="exercise-header">
                       <div className="exercise-title-wrap">
-                        <span className="set-number">{exerciseComplete ? "✓" : exerciseIndex + 1}</span>
+                        {activeWorkout.exercises.length > 1 ? (
+                          <button
+                            className="set-number exercise-reorder-handle"
+                            type="button"
+                            aria-label={`Move ${exercise.name}. Press and hold, then drag. Use the up and down arrow keys with a keyboard.`}
+                            aria-describedby="exercise-reorder-hint"
+                            aria-keyshortcuts="ArrowUp ArrowDown"
+                            title="Hold and drag to reorder"
+                            onPointerDown={(event) => beginExerciseReorder(exercise, event)}
+                            onPointerMove={moveExerciseReorder}
+                            onPointerUp={finishExerciseReorder}
+                            onPointerCancel={resetExerciseReorder}
+                            onLostPointerCapture={(event) => {
+                              if (exerciseReorderGestureRef.current?.pointerId === event.pointerId) resetExerciseReorder();
+                            }}
+                            onContextMenu={(event) => event.preventDefault()}
+                            onClick={(event) => event.preventDefault()}
+                            onKeyDown={(event) => reorderExerciseWithKeyboard(exercise, exerciseIndex, event)}
+                          >
+                            <span>{exerciseComplete ? "✓" : exerciseIndex + 1}</span>
+                            <span className="exercise-reorder-grip" aria-hidden="true">⠿</span>
+                          </button>
+                        ) : <span className="set-number">{exerciseComplete ? "✓" : exerciseIndex + 1}</span>}
                         <div>
                           <p className="exercise-order">EXERCISE {exerciseIndex + 1}</p>
                           {editingWorkout ? (
@@ -2214,12 +2550,6 @@ export default function StrongerApp() {
                         </div>
                       </div>
                       <div className="exercise-header-actions">
-                        {editingWorkout ? (
-                          <div className="stacked-actions" aria-label={`Reorder ${exercise.name}`}>
-                            <button type="button" className="mini-icon-button" disabled={exerciseIndex === 0} onClick={() => moveExercise(exerciseIndex, -1)} aria-label={`Move ${exercise.name} up`}>↑</button>
-                            <button type="button" className="mini-icon-button" disabled={exerciseIndex === activeWorkout.exercises.length - 1} onClick={() => moveExercise(exerciseIndex, 1)} aria-label={`Move ${exercise.name} down`}>↓</button>
-                          </div>
-                        ) : null}
                         <button
                           className="exercise-disclosure"
                           type="button"
@@ -2232,6 +2562,13 @@ export default function StrongerApp() {
                         </button>
                       </div>
                     </header>
+
+                    {editingWorkout && activeWorkout.exercises.length > 1 ? (
+                      <div className="exercise-reorder-buttons" role="group" aria-label={`Reorder ${exercise.name}`}>
+                        <button type="button" className="small-button" disabled={exerciseIndex === 0} onClick={() => moveExercise(exerciseIndex, -1)} aria-label={`Move ${exercise.name} up`}>↑ Move up</button>
+                        <button type="button" className="small-button" disabled={exerciseIndex === activeWorkout.exercises.length - 1} onClick={() => moveExercise(exerciseIndex, 1)} aria-label={`Move ${exercise.name} down`}>Move down ↓</button>
+                      </div>
+                    ) : null}
 
                     <div id={exercisePanelId} className="exercise-panel" hidden={!exerciseExpanded}>
                     {nextSetPreview ? (
@@ -2863,6 +3200,15 @@ export default function StrongerApp() {
             <span aria-hidden="true">◎</span><div><strong>Private by design</strong><p>Your workouts are stored in this installation’s browser storage and are not sent to a Stronger account or workout database.</p></div>
           </section>
         </main>
+      ) : null}
+
+      {exerciseReorderPreview ? createPortal(
+        <div className="exercise-reorder-preview" ref={exerciseReorderPreviewRef} role="status" aria-live="polite">
+          <span aria-hidden="true">↕</span>
+          <span><small>MOVING EXERCISE</small><strong>{exerciseReorderPreview.sourceName}</strong></span>
+          <em>Release to place</em>
+        </div>,
+        document.body,
       ) : null}
 
       {restRemaining !== null ? (

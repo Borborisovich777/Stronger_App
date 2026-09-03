@@ -960,6 +960,29 @@ small {
   transition: width 180ms ease-out;
 }
 
+.exercise-reorder-hint {
+  display: flex;
+  margin: 9px 3px 5px;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.exercise-reorder-hint > span {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-soft);
+  color: var(--ink-soft);
+  font-weight: 800;
+}
+
 .workout-name-input,
 .exercise-name-input {
   width: 100%;
@@ -1002,6 +1025,39 @@ small {
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow-sm);
+}
+
+.workout-exercise-card {
+  position: relative;
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.workout-exercise-card.is-reorder-source {
+  border-color: var(--line-strong);
+  border-style: dashed;
+  opacity: 0.7;
+  transform: scale(0.985);
+}
+
+.workout-exercise-card.is-reorder-target-before {
+  box-shadow: inset 0 4px 0 var(--accent-strong), var(--shadow-sm);
+}
+
+.workout-exercise-card.is-reorder-target-after {
+  box-shadow: inset 0 -4px 0 var(--accent-strong), var(--shadow-sm);
+}
+
+body.is-reordering-exercises .workout-exercise-card {
+  padding-bottom: 18px;
+}
+
+body.is-reordering-exercises .workout-exercise-card .exercise-panel,
+body.is-reordering-exercises .workout-exercise-card .exercise-reorder-buttons {
+  display: none;
 }
 
 .exercise-card.exercise-complete {
@@ -1070,6 +1126,100 @@ small {
 .exercise-title-wrap h2 {
   margin-top: 3px;
   overflow-wrap: anywhere;
+}
+
+.exercise-reorder-handle.set-number {
+  width: var(--touch-target);
+  height: var(--touch-target);
+  min-height: var(--touch-target);
+  padding: 0 6px;
+  grid-template-columns: minmax(12px, 1fr) 11px;
+  gap: 2px;
+  border: 1px solid var(--line);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
+
+.exercise-reorder-handle.set-number:active,
+body.is-reordering-exercises .exercise-reorder-handle.set-number {
+  cursor: grabbing;
+}
+
+.exercise-reorder-grip {
+  overflow: hidden;
+  color: var(--subtle);
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+body.is-reordering-exercises {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.exercise-reorder-preview {
+  position: fixed;
+  z-index: 90;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: min(calc(100vw - 32px), 650px);
+  min-height: 58px;
+  padding: 9px 12px;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 2px solid var(--accent-strong);
+  border-radius: 17px;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  color: var(--ink);
+  pointer-events: none;
+  transform: translateX(-50%);
+  will-change: top;
+}
+
+.exercise-reorder-preview > span:first-child {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.exercise-reorder-preview > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.exercise-reorder-preview small {
+  color: var(--muted);
+  font-size: 0.61rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.exercise-reorder-preview strong {
+  overflow: hidden;
+  font-size: 0.88rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exercise-reorder-preview em {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-style: normal;
+  white-space: nowrap;
 }
 
 .exercise-order {
@@ -1180,14 +1330,17 @@ small {
   color: var(--accent-ink);
 }
 
-.stacked-actions {
+.exercise-reorder-buttons {
   display: grid;
-  flex: 0 0 auto;
-  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  border-top: 1px solid var(--line);
 }
 
-.stacked-actions .mini-icon-button {
-  height: 44px;
+.exercise-reorder-buttons .small-button {
+  width: 100%;
 }
 
 .set-grid {
@@ -3823,6 +3976,14 @@ small {
   .rest-banner button {
     min-width: 50px;
     padding: 0 8px;
+  }
+
+  .exercise-reorder-preview {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .exercise-reorder-preview em {
+    display: none;
   }
 }
 
