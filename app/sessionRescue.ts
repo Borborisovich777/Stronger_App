@@ -1,6 +1,7 @@
 import type { WorkoutSession } from "./storage";
 
 export const SESSION_RESCUE_INACTIVITY_MS = 6 * 60 * 60 * 1000;
+export const LONG_SESSION_CHECK_MS = 3 * 60 * 60 * 1000;
 
 const MAX_TIMER_MS = 8_640_000_000_000_000;
 
@@ -43,6 +44,43 @@ export function workoutElapsedSeconds(workout: WorkoutSession, now: number): num
   return Math.floor(Math.max(0, endAt - workout.startedAt - pausedDurationMs) / 1000);
 }
 
+export function shouldOfferLongSessionCheck(
+  workout: WorkoutSession | null,
+  now: number,
+  thresholdMs = LONG_SESSION_CHECK_MS,
+): boolean {
+  if (!workout || workout.finishedAt !== undefined || workout.longSessionCheckState === "confirmed") return false;
+  if (workout.longSessionCheckState === "pending") return true;
+  return workoutElapsedSeconds(workout, now) * 1000 >= Math.max(0, thresholdMs);
+}
+
+export function pauseForLongSessionCheck(
+  workout: WorkoutSession,
+  now: number,
+  thresholdMs = LONG_SESSION_CHECK_MS,
+): WorkoutSession {
+  if (workout.timerPausedAt !== undefined || !shouldOfferLongSessionCheck(workout, now, thresholdMs)) return workout;
+  const safeNow = Math.max(workout.startedAt, safeEpoch(now, workout.startedAt));
+  const pausedDurationMs = Math.max(0, workout.timerPausedDurationMs ?? 0);
+  const maximumOffsetMs = Math.max(0, MAX_TIMER_MS - workout.startedAt);
+  const pausedOffsetMs = Math.min(maximumOffsetMs, pausedDurationMs);
+  const activeOffsetMs = Math.min(Math.max(0, maximumOffsetMs - pausedOffsetMs), Math.max(0, thresholdMs));
+  const thresholdAt = workout.startedAt + pausedOffsetMs + activeOffsetMs;
+  return {
+    ...workout,
+    timerPausedAt: Math.min(safeNow, thresholdAt),
+    longSessionCheckState: "pending",
+    restEndsAt: undefined,
+  };
+}
+
+export function confirmLongSessionContinuation(workout: WorkoutSession, now: number): WorkoutSession {
+  return {
+    ...resumeWorkoutTimer(workout, now),
+    longSessionCheckState: "confirmed",
+  };
+}
+
 export function pauseWorkoutTimer(workout: WorkoutSession, now: number): WorkoutSession {
   if (workout.timerPausedAt !== undefined) return workout;
   const safeNow = Math.max(workout.startedAt, safeEpoch(now, workout.startedAt));
@@ -78,6 +116,7 @@ export function finishWorkoutTimer(
   const finished = { ...workout };
   delete finished.timerPausedAt;
   delete finished.timerResumedAt;
+  delete finished.longSessionCheckState;
   const requestedFinishAt = closeAtLastActivity ? latestWorkoutActivityAt(workout) : safeEpoch(now, workout.startedAt);
   const finishedAt = Math.max(workout.startedAt, timerPausedAt ?? requestedFinishAt);
   return {

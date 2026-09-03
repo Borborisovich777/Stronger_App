@@ -222,6 +222,15 @@ test("additive paused-timer fields survive backup normalization", () => {
   assert.equal(data.formatVersion, 1);
 });
 
+test("the additive long-session check state survives backup normalization", () => {
+  const backup = structuredClone(pausedActiveBackup);
+  backup.data.activeWorkout.longSessionCheckState = "pending";
+  const data = storage.normalizeStrongerBackup(backup);
+
+  assert.ok(data?.activeWorkout);
+  assert.equal(data.activeWorkout.longSessionCheckState, "pending");
+});
+
 test("optional effort settings and per-set values survive version-1 normalization", () => {
   const data = storage.normalizeStrongerBackup(effortBackup);
 
@@ -356,6 +365,10 @@ test("corrupt or unsupported snapshots are rejected as a whole", () => {
   const invalidOptionalTimestamp = structuredClone(activeHistoryBackup.data);
   invalidOptionalTimestamp.history[0].finishedAt = "later";
   invalidSnapshots.push(invalidOptionalTimestamp);
+
+  const invalidLongSessionState = structuredClone(activeHistoryBackup.data);
+  invalidLongSessionState.activeWorkout.longSessionCheckState = "ignored";
+  invalidSnapshots.push(invalidLongSessionState);
 
   const negativeWeight = structuredClone(activeHistoryBackup.data);
   negativeWeight.activeWorkout.exercises[0].sets[0].weightKg = -1;
@@ -1097,11 +1110,119 @@ test("kg remains canonical across display-unit round trips", () => {
 });
 
 test("only completed sets contribute to workout volume", () => {
-  const data = storage.normalizeStrongerBackup(activeHistoryBackup);
+  const data = storage.normalizeStrongerBackup(structuredClone(activeHistoryBackup));
   assert.ok(data?.activeWorkout);
 
   assert.deepEqual(storage.completedSets(data.activeWorkout).map((set) => set.id), ["set-fixture-complete"]);
   assert.equal(storage.workoutVolumeKg(data.activeWorkout), 425);
+
+  data.activeWorkout.exercises[0].sets[0].reps = 0;
+  assert.deepEqual(storage.completedSets(data.activeWorkout), []);
+  assert.deepEqual(storage.completedSetSegments(data.activeWorkout), []);
+  assert.equal(storage.workoutVolumeKg(data.activeWorkout), 0);
+});
+
+test("drop continuations preserve working-set counts and contribute to volume", () => {
+  const data = storage.normalizeStrongerBackup(structuredClone(activeHistoryBackup));
+  assert.ok(data?.activeWorkout);
+  const exercise = data.activeWorkout.exercises[0];
+  const root = exercise.sets[0];
+  exercise.sets.splice(1, 0, {
+    id: "drop-fixture",
+    weightKg: 35,
+    reps: 5,
+    completed: true,
+    completedAt: root.completedAt,
+    dropSetOf: root.id,
+  });
+
+  assert.equal(storage.isStrongerData(data), true);
+  assert.deepEqual(storage.completedSets(data.activeWorkout).map((set) => set.id), [root.id]);
+  assert.deepEqual(storage.completedSetSegments(data.activeWorkout).map((set) => set.id), [root.id, "drop-fixture"]);
+  assert.equal(storage.workoutVolumeKg(data.activeWorkout), 600);
+});
+
+test("drop continuation validation rejects orphans, nesting, interleaving, and completed gaps", () => {
+  const base = storage.normalizeStrongerBackup(structuredClone(activeHistoryBackup));
+  assert.ok(base?.activeWorkout);
+  const root = base.activeWorkout.exercises[0].sets[0];
+
+  for (const mutate of [
+    (exercise) => exercise.sets.splice(1, 0, { id: "orphan", weightKg: 30, reps: 5, completed: false, dropSetOf: "missing" }),
+    (exercise) => exercise.sets.splice(1, 0,
+      { id: "drop-a", weightKg: 30, reps: 5, completed: false, dropSetOf: root.id },
+      { id: "drop-b", weightKg: 20, reps: 5, completed: false, dropSetOf: "drop-a" }),
+    (exercise) => exercise.sets.push({ id: "late-drop", weightKg: 30, reps: 5, completed: false, dropSetOf: root.id }),
+    (exercise) => exercise.sets.splice(1, 0,
+      { id: "gap-a", weightKg: 30, reps: 5, completed: false, dropSetOf: root.id },
+      { id: "gap-b", weightKg: 20, reps: 5, completed: true, dropSetOf: root.id }),
+    (exercise) => exercise.sets.splice(1, 0, {
+      id: "not-a-drop",
+      weightKg: root.weightKg,
+      reps: 5,
+      completed: true,
+      dropSetOf: root.id,
+    }),
+    (exercise) => {
+      exercise.sets[0].reps = 0;
+      exercise.sets.splice(1, 0, {
+        id: "drop-without-reportable-root",
+        weightKg: 30,
+        reps: 5,
+        completed: true,
+        dropSetOf: root.id,
+      });
+    },
+    (exercise) => {
+      exercise.sets[0].weightKg = 0;
+      exercise.sets.splice(1, 0, {
+        id: "positive-drop-after-zero-load",
+        weightKg: 10,
+        reps: 5,
+        completed: true,
+        dropSetOf: root.id,
+      });
+    },
+  ]) {
+    const candidate = structuredClone(base);
+    mutate(candidate.activeWorkout.exercises[0]);
+    assert.equal(storage.isStrongerData(candidate), false);
+  }
+});
+
+test("drop continuation validation rejects cyclic parent references", () => {
+  const candidate = storage.normalizeStrongerBackup(structuredClone(activeHistoryBackup));
+  assert.ok(candidate?.activeWorkout);
+  candidate.activeWorkout.exercises[0].sets = [
+    { id: "cycle-a", weightKg: 20, reps: 5, completed: false, dropSetOf: "cycle-b" },
+    { id: "cycle-b", weightKg: 16, reps: 5, completed: false, dropSetOf: "cycle-a" },
+  ];
+
+  assert.equal(storage.isStrongerData(candidate), false);
+});
+
+test("bodyweight drop continuations remain at zero while positive load after zero is invalid", () => {
+  assert.equal(storage.isValidDropWeightTransition(100, 80), true);
+  assert.equal(storage.isValidDropWeightTransition(100, 100), false);
+  assert.equal(storage.isValidDropWeightTransition(100, 120), false);
+  assert.equal(storage.isValidDropWeightTransition(100, 0), true);
+  assert.equal(storage.isValidDropWeightTransition(0, 0), true);
+  assert.equal(storage.isValidDropWeightTransition(0, 10), false);
+
+  const candidate = storage.normalizeStrongerBackup(structuredClone(activeHistoryBackup));
+  assert.ok(candidate?.activeWorkout);
+  const root = candidate.activeWorkout.exercises[0].sets[0];
+  root.weightKg = 0;
+  candidate.activeWorkout.exercises[0].sets.splice(1, 0, {
+    id: "zero-drop-after-zero-load",
+    weightKg: 0,
+    reps: 5,
+    completed: true,
+    completedAt: root.completedAt,
+    dropSetOf: root.id,
+  });
+
+  assert.equal(storage.isStrongerData(candidate), true);
 });
 
 test("estimated one-rep max keeps its documented boundaries", () => {
