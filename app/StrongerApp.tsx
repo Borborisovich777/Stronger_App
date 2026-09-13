@@ -121,8 +121,9 @@ import { ExerciseGuide, ExercisePhoto } from "./ExerciseGuide";
 import { findExistingExercise, matchesExerciseSearch, mergeExerciseCatalog } from "./exercise-search";
 import { buildExerciseProgress, defaultSetMeasurements, ExerciseTracking, ExerciseWeightMode, findPreviousSet, findPreviousDropSet, formatDistanceKm, formatSetDuration, isTimedTracking, resolveExerciseTracking, resolveExerciseWeightMode, SetMeasurements, SetMeasurementUpdate, setCompletionError } from "./exercise-tracking";
 import { ArrowDown, ArrowUp, CaretDown, Check, ClockCounterClockwise, DotsThree, Barbell, GearSix, NotePencil, Plus, Timer, Trash, TrendUp, X } from "@phosphor-icons/react";
-import { createPreviewData } from "./preview-data";
+import { createExistingUserPreviewData, createPreviewData } from "./preview-data";
 import { TemplateLibrary } from "./TemplateLibrary";
+import { addPreparedTemplates, missingPreparedTemplates } from "./workoutTemplates";
 
 type Tab = "workout" | "history" | "progress" | "settings";
 type ThemeMode = "light" | "dark";
@@ -1179,8 +1180,8 @@ function EmptyState({ title, copy }: { title: string; copy: string }) {
 
 export default function StrongerApp() {
   const [previewKind] = useState(() => import.meta.env.DEV ? new URLSearchParams(window.location.search).get("preview") : null);
-  const previewMode = previewKind === "compact" || previewKind === "templates" || previewKind === "fresh";
-  const [data, setData] = useState<StrongerData>(() => previewKind === "compact" ? createPreviewData() : createDefaultData());
+  const previewMode = previewKind === "compact" || previewKind === "templates" || previewKind === "fresh" || previewKind === "existing";
+  const [data, setData] = useState<StrongerData>(() => previewKind === "compact" ? createPreviewData() : previewKind === "existing" ? createExistingUserPreviewData() : createDefaultData());
   const [hydrated, setHydrated] = useState(previewMode);
   const [storageRecoveryRequired, setStorageRecoveryRequired] = useState(false);
   const [canOverwriteUnreadableStorage, setCanOverwriteUnreadableStorage] = useState(false);
@@ -1611,6 +1612,7 @@ export default function StrongerApp() {
     () => nextRoutineInRotation(data.history, data.routines),
     [data.history, data.routines],
   );
+  const preparedTemplateCount = useMemo(() => missingPreparedTemplates(data.routines).length, [data.routines]);
   const summaryWorkoutCount = currentReport.totals.sessions;
   const progressHeadline = summaryWorkoutCount === 0
     ? currentReport.emptyReason === "active-workout-excluded"
@@ -2340,6 +2342,17 @@ export default function StrongerApp() {
     setHistoryDetail(null);
   }
 
+  function loadPreparedTemplates() {
+    try {
+      const updated = addPreparedTemplates(data, MAX_ROUTINES);
+      const added = updated.routines.length - data.routines.length;
+      setData(updated);
+      setMessage(`${added} prepared ${added === 1 ? "template" : "templates"} added. Your saved templates and history are unchanged.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Prepared templates could not be added.");
+    }
+  }
+
   function saveRoutine(routine: Routine) {
     const exists = data.routines.some((item) => item.id === routine.id);
     if (!exists && data.routines.length >= MAX_ROUTINES) {
@@ -2901,6 +2914,14 @@ export default function StrongerApp() {
                     <button className="text-button" type="button" onClick={() => setRoutineDraft({ id: makeId("routine"), name: "", exercises: [] })}>New</button>
                   </div>
                 </div>
+                {preparedTemplateCount > 0 ? (
+                  <div className="template-starters">
+                    <strong>{preparedTemplateCount} prepared {preparedTemplateCount === 1 ? "template" : "templates"} available</strong>
+                    <p>Chest, back, arms, shoulders, legs, calisthenics and full body. Add the missing sessions while keeping your saved templates and history.</p>
+                    <button className="primary-button full-width" type="button" onClick={loadPreparedTemplates}>Add {preparedTemplateCount} {preparedTemplateCount === 1 ? "template" : "templates"}</button>
+                    <button className="text-button" type="button" onClick={() => setShowTemplateLibrary(true)}>Preview prepared templates</button>
+                  </div>
+                ) : null}
                 <div className="routine-list">
                   {data.routines.map((routine, index) => (
                     <article className="routine-card" key={routine.id}>

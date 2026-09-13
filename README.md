@@ -118,6 +118,8 @@ Use **Settings → Templates → Delete** to delete an entire template. Deleting
 
 All 14 sessions are included as starter templates on a fresh installation. Choose **Workout → Templates → Browse** to inspect the catalog or add another copy, including on an existing installation. Open a session to see its exercise order, rep or time ranges, rest periods, equipment choices, and optional accessories.
 
+If you already have saved templates, **Workout → Templates** shows an **Add templates** button for the prepared sessions you are missing. Add them together without replacing your own routines or history. Existing prepared templates are recognized by their default ID or saved name, so repeated additions do not duplicate them. Updating or reopening the app alone does not replace an existing template list.
+
 Choose alternatives and include optional exercises, then tap **Customize this template**. Review starting weights and targets in the editor and tap **Save template** to add an independent copy. Existing templates and history stay intact. All public starting loads are zero for you to set; zero added load means bodyweight only. Prior results for the same exercise can still prefill a workout, so check its displayed loads and reps before logging.
 
 Full rep ranges and progression guidance are stored in editable template and exercise notes. These notes carry into the active workout; longer workout guidance can be expanded without covering the set list. Holds use duration tracking, and assistance stays separate from added weight.

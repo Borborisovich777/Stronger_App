@@ -2,6 +2,8 @@
 
 On a fresh installation, all 14 prepared sessions appear directly under Workout → Templates, ready to start or edit without an import or setup step. A Browse action also lets users inspect alternatives, customize, and save extra copies. Existing routines and workout history are not replaced.
 
+Existing users see an Add templates action above their saved routines. It adds missing prepared sessions together, skipping matching default IDs or saved names, while retaining every existing routine and workout record.
+
 ## Review at a glance
 
 | Focus | Option A | Option B |
@@ -299,3 +301,4 @@ Use this as a complete session. Per-side exercises include both sides in each se
 - Browsing and customizing make no changes until Save template; saving adds a new routine with fresh IDs.
 - Optional exercises are excluded by default. Alternative selection does not transfer load or history across exercise identities.
 - The local ?preview=fresh page shows the first-launch home screen; ?preview=templates opens the catalog. Both use temporary state and never read or write workout storage. Reloading resets these previews.
+- The local ?preview=existing page demonstrates adding the library alongside an existing routine and workout history, using temporary state only.
