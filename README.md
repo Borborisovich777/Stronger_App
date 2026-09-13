@@ -1,6 +1,6 @@
 # Stronger — Gym Progress Tracker
 
-Stronger is a free, offline-first workout tracker designed for iPhone. It lets you create routines, record sets quickly, review workout history, and see simple strength trends without an account, subscription, ads, or social features.
+Stronger is a free, offline-first workout tracker designed for iPhone. It lets you create templates, record sets quickly, review workout history, and see training trends without an account, subscription, ads, or social features.
 
 > Live app: **[Open Stronger](https://borborisovich777.github.io/Stronger_App/)**
 
@@ -16,24 +16,24 @@ Your workout records stay in the browser storage on your device. Stronger does n
 
 - Installable on an iPhone Home Screen
 - Works offline after the first successful online load
-- Starter Push, Pull, and Legs routines
-- Searchable library of 50 built-in exercises
-- Explicit different-equipment alternatives for selected movement patterns
+- Starter Push, Pull, and Legs templates
+- Searchable library of 257 exercises with 3D mannequin illustrations and instructions
+- Different-equipment alternatives for selected movement patterns
 - Custom exercises saved to your personal library
-- Editable active workouts
-- Long-press drag ordering for active-workout exercises
-- Quick decimal weight, reps, and set completion
+- Editable active workouts with notes, folding, and long-press drag ordering
+- Compact set entry for weight and reps, bodyweight reps, duration, or distance and duration
 - Linked drop-set continuations with editable 20% load-reduction suggestions
 - Optional read-only next-set previews with visible evidence
 - Previous results shown beside new sets
 - Foreground workout timer with an optional per-exercise rest timer
 - Searchable workout history
 - Duplicate a past workout for today
-- Best weight, estimated one-rep max, volume, and trend views
+- Strength, duration, distance, repetition, and assistance progress views
 - Kilograms and pounds
 - Temporary plate calculator with bounded pair inventory
 - Persistent light and dark appearance modes
-- Fixed workout header and bottom navigation for long sessions
+- Fixed active-workout toolbar with Finish and minimize/resume
+- Fixed navigation outside focused logging, with History keyboard handling
 - Local JSON backup and restore, plus readable workout CSV export
 - No account, ads, subscription, or server-side workout database
 
@@ -71,55 +71,64 @@ You can change these later. Changing units converts the displayed values; it doe
 
 Stronger stores weights internally in kilograms and converts them for display when pounds are selected. Small rounding differences may appear after switching units repeatedly.
 
-## Appearance and fixed controls
+## Appearance and workout controls
 
 Open **Settings → Appearance** and use the switch to choose light or dark mode. Stronger remembers this appearance on the current installation. Dark mode keeps the same cream, charcoal, lime, and red palette; it only remaps those colors for a darker canvas.
 
-The header and bottom navigation remain fixed while you scroll. The navigation is attached directly to the visible viewport rather than to an individual page, which prevents short screens such as an empty or filtered History view from lifting it above the iPhone Home indicator. During an active workout, the compact current-workout bar also stays directly below the header, keeping the workout name and **Edit/Done** control available while you move between exercises. The header keeps the workout timer visible, while the footer keeps Workout, History, Progress, and Settings within thumb reach. Page content includes extra safe-area spacing so these controls do not cover the first or last workout actions.
+The compact layout uses a system font, flat exercise sections and aligned set rows. Stronger retains its own cream, charcoal, lime and semantic red colors in both themes.
+
+During active logging, a fixed toolbar keeps **Finish** and the minimize control within reach. The workout title, elapsed time and optional notes sit above the exercise list. Minimize the session to return to the main navigation, then use **Resume [workout name]** to continue. The session remains saved while minimized.
+
+Outside focused logging, the header and bottom navigation stay fixed while you scroll. Navigation is attached to the visible viewport, including short or filtered History screens. Safe-area spacing keeps the fixed controls clear of workout content and the iPhone Home indicator.
 
 ## Navigation
 
 Stronger has four main areas:
 
-- **Workout:** routines and the active training session
+- **Workout:** templates and the active training session
 - **History:** completed workouts, search, details, duplicate, and delete
-- **Progress:** exercise-specific strength and volume trends
-- **Settings:** appearance, units, default rest time, installation help, backup, restore, and reset
+- **Progress:** exercise-specific strength, repetition, duration, distance, and assistance trends
+- **Settings:** appearance, units, default rest time, template management, installation help, backup, restore, and reset
 
-## Create and edit routines
+## Create and edit templates
 
-Stronger includes Push, Pull, and Legs starter routines. They are starting points and can be changed.
+Stronger includes Push, Pull, and Legs starter templates. They are starting points and can be changed.
 
-To create a routine:
+To create a template:
 
 1. Open **Workout**.
-2. Choose the option to create a routine.
-3. Enter a routine name.
+2. Tap **New** beside **Templates**.
+3. Enter a **Template name**.
 4. Tap **Add exercise**, then search or browse the exercise library.
-5. Add the desired starting sets, weights, and repetitions.
-6. Save the routine.
+5. Set each exercise's defaults: sets and weight/reps, or time/distance where appropriate.
+6. Tap **Save template**.
 
-While editing a routine, you can:
+To edit an existing template, tap its **⋯** control under **Workout → Templates**, or use **Settings → Templates → Edit**. While editing, you can:
 
-- Rename the routine
+- Rename the template
 - Add an exercise from the built-in or custom library
 - Rename an exercise
-- Change its target sets, weight, or reps
+- Change each exercise's set count and weight/reps or time/distance targets
 - Move an exercise using **Move up** or **Move down**
 - Remove an exercise
-- Delete the entire routine
 
-Deleting or editing a routine does not rewrite completed workout history. Completed workouts retain the values that were performed at that time.
+Use **Settings → Templates → Delete** to delete an entire template. Deleting or editing a template does not rewrite completed workout history. Completed workouts retain the values that were performed at that time.
 
 ## Exercise library and custom exercises
 
-Stronger includes 50 common strength exercises across Chest, Back, Shoulders, Arms, Legs, and Core. When adding an exercise to a workout or routine:
+Stronger includes 257 exercises across Chest, Back, Shoulders, Arms, Legs, Core, Full body, Cardio, Olympic, and Mobility. This covers all 253 entries in the published Strong global catalog snapshot, plus four existing Stronger variations. The live Strong endpoint could not be verified; the [catalog provenance and coverage](public/exercises/strong-catalog.json) records the exact source and its limits. Additions include Good Morning (Barbell), T Bar Row, Pendlay Row (Barbell), and underhand barbell rows.
+
+On **Workout**, open **Exercise library** to explore exercises without starting a session. Tap an illustration or exercise name to see two key positions, equipment, muscles, and instructions. **Back to exercises** returns to your search and category. During an active workout, open the exercise's **⋯** menu and choose **View movement** to open the same guide. Search recognizes Strong's exercise names and common aliases, accepts words in any order, and ignores punctuation. For example, try `morning barbell`, `bent over row`, or `landmine row`.
+
+The illustrations and guidance are bundled with the app. Each movement uses a faceless gray 3D mannequin, simplified gym equipment, a white background, and a subtle muscle highlight. Equipment labels identify the demonstrated variation. Custom exercises show a personal exercise placeholder and do not include a built-in illustrated guide.
+
+When adding an exercise to a workout or template:
 
 1. Tap **Add exercise**.
 2. Browse **All**, choose a category, or type in **Search exercises**.
-3. Tap an exercise name.
-4. Set the starting sets, weight, reps, and rest time.
-5. Tap **Add to workout**. In the routine builder, selecting a name adds it directly to the routine so you can edit its targets.
+3. Tap **Add** beside an exercise, or open its guide and tap **Select exercise**.
+4. Set the starting sets, exercise measurements, and rest time. Strength exercises use weight and reps; bodyweight movements use reps or added-load fields; holds use minutes and seconds; cardio uses kilometres and minutes/seconds. Assisted exercises label weight as **Assistance**, while weighted bodyweight exercises label it **Added**.
+5. Tap **Add to workout**. In the template builder, selecting an exercise adds it directly to the template so you can edit its targets.
 
 To add an exercise that is not included:
 
@@ -128,9 +137,13 @@ To add an exercise that is not included:
 3. Enter its name and tap **Save and select**.
 4. Finish its targets as usual.
 
-The custom exercise is saved immediately to the **Custom** category and can be reused in later workouts and routines. Names are checked without regard to capitalization or extra spaces. If the name already exists, Stronger selects the existing exercise instead of creating a duplicate.
+The custom exercise is saved immediately to the **Custom** category and can be reused in later workouts and templates. Names are checked without regard to capitalization or extra spaces. If the name already exists, Stronger selects the existing exercise instead of creating a duplicate.
 
-Each library exercise has a stable internal identity. Reusing the same library entry lets Previous and Progress connect results across workouts. Renaming an exercise inside a particular routine or active workout changes that displayed copy; when possible, reuse the library entry rather than typing a different lift over an unrelated one.
+Each library exercise has a stable internal identity. Reusing the same library entry lets Previous and Progress connect results across workouts. Renaming an exercise inside a particular template or active workout changes that displayed copy; when possible, reuse the library entry rather than typing a different lift over an unrelated one.
+
+All 3D illustrations were created using OpenAI image generation. The original 50 exercises used public-domain [Free Exercise DB](https://github.com/yuhonas/free-exercise-db) photographs as pose and equipment references. The 207 additions use original movement-specific prompts in the same mannequin style. Written guides use a matching public-domain movement reference where available or original text, with attribution shown in each guide. Strong supplies factual catalog names and IDs only; its artwork and instruction prose are not bundled. See the [illustration credits and reference mapping](public/exercises/README.md) and [reference dataset license](public/exercises/LICENSE.md).
+
+Existing exercise IDs and saved measurements are preserved. Old records keep their original weight/repetition meaning, including old holds logged as repetitions. New records snapshot their measurement type so later catalog changes cannot reinterpret them. Progress compares like measurements; assistance records favour a lower assistance weight and do not produce one-rep-max estimates.
 
 ### Equipment alternatives
 
@@ -140,31 +153,29 @@ Loads and difficulty are not equivalent between machines, free weights, cables, 
 
 ## Start a workout
 
-You can start from a saved routine or create a blank workout.
+You can start from a saved template or create a blank workout.
 
-### Start from a routine
+### Start from a template
 
 1. Open **Workout**.
-2. Select Push, Pull, Legs, or another saved routine.
-3. Tap the start control.
-4. Confirm or edit the workout name.
-5. Begin logging sets.
+2. Under **Templates**, tap the row for Push, Pull, Legs, or another saved template. This starts the workout directly.
+3. Begin logging sets.
 
-Starting a routine creates a working copy for today. Changes made inside the active workout do not silently rewrite the original routine.
+Starting a template creates a working copy for today in its saved exercise order. Weight and reps are prefilled from previous results when available, with the template's exercise defaults as a fallback. Historical results also appear in **Previous**. Changes made inside the active workout do not silently rewrite the original template.
 
 ### Start a blank workout
 
 1. Open **Workout**.
-2. Choose **Blank workout**.
+2. Choose **Start a blank workout**.
 3. Name the workout.
 4. Add the exercises you plan to perform from the searchable library, or create a custom exercise.
-5. Add sets and enter weight and rep targets.
+5. Add sets and enter the exercise's measurements.
 
 ### Resume an active workout
 
-An unfinished workout is saved locally as you make changes. If Stronger is closed or the page reloads, open the app again and resume the active workout.
+An unfinished workout is saved locally as you make changes. Use the toolbar's minimize control to browse the app, then **Resume [workout name]** to return. If Stronger is closed or the page reloads, open the app again and resume the active workout.
 
-Closing the app is not the same as finishing the workout. Use **Finish workout** when the session is complete so that it becomes part of History and Progress.
+Closing the app is not the same as finishing the workout. Use **Finish** when the session is complete so that it becomes part of History and Progress.
 
 ### Three-hour workout check
 
@@ -188,25 +199,25 @@ Closing the rescue sheet postpones the decision until the next app launch. It do
 
 ## Edit an active workout
 
-Training plans often change at the gym. During an active session, you can:
+Training plans often change at the gym. Open an exercise's **⋯** menu for:
 
-- Rename the workout
-- Add, rename, reorder, or remove exercises
-- Add or remove sets
-- Change weight and reps
-- Mark a completed set incomplete again
+- **Edit sets:** adjust the exercise's sets.
+- **Reorder:** reveal **Move up** and **Move down** controls for deliberate order changes.
+- **Notes:** edit the exercise note.
+- **Rest timer:** change the exercise's rest duration.
+- **View movement:** open the demonstration and instructions when available.
+
+Use the workout's menu to edit its details, **Add exercise** to expand the session and **Add set** beneath a set table for another working row. Measurements can be edited directly, and a completed set can be marked incomplete again. Edits are saved locally as you work and apply to today's session.
 
 To change the order, press and hold the move grip at the left of an exercise heading. When the **Moving exercise** card appears, drag up or down and release at the new position. Keep holding near the top or bottom of the screen to scroll through a longer workout. A quick tap does not move anything.
 
-The **Move up** and **Move down** buttons remain available in **Edit** mode as a precise alternative and for assistive technology. With a hardware keyboard focused on the move grip, use the Up Arrow or Down Arrow key. Reordering changes only the active workout and preserves its sets, completion status, and folded or open state.
+The **Move up** and **Move down** controls remain available as a precise alternative and for assistive technology. With a hardware keyboard focused on the move grip, use the Up Arrow or Down Arrow key. Reordering changes only the active workout and preserves its sets, completion status, and folded or open state.
 
-Each exercise card starts open. Tap the arrow in its upper-right corner to fold its sets and tap **Expand [exercise name]** to open them again. The compact card still shows completed sets and the rest setting while folded. Folding is only a temporary screen preference: it does not remove sets, change completion, or alter saved workout data, and cards open again after a reload or new workout.
-
-Edits are saved locally as you work.
+Each exercise starts open. Use its disclosure arrow to fold the sets or expand them again. Folding is only a temporary screen preference: it does not remove sets, change completion, or alter saved workout data, and exercises open again after a reload or new workout.
 
 ## Experimental program blocks
 
-Wave 3A adds a **Program lab** below the routine list. It is available when no workout is active and works only on copied data:
+**Program lab** appears below the template list. It is available when no workout is active and works only on copied data:
 
 1. Choose **Create a program copy**.
 2. Select a source routine and a block length from 2–12 weeks.
@@ -219,18 +230,18 @@ A program copy cannot start a workout, update its source routine, or change hist
 
 ## Log a set
 
-Each set includes:
+Each strength set uses one compact row at phone widths:
 
-- Set number
-- Previous result, when available
-- Weight
-- Repetitions
-- Completion control
+**Set · Previous · kg or lb · Reps · ✓**
+
+Reps-only exercises omit weight. Holds use **min:sec**, and cardio uses **km** plus **min:sec**. Assisted exercises label the load **Assistance**; weighted bodyweight movements label it **Added**.
+
+The shared header keeps set numbers, historical results, editable targets and completion controls aligned. **Add set** sits directly beneath each exercise's table.
 
 To record a set:
 
-1. Tap its weight field and enter the weight used.
-2. Tap its reps field and enter the completed repetitions.
+1. Enter the weight and repetitions, or the time and distance shown for that exercise.
+2. Check the measurements before completing the set. Timed sets require a positive duration; cardio also requires a positive distance.
 3. Mark the set complete.
 4. Continue to the next set.
 
@@ -238,13 +249,13 @@ Weight fields accept decimal values with up to two digits after the decimal poin
 
 Tap a completed set again if it was marked by mistake.
 
-Previous values come from completed workout history for the same exercise. A new or renamed exercise may not show a previous result until it has been completed in a workout.
+Previous values come from completed workout history with the same exercise identity, measurement type, and weight convention. A newly created exercise may not show a previous result until it has been completed in a workout.
 
 Workout progress updates as sets and exercises are completed.
 
 ## Log a drop set
 
-A drop set stays attached to one normal working set instead of inflating the working-set count.
+A drop set stays attached to one normal working set instead of inflating the working-set count. Drop continuations are available for external-load and added-load strength exercises; timed, reps-only, and assisted exercises use normal working sets.
 
 1. Under the working set you want to continue, tap **+ Add drop**.
 2. Stronger inserts **D1** directly below that set and suggests 80% of the preceding segment’s weight.
@@ -270,17 +281,18 @@ Effort tracking is off by default. Turn it on in **Settings → Effort tracking*
 
 The optional selector appears only after a set is marked complete. Each saved entry keeps its original scale, so changing the setting later does not reinterpret history. Turning effort tracking off hides the selectors without deleting recorded values. Marking a set incomplete removes its effort entry because the set is no longer recorded as performed.
 
-RPE and RIR are subjective notes only in Wave 2A. They do not change weights, reps, routines, Progress calculations, or future workouts, and they do not create automatic coaching suggestions.
+RPE and RIR are subjective notes. They never change a set or future workout automatically. If next-set previews are enabled, recorded effort is included in the evidence used by that optional prompt.
 
 ### Optional next-set previews
 
-Wave 6A adds an opt-in, read-only prompt. Turn on **Settings → Next-set previews** to allow it; the setting is off by default.
+Next-set previews are optional prompts for reviewing a possible load increment. Turn on **Settings → Next-set previews** to allow it; the setting is off by default.
 
 A preview appears only when all of these conditions are true:
 
+- The exercise uses weight and reps with external or added load; assistance and timed exercises do not produce load-increase previews.
 - There is an unfinished next set with a positive planned load and rep count.
 - The immediately preceding completed set today met or exceeded that planned load and reps.
-- The latest saved History session containing completed sets for the same exercise also has a set that met or exceeded the plan. A newer miss cannot be skipped in favor of an older success.
+- The latest saved History session containing completed sets for the same exercise, tracking type, and load convention also has a set that met or exceeded the plan. A newer miss cannot be skipped in favor of an older success.
 - If effort tracking is enabled, today's effort must be entered before a preview can appear. If either evidence set has effort recorded, it is no higher than RPE 8.5 or no lower than RIR 2. Missing historical effort is treated as unknown, not as proof that the set was easy.
 
 The preview shows both evidence sets and one small possible increment: 2.5 kg when displaying kilograms or 5 lb when displaying pounds. It has no apply button and does not change the next set, routine, History, or Progress. If the prompt is useful, edit the next set manually; otherwise ignore it or turn the setting off.
@@ -291,7 +303,7 @@ This arithmetic rule cannot assess fatigue, pain, technique, equipment, sleep, o
 
 Completing a set starts the rest countdown using the duration selected for that exercise. The timer is stored as a deadline rather than as a fragile in-memory counter, so reopening the app can recalculate the correct remaining time.
 
-Choose **Off** in **Settings → Default rest** to make newly created exercises start without a timer. You can also choose **Off** for an individual exercise while editing a routine or active workout. Completing a set for that exercise will still record the set normally but will not show a rest countdown.
+Choose **Off** in **Settings → Default rest** to make newly created exercises start without a timer. You can also choose **Off** for an individual exercise while editing a template or active workout. Completing a set for that exercise will still record the set normally but will not show a rest countdown.
 
 ### Important iPhone limitation
 
@@ -304,7 +316,7 @@ For an exact alert, keep Stronger visible during the rest period or use the iPho
 When training is complete:
 
 1. Review the exercises and completed sets.
-2. Tap **Finish workout**.
+2. Tap **Finish** in the workout toolbar.
 3. Review the workout summary.
 
 Finishing creates a permanent history entry and makes its completed results available to Progress and to future “previous result” comparisons.
@@ -328,7 +340,7 @@ You can:
 
 1. Open **History**.
 2. Select the workout.
-3. Choose **Duplicate for today**.
+3. Open the workout actions menu and choose **Repeat workout**.
 4. Review or edit the new active workout.
 
 The original history entry remains unchanged.
@@ -352,9 +364,11 @@ Open **Progress** for a plain-language summary instead of a dense statistics das
 7. Tap an exercise row or **See all exercises** only when you want the exercise records for the selected period.
 8. Tap **Next in your routine** to return to Workout. This opens the Workout tab; it never starts or replaces a workout automatically.
 
-Only finished History entries and completed sets with at least one rep contribute to the summary. If a current workout already contains completed work, Progress says **Active workout not included yet** until that workout is finished and saved.
+Only finished History entries and valid completed sets contribute to the summary. If a current workout already contains completed work, Progress says **Active workout not included yet** until that workout is finished and saved.
 
-A drop-set continuation is shown under **Drops**, not **Working sets**. Its reps and external-load volume are included, but it cannot create a heaviest-set or estimated-one-rep-max record. Bodyweight work recorded at 0 kg still counts in sets and reps; the external-load volume deliberately excludes body mass. Built-in exercises use their primary library category, while custom exercises remain **Unclassified** rather than being assigned a guessed category.
+A drop-set continuation is shown under **Drops**, not **Working sets**. Its reps and external-load volume are included, but it cannot create a heaviest-set or estimated-one-rep-max record. Bodyweight work recorded at 0 kg still counts in sets and reps; the external-load volume excludes body mass and assistance weight. Built-in exercises use their primary library category, while custom exercises remain **Unclassified**.
+
+Exercise details compare results with the same measurement type and weight convention. Distance is recorded in kilometres, while the kg/lb setting controls weight.
 
 A first logged result is a starting point, not a claimed improvement. On Week, **New best** means the heaviest completed working set exceeds every comparable weight recorded before the week began. A positive number compares the selected period with its matching previous period.
 
@@ -362,10 +376,13 @@ A first logged result is a starting point, not a claimed improvement. On Week, *
 
 Tap **See all exercises** to reveal the optional detail for the currently selected Week, Month, or All-time period:
 
-- **Heaviest set:** the heaviest completed logged working set
-- **Estimated one-rep max:** a calculated estimate based on weight and reps
-- **Training volume:** weight multiplied by reps across completed set segments
-- **Recent trend:** the heaviest completed working set from each recent workout
+- **Heaviest set:** the heaviest completed logged working set for weighted movements
+- **Estimated one-rep max:** an estimate from external weight and reps; assistance and added bodyweight load do not produce an estimate
+- **Training volume:** recorded load multiplied by reps across completed set segments, excluding assistance
+- **Duration and distance:** longest set, total time, and distance for holds and cardio
+- **Repetitions:** best and total reps for reps-only movements
+- **Assistance:** lowest assistance weight; lower means less help from the machine
+- **Recent trend:** comparable completed working sets across workouts
 
 Estimated one-rep max is a planning signal, not a tested maximum or medical recommendation. Rep speed, technique, fatigue, equipment, and exercise variation can all affect the estimate. New exercises will not show a useful trend until enough completed workouts exist.
 
@@ -414,11 +431,11 @@ Do not rely on iCloud to preserve PWA storage. Export a backup regularly.
 3. Save the generated JSON file to the Files app, iCloud Drive, or another location you control.
 4. Keep at least one recent copy outside Stronger.
 
-A backup may contain built-in selections, custom exercise names, workout dates, weights, reps, and settings. Treat it as personal data.
+A backup may contain built-in selections, custom exercise names, workout dates, weights, reps, time and distance measurements, and settings. Treat it as personal data.
 
 ### Export workout CSV
 
-Choose **Export workout CSV** when you want a readable copy of saved History for a spreadsheet. The CSV keeps history order and includes one row per saved set, including whether the set was completed, its canonical kilogram value, reps, optional RPE or RIR, timestamps, and stable exercise keys. A saved workout with no sets receives one workout-only row so it is not silently omitted.
+Choose **Export workout CSV** when you want a readable copy of saved History for a spreadsheet. The CSV keeps history order and includes one row per saved set, including whether the set was completed, its canonical kilogram value, reps, time and distance measurements, tracking and load conventions, optional RPE or RIR, timestamps, and stable exercise keys. A saved workout with no sets receives one workout-only row so it is not silently omitted.
 
 CSV is not a backup and cannot be imported into Stronger. It excludes the active unfinished workout, routines, program copies, custom-exercise definitions, and settings. Keep exporting JSON separately for complete recovery.
 
@@ -448,13 +465,13 @@ Do not manually edit a backup unless you understand its data format.
 
 ## Reset all data
 
-**Reset all data** permanently removes custom exercises, local routines, the active workout, history, progress source data, and settings.
+**Reset all data** permanently removes custom exercises, local templates, the active workout, history, progress source data, and settings.
 
 Export a backup first. Reset cannot be undone unless a valid backup exists.
 
 # Offline behavior
 
-After Stronger has loaded successfully online, its service worker caches the application shell so it can open without gym Wi-Fi or cellular service.
+After Stronger has loaded successfully online, its service worker caches the application shell and downloads the bundled exercise illustrations so it can open without gym Wi-Fi or cellular service. Keep the first online visit open long enough for the image downloads to finish. An interrupted download or browser storage limit can leave some illustrations unavailable offline; another online launch retries missing files. Illustrations that finish downloading can be viewed offline without opening every exercise first. Versioned image URLs ensure that an older photo cache does not hide the new 3D artwork.
 
 While offline, you can continue to:
 
@@ -463,6 +480,7 @@ While offline, you can continue to:
 - Edit exercises and sets
 - Finish a workout
 - Review locally stored history and progress
+- Browse exercise guides and any illustrations that have finished downloading
 - Change local settings
 
 The first load on a new device requires internet access. A newly deployed version should also be opened online once before relying on it offline.
@@ -620,6 +638,8 @@ npm run dev
 
 Open the local URL printed by the development server.
 
+For a populated compact-interface sample, append `?preview=compact` to that local development URL. This preview uses isolated, in-memory sample data; it does not read or write your saved workouts or change your stored appearance preference. Reloading resets the sample. The preview is enabled only by the development server.
+
 Localhost is useful for development on the Mac. For realistic iPhone installation and offline testing, use a deployed HTTPS URL because service workers and PWA installation require a secure context.
 
 ## Validate changes
@@ -678,6 +698,7 @@ Before considering a release ready:
 - `display` is configured for standalone use.
 - The service worker registers on HTTPS.
 - The application shell opens offline after one online visit.
+- Exercise illustrations and guides open offline after their initial downloads finish, including exercises not previously viewed.
 - Safe-area padding works around the iPhone notch and Home indicator.
 - Inputs remain usable when the iOS keyboard opens.
 - Touch controls have comfortable target sizes.
@@ -713,7 +734,7 @@ A useful release test on a real iPhone is:
 
 1. Load the current production version online.
 2. Install it to the Home Screen.
-3. Create or edit a routine.
+3. Create or edit a template.
 4. Start a workout and complete several sets.
 5. Lock and unlock the phone.
 6. Close and relaunch Stronger.

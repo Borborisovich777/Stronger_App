@@ -1,20 +1,11 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
-import ts from "typescript";
+import { importTypeScriptModule } from "./helpers/import-typescript.mjs";
 
 const projectRoot = new URL("../", import.meta.url);
 
 async function importProgramBlocksModule() {
-  const source = await readFile(new URL("app/programBlocks.ts", projectRoot), "utf8");
-  const transpiled = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ES2022,
-    },
-    fileName: "programBlocks.ts",
-  });
-  return import(`data:text/javascript;base64,${Buffer.from(transpiled.outputText).toString("base64")}`);
+  return importTypeScriptModule(new URL("app/programBlocks.ts", projectRoot));
 }
 
 const programBlocks = await importProgramBlocksModule();
@@ -60,4 +51,16 @@ test("week edits stay inside the copied block", () => {
 test("load previews are arithmetic only", () => {
   assert.equal(programBlocks.programBlockTargetWeight(80, { id: "week-test", loadPercent: 90 }), 72);
   assert.equal(programBlocks.programBlockTargetWeight(82.5, { id: "week-test", loadPercent: 105 }), 86.625);
+});
+
+test("program load percentages preserve timed and assistance targets while scaling external load", () => {
+  const week = { id: "week", loadPercent: 110 };
+  const target = { id: "exercise", exerciseKey: "running", name: "Running", targetSets: 1, targetWeightKg: 40, targetReps: 0, targetDurationSeconds: 600, targetDistanceMeters: 1500, restSeconds: 0, tracking: "distance-duration", weightMode: "external" };
+  assert.deepEqual(programBlocks.programBlockExerciseTarget(target, week), target);
+  const assistance = { ...target, exerciseKey: "assisted-chin-up", tracking: "weight-reps", weightMode: "assistance", targetReps: 8 };
+  assert.deepEqual(programBlocks.programBlockExerciseTarget(assistance, week), assistance);
+  const strength = { ...target, exerciseKey: "bench-press", tracking: "weight-reps", weightMode: "external", targetReps: 8 };
+  assert.equal(programBlocks.programBlockExerciseTarget(strength, week).targetWeightKg, 44);
+  assert.equal(programBlocks.programBlockExerciseTarget({ ...target, tracking: "reps" }, week).targetWeightKg, 40);
+  assert.equal(target.targetWeightKg, 40, "program projection must not mutate the routine");
 });

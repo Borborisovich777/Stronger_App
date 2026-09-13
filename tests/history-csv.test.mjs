@@ -1,20 +1,11 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
-import ts from "typescript";
+import { importTypeScriptModule } from "./helpers/import-typescript.mjs";
 
 const projectRoot = new URL("../", import.meta.url);
 
 async function importHistoryCsvModule() {
-  const source = await readFile(new URL("app/historyCsv.ts", projectRoot), "utf8");
-  const transpiled = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ES2022,
-    },
-    fileName: "historyCsv.ts",
-  });
-  return import(`data:text/javascript;base64,${Buffer.from(transpiled.outputText).toString("base64")}`);
+  return importTypeScriptModule(new URL("app/historyCsv.ts", projectRoot));
 }
 
 const historyCsv = await importHistoryCsvModule();
@@ -72,7 +63,7 @@ test("exports stable human-readable rows for complete and incomplete saved sets"
 
   const rows = parseCsv(historyCsv.buildHistoryCsv(history));
   assert.equal(rows.length, 3);
-  assert.equal(rows[0].length, 22);
+  assert.equal(rows[0].length, 26);
   assert.deepEqual(rows[0].slice(0, 12), [
     "workout_date", "workout_name", "duration_seconds", "exercise_name", "exercise_key",
     "exercise_order", "set_order", "completed", "weight_kg", "reps", "effort_scale", "effort_value",
@@ -145,10 +136,26 @@ test("exports drop continuations with their parent and within-set order", () => 
     }],
   })]));
 
-  assert.deepEqual(rows[0].slice(19), ["set_type", "drop_set_of", "drop_order"]);
-  assert.deepEqual(rows[1].slice(19), ["working", "", ""]);
-  assert.deepEqual(rows[2].slice(19), ["drop", "root", "1"]);
+  assert.deepEqual(rows[0].slice(19, 22), ["set_type", "drop_set_of", "drop_order"]);
+  assert.deepEqual(rows[1].slice(19, 22), ["working", "", ""]);
+  assert.deepEqual(rows[2].slice(19, 22), ["drop", "root", "1"]);
   assert.deepEqual(rows[2].slice(10, 12), ["RIR", "2"]);
   assert.equal(rows[2][14], "1970-01-01T00:00:00.150Z");
-  assert.deepEqual(rows[3].slice(19), ["drop", "root", "2"]);
+  assert.deepEqual(rows[3].slice(19, 22), ["drop", "root", "2"]);
+});
+
+test("exports timed measurements and weight modes without losing existing effort/drop columns", () => {
+  const history = [session({ id: "mixed", name: "Mixed", date: "2026-09-03", startedAt: 1000, finishedAt: 601000, exercises: [
+    { id: "run", exerciseKey: "running", name: "Running", tracking: "distance-duration", restSeconds: 0, sets: [{ id: "run-set", weightKg: 0, reps: 0, durationSeconds: 600, distanceMeters: 1500, completed: true }] },
+    { id: "assist", exerciseKey: "assisted-chin-up", name: "Assisted chin up", tracking: "weight-reps", weightMode: "assistance", restSeconds: 60, sets: [{ id: "assist-set", weightKg: 30, reps: 8, completed: true, effort: { scale: "rir", value: 2 } }] },
+    { id: "legacy", exerciseKey: "plank", name: "Plank", restSeconds: 60, sets: [{ id: "legacy-set", weightKg: 0, reps: 30, completed: true }] },
+  ] })];
+  const rows = parseCsv(historyCsv.buildHistoryCsv(history));
+  assert.deepEqual(rows[0].slice(22), ["tracking", "weight_mode", "set_duration_seconds", "distance_meters"]);
+  assert.deepEqual(rows[1].slice(22), ["distance-duration", "external", "600", "1500"]);
+  assert.deepEqual(rows[2].slice(22), ["weight-reps", "assistance", "", ""]);
+  assert.deepEqual(rows[2].slice(8, 12), ["30", "8", "RIR", "2"]);
+  assert.deepEqual(rows[3].slice(22), ["weight-reps", "external", "", ""]);
+  const empty = parseCsv(historyCsv.buildHistoryCsv([session({ id: "empty", name: "Empty", date: "2026-09-03", startedAt: 1000, exercises: [] })]));
+  assert.equal(empty[1].length, empty[0].length);
 });

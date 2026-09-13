@@ -1,3 +1,4 @@
+import { isCompletedTrackedSet, resolveExerciseWeightMode, tracksLoad } from "./exercise-tracking";
 import type { Routine, WorkoutSession } from "./storage";
 
 export type WeeklyPersonalRecord = {
@@ -45,7 +46,7 @@ export function weekRange(referenceDateKey: string): { startDate: string; endDat
 
 function completedExerciseSets(session: WorkoutSession) {
   return session.exercises.flatMap((exercise) => exercise.sets
-    .filter((set) => set.completed && set.reps > 0 && !set.dropSetOf)
+    .filter((set) => isCompletedTrackedSet(set, exercise) && !set.dropSetOf)
     .map((set) => ({ exercise, set })));
 }
 
@@ -77,20 +78,24 @@ function weeklyPersonalRecords(
 
   for (const session of history.filter((item) => item.workoutDate < startDate)) {
     for (const { exercise, set } of completedExerciseSets(session)) {
-      previousBest.set(exercise.exerciseKey, Math.max(previousBest.get(exercise.exerciseKey) ?? -Infinity, set.weightKg));
+      if (!tracksLoad(exercise)) continue;
+      const comparisonKey = `${exercise.exerciseKey}:${resolveExerciseWeightMode(exercise)}`;
+      previousBest.set(comparisonKey, Math.max(previousBest.get(comparisonKey) ?? -Infinity, set.weightKg));
     }
   }
 
   for (const session of history.filter((item) => item.workoutDate >= startDate && item.workoutDate <= endDate)) {
     for (const { exercise, set } of completedExerciseSets(session)) {
-      const current = weeklyBest.get(exercise.exerciseKey);
+      if (!tracksLoad(exercise)) continue;
+      const comparisonKey = `${exercise.exerciseKey}:${resolveExerciseWeightMode(exercise)}`;
+      const current = weeklyBest.get(comparisonKey);
       if (!current || set.weightKg > current.currentWeightKg ||
         (set.weightKg === current.currentWeightKg && session.workoutDate > current.workoutDate)) {
-        weeklyBest.set(exercise.exerciseKey, {
+        weeklyBest.set(comparisonKey, {
           exerciseKey: exercise.exerciseKey,
           name: exercise.name,
           currentWeightKg: set.weightKg,
-          previousWeightKg: previousBest.get(exercise.exerciseKey) ?? -Infinity,
+          previousWeightKg: previousBest.get(comparisonKey) ?? -Infinity,
           workoutDate: session.workoutDate,
         });
       }

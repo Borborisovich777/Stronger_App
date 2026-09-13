@@ -1,30 +1,11 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
-import ts from "typescript";
+import { importTypeScriptModule } from "./helpers/import-typescript.mjs";
 
 const projectRoot = new URL("../", import.meta.url);
 
 async function importOverallProgressModule() {
-  const reportSource = await readFile(new URL("app/reportMetrics.ts", projectRoot), "utf8");
-  const reportTranspiled = ts.transpileModule(reportSource, {
-    compilerOptions: {
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ES2022,
-    },
-    fileName: "reportMetrics.ts",
-  });
-  const reportUrl = `data:text/javascript;base64,${Buffer.from(reportTranspiled.outputText).toString("base64")}`;
-  const source = await readFile(new URL("app/overallProgress.ts", projectRoot), "utf8");
-  const transpiled = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ES2022,
-    },
-    fileName: "overallProgress.ts",
-  });
-  const linkedSource = transpiled.outputText.replace('from "./reportMetrics"', `from "${reportUrl}"`);
-  return import(`data:text/javascript;base64,${Buffer.from(linkedSource).toString("base64")}`);
+  return importTypeScriptModule(new URL("app/overallProgress.ts", projectRoot));
 }
 
 const overallProgress = await importOverallProgressModule();

@@ -1,20 +1,11 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
-import ts from "typescript";
+import { importTypeScriptModule } from "./helpers/import-typescript.mjs";
 
 const projectRoot = new URL("../", import.meta.url);
 
 async function importReportMetricsModule() {
-  const source = await readFile(new URL("app/reportMetrics.ts", projectRoot), "utf8");
-  const transpiled = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ES2022,
-    },
-    fileName: "reportMetrics.ts",
-  });
-  return import(`data:text/javascript;base64,${Buffer.from(transpiled.outputText).toString("base64")}`);
+  return importTypeScriptModule(new URL("app/reportMetrics.ts", projectRoot));
 }
 
 const reports = await importReportMetricsModule();
@@ -777,4 +768,51 @@ test("aggregate volume overflow stays included and identifies every contributing
   assert.equal(result.current.dataQuality.unsafeVolumeSessionIds.length, sessionCount);
   assert.equal(result.current.dataQuality.unsafeVolumeSessionIds[0], "overflow-0000");
   assert.equal(result.current.dataQuality.unsafeVolumeSessionIds.at(-1), "overflow-1801");
+});
+
+test("mixed tracking reports count timed work and drops without inventing load or strength", () => {
+  const mixedExercise = (key, tracking, weightMode, sets) => ({ ...exercise(key, key, key, sets), tracking, weightMode });
+  const history = [session({ id: "mixed", date: "2026-09-03", startedAt: 100, exercises: [
+    mixedExercise("bench-press", "weight-reps", "external", [workoutSet("bench-root", 100, 5), workoutSet("bench-drop", 80, 8, { dropSetOf: "bench-root" })]),
+    mixedExercise("assisted-chin-up", "weight-reps", "assistance", [workoutSet("assist", 40, 8)]),
+    mixedExercise("weighted-chin-up", "weight-reps", "added", [workoutSet("added", 10, 5)]),
+    mixedExercise("push-up", "reps", "external", [workoutSet("reps", 80, 12)]),
+    mixedExercise("plank", "duration", "external", [{ ...workoutSet("hold", 50, 99), durationSeconds: 45 }]),
+    mixedExercise("running", "distance-duration", "external", [{ ...workoutSet("run", 60, 99), durationSeconds: 600, distanceMeters: 1500 }]),
+  ] })];
+  const result = reports.deriveReportMetrics({ history, range: null, categoriesByExerciseKey: { "bench-press": "Chest", "assisted-chin-up": "Back", "weighted-chin-up": "Back", "push-up": "Chest", plank: "Core", running: "Cardio" } });
+  assert.equal(result.current.totals.sessions, 1);
+  assert.equal(result.current.totals.workingSets, 6);
+  assert.equal(result.current.totals.drops, 1);
+  assert.equal(result.current.totals.totalReps, 38);
+  assert.equal(result.current.totals.externalLoadVolumeKg, 1190);
+  assert.equal(result.current.dataQuality.zeroRepWorkingSetRows, 0);
+  const byKey = Object.fromEntries(result.current.exercises.map((item) => [item.exerciseKey, item]));
+  for (const key of ["assisted-chin-up", "push-up", "plank", "running"]) {
+    assert.equal(byKey[key].externalLoadVolumeKg, 0, key);
+    assert.equal(byKey[key].bestWeightKg, null, key);
+    assert.equal(byKey[key].bestEstimatedOneRepMaxKg, null, key);
+  }
+  assert.equal(byKey["weighted-chin-up"].bestWeightKg, 10);
+  assert.equal(byKey["weighted-chin-up"].bestEstimatedOneRepMaxKg, null);
+  assert.deepEqual(result.current.categories.map((item) => item.category), ["Chest", "Back", "Core", "Cardio"]);
+});
+
+test("strength highlights never reward greater assistance or compare added load with legacy external load", () => {
+  const build = (id, date, weight, weightMode) => session({ id, date, startedAt: 100, exercises: [{ ...exercise(id, "chin-up", "Chin up", [workoutSet(`${id}-set`, weight, 8)]), tracking: "weight-reps", ...(weightMode ? { weightMode } : {}) }] });
+  const range = { startDate: "2026-09-01", endDate: "2026-09-03" };
+  assert.deepEqual(reports.deriveReportMetrics({ history: [build("old", "2026-08-20", 20, "assistance"), build("new", "2026-09-02", 40, "assistance")], range }).highlights, []);
+  assert.deepEqual(reports.deriveReportMetrics({ history: [build("old", "2026-08-20", 20), build("new", "2026-09-02", 40, "added")], range }).highlights, []);
+});
+
+test("a completed cardio-only workout remains reportable in saved history and active-workout disclosure", () => {
+  const cardio = session({ id: "cardio", date: "2026-09-03", startedAt: 100, exercises: [{ ...exercise("running", "running", "Running", [{ ...workoutSet("run", 0, 0), durationSeconds: 600, distanceMeters: 1500 }]), tracking: "distance-duration" }] });
+  const range = { startDate: "2026-09-01", endDate: "2026-09-03" };
+  const saved = reports.deriveReportMetrics({ history: [cardio], range });
+  assert.equal(saved.current.totals.sessions, 1);
+  assert.equal(saved.current.totals.workingSets, 1);
+  assert.equal(saved.current.emptyReason, null);
+  const active = reports.deriveReportMetrics({ history: [], range, activeWorkout: cardio });
+  assert.equal(active.current.emptyReason, "active-workout-excluded");
+  assert.equal(active.current.dataQuality.activeWorkoutHasReportableWork, true);
 });

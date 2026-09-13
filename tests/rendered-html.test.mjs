@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { access, readFile, readdir } from "node:fs/promises";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
+import { createHash } from "node:crypto";
+import ts from "typescript";
 
 const projectRoot = new URL("../", import.meta.url);
 
@@ -78,6 +81,7 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(app, /function NumericInput/);
   assert.match(app, /type="text"[\s\S]*inputMode=\{decimal \? "decimal" : "numeric"\}/);
   assert.match(app, /exercise\.restSeconds > 0/);
+  assert.match(app, /Rest after each set/);
   assert.match(app, /exercise\.restSeconds === 0 \? "Rest timer off"/);
   assert.match(app, /insertDropSegment/);
   assert.match(app, /isValidDropWeightTransition/);
@@ -142,7 +146,8 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(app, /Active workout not included yet/);
   assert.match(app, /PRIMARY CATEGORY COVERAGE/);
   assert.match(app, /Previous matched period/);
-  assert.match(app, /HEAVIEST SET/);
+  assert.match(app, /"Heaviest set"/);
+  assert.match(app, /trendLabel\.toUpperCase\(\)/);
   assert.match(app, /Drop segments are not used for best-weight records/);
   assert.match(app, /role="progressbar"/);
   assert.match(app, /Plate calculator/);
@@ -226,7 +231,7 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(overallProgress, /previousVolumeKg/);
   assert.doesNotMatch(overallProgress, /saveData|setData|startWorkout|estimatedOneRepMax/);
 
-  assert.match(reportMetrics, /set\.completed && set\.reps > 0/);
+  assert.match(reportMetrics, /isCompletedTrackedSet\(set, exercise\)/);
   assert.match(reportMetrics, /externalLoadVolumeKg/);
   assert.match(reportMetrics, /activeWorkoutExcluded/);
   assert.match(reportMetrics, /mixedEffortScales/);
@@ -263,12 +268,11 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(exercises, /if \(alternatives\.length === 3\) break/);
   assert.doesNotMatch(exercises, /saveData|setData|replaceData|startWorkout|activeWorkout/);
 
-  const catalogEntries = [...exercises.matchAll(/\{ exerciseKey: "([^"]+)", name: "([^"]+)", category: "([^"]+)" \}/g)];
-  assert.equal(catalogEntries.length, 50);
-  assert.equal(new Set(catalogEntries.map((entry) => entry[1])).size, catalogEntries.length);
-  assert.equal(new Set(catalogEntries.map((entry) => entry[2].toLocaleLowerCase())).size, catalogEntries.length);
+  const { BUILT_IN_EXERCISES: catalogEntries } = await loadCatalogModule("app/exercises.ts");
+  assert.equal(catalogEntries.length, 257);
+  assert.equal(new Set(catalogEntries.map((entry) => entry.exerciseKey)).size, catalogEntries.length);
   for (const starterKey of ["bench-press", "deadlift", "back-squat", "leg-curl", "standing-calf-raise"]) {
-    assert.ok(catalogEntries.some((entry) => entry[1] === starterKey), `catalog is missing ${starterKey}`);
+    assert.ok(catalogEntries.some((entry) => entry.exerciseKey === starterKey), `catalog is missing ${starterKey}`);
   }
 
   assert.match(styles, /--font-sans:/);
@@ -298,7 +302,7 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(app, /onFocus=\{\(\) => setHistorySearchFocused\(true\)\}/);
   assert.match(app, /onBlur=\{\(\) => setHistorySearchFocused\(false\)\}/);
   assert.match(app, /tab === "history" && \(historySearchFocused \|\| historyKeyboardOpen\)/);
-  assert.match(app, /hidden=\{otherModalOpen \|\| Boolean\(sessionRescueWorkout && sessionRescuePrompt\)\}/);
+  assert.match(app, /hidden=\{isLogging \|\| otherModalOpen \|\| Boolean\(sessionRescueWorkout && sessionRescuePrompt\)\}/);
   assert.match(app, /const \[collapsedExerciseIds, setCollapsedExerciseIds\] = useState<Set<string>>/);
   assert.match(app, /aria-expanded=\{exerciseExpanded\}/);
   assert.match(app, /aria-controls=\{exercisePanelId\}/);
@@ -339,7 +343,7 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(styles, /\.equipment-alternative-option\s*\{/);
 
   assert.match(serviceWorker, /self\.registration\.scope/);
-  assert.match(serviceWorker, /v5-exercise-library/);
+  assert.match(serviceWorker, /v8-strong-catalog/);
   assert.match(serviceWorker, /APP_PATH/);
   assert.match(serviceWorker, /addEventListener\(["']install["']/);
   assert.match(serviceWorker, /addEventListener\(["']activate["']/);
@@ -359,4 +363,203 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.equal(packageJson.scripts.dev, "vite");
   assert.equal(packageJson.devDependencies.vinext, undefined);
   assert.equal(packageJson.devDependencies.wrangler, undefined);
+});
+
+async function loadCatalogModule(path) {
+  const source = await readFile(new URL(path, projectRoot), "utf8");
+  const { outputText } = ts.transpileModule(source, {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+  });
+  return import(`data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`);
+}
+
+test("covers every published Strong exercise and preserves all original workout keys", async () => {
+  const { BUILT_IN_EXERCISES } = await loadCatalogModule("app/exercises.ts");
+  const coverage = JSON.parse(await readFile(new URL("dist/exercises/strong-catalog.json", projectRoot), "utf8"));
+  const catalog = new Map(BUILT_IN_EXERCISES.map((exercise) => [exercise.exerciseKey, exercise]));
+  assert.equal(coverage.sourceCount, 253);
+  assert.equal(coverage.localCount, BUILT_IN_EXERCISES.length);
+  assert.equal(coverage.coverage.length, coverage.sourceCount);
+  assert.equal(new Set(coverage.coverage.map((entry) => entry.strongId)).size, 253);
+  assert.equal(new Set(coverage.coverage.map((entry) => entry.exerciseKey)).size, 253);
+  for (const entry of coverage.coverage) {
+    const exercise = catalog.get(entry.exerciseKey);
+    assert.ok(exercise, `missing Strong exercise: ${entry.strongName}`);
+    assert.equal(exercise.strongId, entry.strongId);
+    assert.ok(exercise.name === entry.strongName || exercise.aliases.includes(entry.strongName));
+  }
+  assert.equal(coverage.preservedOriginalKeys.length, 50);
+  for (const key of coverage.preservedOriginalKeys) assert.ok(catalog.has(key), `lost original key: ${key}`);
+  for (const key of ["good-morning-barbell", "barbell-row", "t-bar-row", "pendlay-row-barbell", "upright-row-barbell"]) {
+    assert.ok(catalog.has(key), `missing requested row or hinge variation: ${key}`);
+  }
+});
+
+test("packages two illustrated positions and complete guidance for every built-in exercise", async () => {
+  const [{ BUILT_IN_EXERCISES }, { EXERCISE_MEDIA }] = await Promise.all([
+    loadCatalogModule("app/exercises.ts"),
+    loadCatalogModule("app/exercise-media.ts"),
+  ]);
+
+  assert.equal(BUILT_IN_EXERCISES.length, 257);
+  assert.deepEqual(
+    Object.keys(EXERCISE_MEDIA).sort(),
+    BUILT_IN_EXERCISES.map((exercise) => exercise.exerciseKey).sort(),
+    "every built-in exercise must have its own media entry",
+  );
+
+  const imagePaths = new Set();
+  for (const { exerciseKey } of BUILT_IN_EXERCISES) {
+    const media = EXERCISE_MEDIA[exerciseKey];
+    assert.equal(media.images.length, media.layout === "paired" ? 1 : 2, `${exerciseKey} needs both demonstration positions`);
+    for (const [index, imagePath] of media.images.entries()) {
+      assert.equal(imagePath, `exercises/${exerciseKey}-${media.layout === "paired" ? "pair" : index}.jpg`);
+      assert.ok(!imagePaths.has(imagePath), `${imagePath} must be assigned to one exercise`);
+      imagePaths.add(imagePath);
+      const image = await readFile(new URL(`dist/${imagePath}`, projectRoot));
+      assert.ok(image.length > 1000, `${imagePath} must contain an image, not an empty placeholder`);
+      assert.equal(image.readUInt16BE(0), 0xffd8, `${imagePath} must be a JPEG`);
+      assert.equal(image.readUInt16BE(image.length - 2), 0xffd9, `${imagePath} must be a complete JPEG`);
+    }
+    assert.ok(typeof media.equipment === "string" && media.equipment.trim(), `${exerciseKey} needs equipment`);
+    for (const field of ["muscles", "instructions"]) {
+      assert.ok(Array.isArray(media[field]) && media[field].length > 0, `${exerciseKey} needs ${field}`);
+      assert.ok(media[field].every((text) => typeof text === "string" && text.trim()), `${exerciseKey} has empty ${field}`);
+    }
+    assert.ok(media.sourceName.trim(), `${exerciseKey} needs attribution`);
+    if (media.sourceUrl) assert.equal(new URL(media.sourceUrl).protocol, "https:");
+    else assert.equal(media.sourceName, "Original movement guide");
+  }
+  assert.equal(imagePaths.size, 307);
+
+  const [license, attribution] = await Promise.all([
+    readFile(new URL("dist/exercises/LICENSE.md", projectRoot), "utf8"),
+    readFile(new URL("dist/exercises/README.md", projectRoot), "utf8"),
+  ]);
+  assert.match(license, /public domain/i);
+  assert.match(license, /unlicense\.org/i);
+  assert.match(attribution, /github\.com\/yuhonas\/free-exercise-db/);
+  assert.match(attribution, /OpenAI-generated/);
+});
+
+test("ships the complete generated illustration set without stale photograph bytes", async () => {
+  const manifest = JSON.parse(await readFile(new URL("dist/exercises/illustrations.json", projectRoot), "utf8"));
+  const { EXERCISE_MEDIA, EXERCISE_IMAGE_VERSION } = await loadCatalogModule("app/exercise-media.ts");
+  const expectedPaths = Object.values(EXERCISE_MEDIA).flatMap((media) => media.images).sort();
+  assert.equal(manifest.generator, "OpenAI image generation");
+  assert.equal(manifest.version, EXERCISE_IMAGE_VERSION);
+  assert.deepEqual(manifest.images.map((image) => image.path).sort(), expectedPaths);
+  for (const image of manifest.images) {
+    const bytes = await readFile(new URL(`dist/${image.path}`, projectRoot));
+    assert.equal(createHash("sha256").update(bytes).digest("hex"), image.sha256, `${image.path} must match its generated export`);
+    if (image.referenceSha256) assert.notEqual(image.sha256, image.referenceSha256, `${image.path} must replace its original photograph`);
+    assert.equal(image.width / image.height, image.path.endsWith("-pair.jpg") ? 2 : 1);
+  }
+});
+
+test("preloads scoped exercise media, retries failures, and serves versioned illustrations offline", async () => {
+  const serviceWorker = await readFile(new URL("dist/sw.js", projectRoot), "utf8");
+  const scope = "https://example.test/Stronger_App/";
+  const handlers = new Map();
+  const stores = new Map();
+  const fetched = [];
+  let offline = false;
+  const keyFor = (request) => typeof request === "string" ? request : request.url;
+  const caches = {
+    async open(name) {
+      if (!stores.has(name)) stores.set(name, new Map());
+      const store = stores.get(name);
+      return {
+        async match(request) { return store.get(keyFor(request)); },
+        async put(request, response) { store.set(keyFor(request), response); },
+      };
+    },
+    async match(request, options = {}) {
+      for (const [name, store] of stores) {
+        if (options.cacheName && name !== options.cacheName) continue;
+        const response = store.get(keyFor(request));
+        if (response) return response;
+      }
+    },
+  };
+
+  runInNewContext(serviceWorker, {
+    URL, Request, Response, caches,
+    self: {
+      registration: { scope },
+      location: new URL(scope),
+      addEventListener(type, handler) { handlers.set(type, handler); },
+    },
+    async fetch(request) {
+      const url = keyFor(request);
+      fetched.push(url);
+      if (offline || url.endsWith("missing.jpg")) throw new Error("Network unavailable");
+      const response = new Response("bundled photo");
+      Object.defineProperty(response, "type", { value: "basic" });
+      return response;
+    },
+  });
+
+  async function preload(urls) {
+    let work;
+    let result;
+    handlers.get("message")({
+      data: { type: "CACHE_URLS", urls },
+      ports: [{ postMessage(value) { result = value; } }],
+      waitUntil(value) { work = value; },
+    });
+    await work;
+    return result;
+  }
+
+  const firstPhoto = `${scope}exercises/bench-press-0.jpg`;
+  const urls = [
+    "exercises/bench-press-0.jpg",
+    "exercises/bench-press-0.jpg",
+    firstPhoto,
+    "exercises/bench-press-1.jpg",
+    "exercises/missing.jpg",
+    "https://other.test/exercises/photo.jpg",
+    "/unrelated/photo.jpg",
+    null,
+  ];
+  const oldCache = await caches.open("stronger-assets-old-version");
+  await oldCache.put(firstPhoto, new Response("outdated photo"));
+
+  const initial = await preload(urls);
+  assert.equal(initial.type, "CACHE_URLS_RESULT");
+  assert.equal(initial.cached, 2);
+  assert.equal(initial.failed, 1);
+  assert.equal(fetched.length, 3, "only unique same-scope URLs should be fetched");
+  assert.ok(fetched.includes(firstPhoto), "an old worker's photo must not suppress the current download");
+
+  offline = true;
+  const retry = await preload(urls);
+  assert.equal(retry.cached, 2);
+  assert.equal(retry.failed, 1);
+  assert.equal(fetched.length, 4, "already cached photos should not be downloaded again");
+
+  let offlineResponse;
+  handlers.get("fetch")({
+    request: new Request(firstPhoto),
+    respondWith(value) { offlineResponse = value; },
+  });
+  const photo = await offlineResponse;
+  assert.equal(await photo.text(), "bundled photo");
+  assert.equal(fetched.length, 4, "viewing a cached bundled photo should not require a network request");
+
+  // Updating artwork must bypass an older photograph even when the basename is unchanged.
+  offline = false;
+  const { EXERCISE_IMAGE_VERSION } = await loadCatalogModule("app/exercise-media.ts");
+  const illustratedUrl = `${firstPhoto}?v=${EXERCISE_IMAGE_VERSION}`;
+  const updated = await preload([illustratedUrl]);
+  assert.equal(updated.cached, 1);
+  assert.ok(fetched.includes(illustratedUrl));
+  offline = true;
+  handlers.get("fetch")({
+    request: new Request(illustratedUrl),
+    respondWith(value) { offlineResponse = value; },
+  });
+  assert.equal(await (await offlineResponse).text(), "bundled photo");
+  assert.equal(fetched.length, 5, "versioned illustrations should also work offline after their first download");
 });

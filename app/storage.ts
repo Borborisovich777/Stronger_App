@@ -1,3 +1,5 @@
+import { isCompletedTrackedSet, resolveExerciseTracking, resolveExerciseWeightMode, type ExerciseTracking, type ExerciseWeightMode } from "./exercise-tracking";
+
 export const CURRENT_FORMAT_VERSION = 1 as const;
 export const BACKUP_KIND = "stronger-backup" as const;
 export const BACKUP_FORMAT_VERSION = 1 as const;
@@ -15,6 +17,8 @@ export type WorkoutSet = {
   id: string;
   weightKg: number;
   reps: number;
+  durationSeconds?: number;
+  distanceMeters?: number;
   completed: boolean;
   completedAt?: number;
   effort?: SetEffort;
@@ -26,17 +30,24 @@ export type WorkoutExercise = {
   id: string;
   exerciseKey: string;
   name: string;
+  tracking?: ExerciseTracking;
+  weightMode?: ExerciseWeightMode;
   restSeconds: number;
   sets: WorkoutSet[];
+  notes?: string;
 };
 
 export type RoutineExercise = {
   id: string;
   exerciseKey: string;
   name: string;
+  tracking?: ExerciseTracking;
+  weightMode?: ExerciseWeightMode;
   targetSets: number;
   targetWeightKg: number;
   targetReps: number;
+  targetDurationSeconds?: number;
+  targetDistanceMeters?: number;
   restSeconds: number;
 };
 
@@ -69,6 +80,7 @@ export type WorkoutSession = {
   finishedAt?: number;
   sourceRoutineId?: string;
   restEndsAt?: number;
+  notes?: string;
   timerPausedAt?: number;
   timerPausedDurationMs?: number;
   timerResumedAt?: number;
@@ -394,6 +406,22 @@ function optionalIntegerInRange(value: unknown, maximum: number): boolean {
   return value === undefined || integerInRange(value, maximum);
 }
 
+function optionalNumberInRange(value: unknown, maximum = Number.MAX_VALUE): boolean {
+  return value === undefined || numberInRange(value, maximum);
+}
+
+function optionalTracking(value: unknown): boolean {
+  return value === undefined || value === "weight-reps" || value === "reps" || value === "duration" || value === "distance-duration";
+}
+
+function optionalWeightMode(value: unknown): boolean {
+  return value === undefined || value === "external" || value === "added" || value === "assistance";
+}
+
+function optionalText(value: unknown): boolean {
+  return value === undefined || typeof value === "string";
+}
+
 function uniqueStrings(values: string[]): boolean {
   return new Set(values).size === values.length;
 }
@@ -421,6 +449,8 @@ function validSet(set: unknown, enforceResourceLimits = true): set is WorkoutSet
   return nonEmptyString(item.id) &&
     numberInRange(item.weightKg, enforceResourceLimits ? MAX_WEIGHT_KG : Number.MAX_VALUE) &&
     integerInRange(item.reps, MAX_REPS) &&
+    optionalNumberInRange(item.durationSeconds) &&
+    optionalNumberInRange(item.distanceMeters) &&
     typeof item.completed === "boolean" &&
     optionalIntegerInRange(item.completedAt, MAX_TIMESTAMP) &&
     (item.effort === undefined || validSetEffort(item.effort)) &&
@@ -441,11 +471,15 @@ function validWorkoutExercise(exercise: unknown, enforceResourceLimits = true): 
   if (!(nonEmptyString(item.id) &&
     nonEmptyString(item.exerciseKey) &&
     typeof item.name === "string" &&
+    optionalText(item.notes) && optionalTracking(item.tracking) && optionalWeightMode(item.weightMode) &&
     integerInRange(item.restSeconds, MAX_REST_SECONDS) &&
     Array.isArray(item.sets) &&
     (!enforceResourceLimits || item.sets.length <= MAX_SETS_PER_EXERCISE) &&
     item.sets.every((set) => validSet(set, enforceResourceLimits)) &&
     uniqueStrings(item.sets.map((set) => set.id)))) return false;
+
+  if (item.sets.some((set) => set.dropSetOf) &&
+    (resolveExerciseTracking(item as WorkoutExercise) !== "weight-reps" || resolveExerciseWeightMode(item as WorkoutExercise) === "assistance")) return false;
 
   const roots = new Map<string, WorkoutSet>();
   let activeRootId: string | undefined;
@@ -470,7 +504,7 @@ function validSession(session: unknown, enforceResourceLimits = true): session i
   if (!session || typeof session !== "object") return false;
   const item = session as Partial<WorkoutSession>;
   if (!nonEmptyString(item.id) || typeof item.name !== "string" || !validDateKey(item.workoutDate) ||
-    !integerInRange(item.startedAt, MAX_TIMESTAMP) || !optionalIntegerInRange(item.finishedAt, MAX_TIMESTAMP) ||
+    !optionalText(item.notes) || !integerInRange(item.startedAt, MAX_TIMESTAMP) || !optionalIntegerInRange(item.finishedAt, MAX_TIMESTAMP) ||
     (item.sourceRoutineId !== undefined && !nonEmptyString(item.sourceRoutineId)) ||
     !optionalIntegerInRange(item.restEndsAt, MAX_TIMESTAMP) ||
     !optionalIntegerInRange(item.timerPausedAt, MAX_TIMESTAMP) ||
@@ -501,6 +535,9 @@ function validRoutine(routine: unknown, enforceResourceLimits = true): routine i
       routineItem.targetSets >= MIN_TARGET_SETS &&
       numberInRange(routineItem.targetWeightKg, enforceResourceLimits ? MAX_WEIGHT_KG : Number.MAX_VALUE) &&
       integerInRange(routineItem.targetReps, MAX_REPS) &&
+      optionalNumberInRange(routineItem.targetDurationSeconds) &&
+      optionalNumberInRange(routineItem.targetDistanceMeters) &&
+      optionalTracking(routineItem.tracking) && optionalWeightMode(routineItem.weightMode) &&
       integerInRange(routineItem.restSeconds, MAX_REST_SECONDS);
   });
   return exercisesValid &&
@@ -1053,15 +1090,19 @@ export function formatWeight(weightKg: number, unit: WeightUnit): string {
 
 export function completedSets(session: WorkoutSession): WorkoutSet[] {
   return session.exercises.flatMap((exercise) =>
-    exercise.sets.filter((set) => set.completed && set.reps > 0 && !set.dropSetOf));
+    exercise.sets.filter((set) => isCompletedTrackedSet(set, exercise) && !set.dropSetOf));
 }
 
 export function completedSetSegments(session: WorkoutSession): WorkoutSet[] {
-  return session.exercises.flatMap((exercise) => exercise.sets.filter((set) => set.completed && set.reps > 0));
+  return session.exercises.flatMap((exercise) => exercise.sets.filter((set) => isCompletedTrackedSet(set, exercise)));
 }
 
 export function workoutVolumeKg(session: WorkoutSession): number {
-  return completedSetSegments(session).reduce((total, set) => total + set.weightKg * set.reps, 0);
+  return session.exercises.reduce((total, exercise) => {
+    if (resolveExerciseTracking(exercise) !== "weight-reps" || resolveExerciseWeightMode(exercise) === "assistance") return total;
+    return total + exercise.sets.filter((set) => isCompletedTrackedSet(set, exercise))
+      .reduce((volume, set) => volume + set.weightKg * set.reps, 0);
+  }, 0);
 }
 
 export function estimatedOneRepMax(weightKg: number, reps: number): number {

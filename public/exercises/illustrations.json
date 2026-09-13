@@ -1,0 +1,5239 @@
+{
+  "generator": "OpenAI image generation",
+  "mode": "Built-in tool",
+  "generatedAt": "2026-09-13",
+  "version": "strong-catalog-v1",
+  "style": "Faceless gray 3D mannequin, white background, simplified equipment, muted red muscle highlight",
+  "exerciseCount": 257,
+  "positionCount": 514,
+  "imageCount": 307,
+  "totalBytes": 31106904,
+  "images": [
+    {
+      "path": "exercises/bench-press-0.jpg",
+      "exerciseKey": "bench-press",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "d27ccca65a9ca9b43629eb7985a3fde17d57fca3ef34d1f54be4adf2ccac202d",
+      "originalSha256": "2fc7b8ab58af3fddd34752f9e95226118e0174523b250b7c179cdfef83fc71cf",
+      "referenceSha256": "44ba81b3ea124f625c555ae812b37263f82ae460749bbc9ebbeb55a6309f6663",
+      "bytes": 70410
+    },
+    {
+      "path": "exercises/bench-press-1.jpg",
+      "exerciseKey": "bench-press",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "076ad32bac7d8ba9ab3f114fc5ca2abc7a98223f01a06803fb168fa589d852f0",
+      "originalSha256": "d6eb56f324378ddfbcfae8831c8fcc549797c1caef4f473200a4596774aa329b",
+      "referenceSha256": "5056475ae5def865dbe52882d30d2730142de2b03231bda304f82fd0b088f608",
+      "bytes": 72123
+    },
+    {
+      "path": "exercises/incline-dumbbell-press-0.jpg",
+      "exerciseKey": "incline-dumbbell-press",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "b22f4c39cbc9caf4da94388c4434b091f665cb56bcdcca8426d28c34fa14aff7",
+      "originalSha256": "ed4ae6527080f4b36b17a78ba4ed47319aef1c82af4d90d42a94f4abc164347f",
+      "referenceSha256": "5128af58efedb66e5d3e2454c7a1e3c7f9353b573e97c8430e37cb638da8882e",
+      "bytes": 65701
+    },
+    {
+      "path": "exercises/incline-dumbbell-press-1.jpg",
+      "exerciseKey": "incline-dumbbell-press",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "2f0ad440e1a9ecf535938507a69fcca870cb18f9bae760672354cf2a8243c89d",
+      "originalSha256": "42d3d549e2b1cbb16cccdd6a7ce401b63dc4a706e114951b5ffe30635109ce40",
+      "referenceSha256": "7e4cd389cd0c537911da937657333f33118102e69f050c36906a6d49ae3f921f",
+      "bytes": 62979
+    },
+    {
+      "path": "exercises/dumbbell-bench-press-0.jpg",
+      "exerciseKey": "dumbbell-bench-press",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "e25895a61d64a547c3cefb0aaa3771d0c2730d212092adf601ec84fc84928fa8",
+      "originalSha256": "a1accbf8d4c12200db198ee5078aeb3ec411d62ea34f24153d664dc4b5dbc270",
+      "referenceSha256": "06494fc5d679283ad7de10fd60149e543396bbd9ba65b0821937de317ce9e001",
+      "bytes": 58783
+    },
+    {
+      "path": "exercises/dumbbell-bench-press-1.jpg",
+      "exerciseKey": "dumbbell-bench-press",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "19af53c1f220a4889b7fd47cf828c236bd5635972110c459cf7eabe6cc021bce",
+      "originalSha256": "14c9ffc726f87370a8834018f4f3d5600b2eeec553089f78394c126dedacea29",
+      "referenceSha256": "29ce1d1335b10ae5e92b208c512f4f562493379a9c49bafb249f945c5b702299",
+      "bytes": 57138
+    },
+    {
+      "path": "exercises/chest-press-machine-0.jpg",
+      "exerciseKey": "chest-press-machine",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "1872a3d3e66fc933d9c16be364de66f2fee8dc60113ce6718bf3c166401b9216",
+      "originalSha256": "0d72c30450b9b0e428ea38f6db38b65ba245309bcc3c68a85b8e94e27ef6e194",
+      "referenceSha256": "d3d8399ff8da08865f0ec97495b3001731a8170ac44a63663dfe382c7d092d41",
+      "bytes": 79879
+    },
+    {
+      "path": "exercises/chest-press-machine-1.jpg",
+      "exerciseKey": "chest-press-machine",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "289b4bc0073cc06faf58f9f616e9c06d1d64275242ada4d71150d73557c516ad",
+      "originalSha256": "4b3aeb5412930b07700a568e7522339a8c5e32a35b7b99be081210b29248833e",
+      "referenceSha256": "b916ff565039208b3baec76e141b4963f4e90aac17dff25c99098d6fc2131251",
+      "bytes": 79734
+    },
+    {
+      "path": "exercises/push-up-0.jpg",
+      "exerciseKey": "push-up",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "a1247aadadf923371e82491754dee976ce6415466f00d5379d195e7f6210dbb3",
+      "originalSha256": "bd83be01a8bef8ce1e4ceaf3d43b368fddb4025dc96a5607e238c6f499c457c5",
+      "referenceSha256": "8e6757ae0dc1d50a30f0ea67cdb330994947716a106451860cf7362bcd15f9f4",
+      "bytes": 43530
+    },
+    {
+      "path": "exercises/push-up-1.jpg",
+      "exerciseKey": "push-up",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "44e8b2e87c47a3f3604c30ae2d73b42a6c6eb344891690918d5bd2a088474a54",
+      "originalSha256": "6819352b737a3a87ccd34a853ef5dd1eae547d4cc81df9ddd7cd126f57ded901",
+      "referenceSha256": "e835d50facea325828d7a3700185a0d8ba9f908db3f033334f81a6f85f774f27",
+      "bytes": 40062
+    },
+    {
+      "path": "exercises/cable-fly-0.jpg",
+      "exerciseKey": "cable-fly",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "04bc396bfc4dad99bc4bd90f63c27332eb66f3a5c77c5f837a583095907f69ec",
+      "originalSha256": "5ee9437cc4c73a75a6fc1b8dd48c03f400c422c135fdb0f154117a62843245b3",
+      "referenceSha256": "a0d37cf03da0a31acb010620ed4203498fbe83b82e4af298cd28b7fe4435144b",
+      "bytes": 68596
+    },
+    {
+      "path": "exercises/cable-fly-1.jpg",
+      "exerciseKey": "cable-fly",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "55d87b59dfdc75a550bf503f7e99f1ea458ec8c95e6c461eb8a82332dc206840",
+      "originalSha256": "c260630d262afdf22822ed1f91618b9b92af0ac5fbb570ba700857eb46e59c01",
+      "referenceSha256": "ebaf5aa26a4c7502364fcd5c64d8af8d9ba368f190914eee14ec445f9adef2ca",
+      "bytes": 78078
+    },
+    {
+      "path": "exercises/pec-deck-0.jpg",
+      "exerciseKey": "pec-deck",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "0e1b98d934eb42eb90d70669a20e8efc4c3ce607f1130e7f821bd3d735fe2e86",
+      "originalSha256": "5053a9a36c991635e9973cc2cd21b3e7bb1d3c22ec67bf5f3120b0851afee5d5",
+      "referenceSha256": "8819cc3e699ff1d0b5d18c21a411a0e380fc0f316e83d9dcaa1207617f78ea23",
+      "bytes": 61240
+    },
+    {
+      "path": "exercises/pec-deck-1.jpg",
+      "exerciseKey": "pec-deck",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "961ef4295aa22ab626dcf3d52cb7f97545ba0d23c26aaf4b6917704859a4fb60",
+      "originalSha256": "3ec0fa8311dec048269fe4166f0674083c30a1993b0dde8360daf62ab2c7cb20",
+      "referenceSha256": "7f471857324312b07e14f3fe73dd783d2ecd3a3ff15f9f52e9813390cda314db",
+      "bytes": 70732
+    },
+    {
+      "path": "exercises/deadlift-0.jpg",
+      "exerciseKey": "deadlift",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "41de05c33df6318ba1f6fcdc19b6dad2c272890618236f252fcc1964d79a3502",
+      "originalSha256": "4c47958935a543f525e60c5d602180e4c2778b4fcc6624c0b1536c4832b54225",
+      "referenceSha256": "f032a7e4566eb3e73258580add64bf2756cb465bfcee22fdfffbed0f43f1eae6",
+      "bytes": 53416
+    },
+    {
+      "path": "exercises/deadlift-1.jpg",
+      "exerciseKey": "deadlift",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "9f3b52ae0aa981316bb95cb0205ac52666c7ca8072ecb9dc3cbde670c0df4fed",
+      "originalSha256": "4843592de2e1ca5fc86dce58d6bb63ecafb1b2fc68a3c20fa0f46e02bd92736b",
+      "referenceSha256": "cf206d0738830af831872cfb054c7cf91a43b435f4cc20f4fdb00a2664654e90",
+      "bytes": 54055
+    },
+    {
+      "path": "exercises/barbell-row-0.jpg",
+      "exerciseKey": "barbell-row",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "450b52b864d27c04733121347ed97e24041119f7484f737da8987fa55fe74eaa",
+      "originalSha256": "b8fb5e59da9c9d53100c59a0538b4c11b032241eb1eab1ae38486bd561bbeac0",
+      "referenceSha256": "09abbeb2fca7006d0e072bdc802158b34acf7923bd3069bb835951e49a95de41",
+      "bytes": 57648
+    },
+    {
+      "path": "exercises/barbell-row-1.jpg",
+      "exerciseKey": "barbell-row",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "34d95479fcc1fb53617b0c15cd486e2f25a3797f403f78a3790e0bc27b887d39",
+      "originalSha256": "f41bbf957f22f47540592c7c2018246b3931223089e18b26dd874f69a8d6f594",
+      "referenceSha256": "3c323601573df29cc9c6343765e0d21e7cd99a2dc830105099ac95ecba2cea72",
+      "bytes": 58464
+    },
+    {
+      "path": "exercises/lat-pulldown-0.jpg",
+      "exerciseKey": "lat-pulldown",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "6c17c6bb752e67c0ae10b8f05abfe39c1565386008171e4f07e80eed7841524a",
+      "originalSha256": "e420e5b3a60afaec8677f5d2e3d2daf321cfa15a6dd557792545d2b19484b04f",
+      "referenceSha256": "929bc29751c35d0a624840b24501e74dc59438d351e66cc017e7ee8682fb3346",
+      "bytes": 54589
+    },
+    {
+      "path": "exercises/lat-pulldown-1.jpg",
+      "exerciseKey": "lat-pulldown",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "d7f9a38ded330deb8f9e654551346c6e999ed8b0983cbfb3e654d38ebca043f3",
+      "originalSha256": "6b7b1004361642f2962a061e6b6a438fcb93058d75790fa04f7ab263ea38985e",
+      "referenceSha256": "781952e629e8a4cff549df94ee6b1da7e32c7cd507382d47e8566718c07807dd",
+      "bytes": 64055
+    },
+    {
+      "path": "exercises/pull-up-0.jpg",
+      "exerciseKey": "pull-up",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "219f3e3937aab590681d92cf559239040f3a1e86827dfa37667264f10db8fa50",
+      "originalSha256": "8cdc5eccfc40771cb73b69253b3f6cf5d823c9cb952f9d938378be01b7444be8",
+      "referenceSha256": "e56c8c43a41cfe2489dcfffc2c8195fd9e8897ba25165dbc34a4154ed6df5c7a",
+      "bytes": 63373
+    },
+    {
+      "path": "exercises/pull-up-1.jpg",
+      "exerciseKey": "pull-up",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "157d62c468fbefc6645a70d6a33c68bd5d68480b1d9a21562028ea06aff04d15",
+      "originalSha256": "2476fe0d0eed05b6eaf62309ed4e3948f525ab4110cd51f3c7526dfea24718c3",
+      "referenceSha256": "40549a52b064e5084a85e2c36afb51438df6ac1097169379a05f21565f8b4f3f",
+      "bytes": 60216
+    },
+    {
+      "path": "exercises/assisted-pull-up-0.jpg",
+      "exerciseKey": "assisted-pull-up",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "b6154fbd94f9240827cd8bbcc6319e67ed1d526bb59a080a10f4ed22ae4fc33c",
+      "originalSha256": "656ba3b130178844f85c49373b6d8abd93bc17989f80865722596c2c3e3437b5",
+      "referenceSha256": "7af060c6c064e6e8a074add38c950dc59f93801ecd54b7d652172bd9800b034d",
+      "bytes": 73954
+    },
+    {
+      "path": "exercises/assisted-pull-up-1.jpg",
+      "exerciseKey": "assisted-pull-up",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "154cea9040cda503b92ef45ee185212c0eda7037dd0685c6f78b0a42df529904",
+      "originalSha256": "ead71607b5a354ce57521affb6fb98d55b0385eb9fd35ba48f76033d3d5bf7c8",
+      "referenceSha256": "edc82e3a48ec624be2b920262d99399d055b96333850579b22fefa7375768a30",
+      "bytes": 64785
+    },
+    {
+      "path": "exercises/seated-cable-row-0.jpg",
+      "exerciseKey": "seated-cable-row",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "362df8042501302e20312ba395fabe2ee48c08f9116b4cdec1827bd6d874c956",
+      "originalSha256": "882593ad7f23b95818ae09472031fd0eb4f6e3acd93470ea7d3a9f87b2e2aff4",
+      "referenceSha256": "f5a4adf972f93a6c7b09e003f23005a1163653a7e36b71f1e374acab0243ddf7",
+      "bytes": 70137
+    },
+    {
+      "path": "exercises/seated-cable-row-1.jpg",
+      "exerciseKey": "seated-cable-row",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "593128a03e232354208ac57e01353350fa5b355d981c60d0fe1cc545fa320906",
+      "originalSha256": "b7c0495a765ac0bd3f0f658defd96737cc9325212fde37f03e223637ed3a40fe",
+      "referenceSha256": "0b8e1a0b0fff86cafff45d851ea631a20d469713e9fd735031d3fffb0299fde6",
+      "bytes": 74622
+    },
+    {
+      "path": "exercises/one-arm-dumbbell-row-0.jpg",
+      "exerciseKey": "one-arm-dumbbell-row",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "da6ba6a3589e11365df7c0956c55dc1051a20a27f567f930fb1882a51b0d017e",
+      "originalSha256": "2b44196056cabaae08a86a1799cf6b4fddc11c4e885b29de7cd627de019fda63",
+      "referenceSha256": "04b2f49e6ba0c2fce5f566fe53d03571715fa58350a2b8558b3dfa9110093a53",
+      "bytes": 55008
+    },
+    {
+      "path": "exercises/one-arm-dumbbell-row-1.jpg",
+      "exerciseKey": "one-arm-dumbbell-row",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "f2fbf2386d0ae8ddd195ed5e1bbe87e23d7472db0b0f819dfea88472b575cf1d",
+      "originalSha256": "52032cf8c3bfff317290943352234fa394d4c2b8d0b55aa2d2a83f3ef41275d5",
+      "referenceSha256": "83d5ceaa6d9ec6732f0afedaaa9a842c34cfdedce89e6fed75681c0bf971174a",
+      "bytes": 60118
+    },
+    {
+      "path": "exercises/chest-supported-row-0.jpg",
+      "exerciseKey": "chest-supported-row",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "0426d7c0be54709ed40fe03483325012f68365cef6ca879e9d85d4f95c4b0858",
+      "originalSha256": "c956538d001800dd33e24d15d0f9e1b399485e8a429aa7a450ec603ab01a43ca",
+      "referenceSha256": "6bdf4dd4c46fd9d50abe73802d49c87f3714dfd05774595e902a5b1765b45d46",
+      "bytes": 60021
+    },
+    {
+      "path": "exercises/chest-supported-row-1.jpg",
+      "exerciseKey": "chest-supported-row",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "27afbc8c9f49ebadc04edb8a6243a12ddecf295b3e309d4a9c7be13df54cce84",
+      "originalSha256": "5dd079a237e1f1bb851411ec3cba619c207a62398e6ad1ac2580879b430b226f",
+      "referenceSha256": "8c0cc8f09e194825429a0e7b6c96d9a2a85a5ac6005cf25d31ab65b04adfe739",
+      "bytes": 58502
+    },
+    {
+      "path": "exercises/straight-arm-pulldown-0.jpg",
+      "exerciseKey": "straight-arm-pulldown",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "2123e4c3121611000b2805b51d2589a14eb5650cdf5fd644025346ce64c43a90",
+      "originalSha256": "10e561edcdc66275702d6287df84a2330dcbc59f08f67ada0e76abeebab68fb7",
+      "referenceSha256": "be0021aa99d1a00fa4536b027f9ade42f08acd3b59b384acab270bfbe6e9c294",
+      "bytes": 63416
+    },
+    {
+      "path": "exercises/straight-arm-pulldown-1.jpg",
+      "exerciseKey": "straight-arm-pulldown",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "676ffbedd8c6647d18252839706c12f3dd17d1c4a88b92d8b1aa3341891231ef",
+      "originalSha256": "3837d0246b6d00bcc1a007468a49d630d705fd890826e3a035a67ed7e84287ed",
+      "referenceSha256": "4ef6a19848a25f91f2089d168057e4c84b285d48d14758d16b3d8e131fbbc88c",
+      "bytes": 62146
+    },
+    {
+      "path": "exercises/face-pull-0.jpg",
+      "exerciseKey": "face-pull",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "e41e8c0c2f534da533e9f00e7d8698130e92b7a0097ef7631466b1bd9af1e84f",
+      "originalSha256": "c6a93e451b79b6e4c68645bd4f033457ef0947842a4ef47cc50078fa02a84088",
+      "referenceSha256": "a184e981e8cc261a5cc1856b92d897894691d83e27929aae7e89bc9d8aa1d444",
+      "bytes": 65554
+    },
+    {
+      "path": "exercises/face-pull-1.jpg",
+      "exerciseKey": "face-pull",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "4a299bbbbee5c2fc35e3f871d40ecce2597ecde4c7a265391d64ee9c19a41aaa",
+      "originalSha256": "550f7299427033ca318b65b3c4c64ef7f23a008b36b61bd2807873e230140db5",
+      "referenceSha256": "1aeee744a027983d58328e68a258ee17ba2db85c1d16ba1bad00b4f2511dde2b",
+      "bytes": 65808
+    },
+    {
+      "path": "exercises/shoulder-press-0.jpg",
+      "exerciseKey": "shoulder-press",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "8cb7da0e88ab02e417e5b4a0a7df6825da538e4135f73d78a2870828e1feb113",
+      "originalSha256": "794a23a4a5903eedfbbabf4234b8b6cd1e8ae661d68254822bff92480cb57f6e",
+      "referenceSha256": "90dcc91593fe8d97baa0658cb1a51c5899786129411c9338eafa19345e977ca4",
+      "bytes": 58191
+    },
+    {
+      "path": "exercises/shoulder-press-1.jpg",
+      "exerciseKey": "shoulder-press",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "a02ea39ac9106a7179b5bf328d8a26c89196f7aac546b68a6ac68e9de84b0629",
+      "originalSha256": "29e3943bc504726168bba0fd824b3c0eafdbbc8d53794671b9fd2922c00de9e1",
+      "referenceSha256": "487e9bef066fb6275ebad782e6deca8bbdd90141c7cd0b44857a31f2d7d57c90",
+      "bytes": 58967
+    },
+    {
+      "path": "exercises/dumbbell-shoulder-press-0.jpg",
+      "exerciseKey": "dumbbell-shoulder-press",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "acdfd72069f4e27e89875e4da4ae4056b80c4ead81a254004f812fa81945ee3f",
+      "originalSha256": "faaaeae2a1df70c9e8f735354477e465d746423a53b2a0727bdfe5d7959840dc",
+      "referenceSha256": "e0a775bfa0b32b63c84f19fba2b1a05db535bde849feb3e54a3479a943b3bed6",
+      "bytes": 59174
+    },
+    {
+      "path": "exercises/dumbbell-shoulder-press-1.jpg",
+      "exerciseKey": "dumbbell-shoulder-press",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "f8698cdbd405d30c6dc533b4ab39980d5b54bc6de9f546b8bd492785a971c8d0",
+      "originalSha256": "e19132d6b43b071a77cc043486601069d9b514318e007b8c407ce8072e8420ba",
+      "referenceSha256": "940d5aad6b85960e833f88e218de8ce4f806d84cf2764741f1cbff9cce365d84",
+      "bytes": 56310
+    },
+    {
+      "path": "exercises/arnold-press-0.jpg",
+      "exerciseKey": "arnold-press",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "4f2778a449d01ec3966c6f8eeb91c8b3fee37fc0d18c066fc33def09521c4b0c",
+      "originalSha256": "daa996e7c76a304bdd02734c715d0b34df6fce94946334d0dab905cfea9fff51",
+      "referenceSha256": "44d9a18abcc9f21038e82b574e9ef600b302c80806e284ea16642410670ad568",
+      "bytes": 57807
+    },
+    {
+      "path": "exercises/arnold-press-1.jpg",
+      "exerciseKey": "arnold-press",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "80d10ce57961e9ad9f79ee588544ef1adc074e6506bf29469ead996d84417fda",
+      "originalSha256": "d56e4074f0d4aa7eaf5e0e0d45f522aaab68e59ccce107260e2d54b405ddfd8b",
+      "referenceSha256": "9a59d4eb25dbaf14ff5c5a193a890ff9c976c386cc5605dcabd5b9243da35ff4",
+      "bytes": 54449
+    },
+    {
+      "path": "exercises/lateral-raise-0.jpg",
+      "exerciseKey": "lateral-raise",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "5b4adc6d550b2f1c9a61005c4f5466f3c2a4e2fc1fa795b5e88ce059c2096513",
+      "originalSha256": "15c0fc79950d1a746b802c016b8887a813402dc837ed3f8d960a9972632329ee",
+      "referenceSha256": "aa1982c367ea9151ee7769ac1f9f8795209db94a6eb85f7d51a7033886fb7ebc",
+      "bytes": 41795
+    },
+    {
+      "path": "exercises/lateral-raise-1.jpg",
+      "exerciseKey": "lateral-raise",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "7ce0d963f4e758f305042cb2e6ecf94bb058a3c9484a45675078f870e366979b",
+      "originalSha256": "ecd521beac4ce4d6c67841e9f75ff58366a38ddfe6eb4d1d1ae60cc6f1d36ae0",
+      "referenceSha256": "9210e0fb0202c306026d45a55703aaec89b3bef7aafeb7791aa1d06adcf58ab3",
+      "bytes": 45003
+    },
+    {
+      "path": "exercises/rear-delt-fly-0.jpg",
+      "exerciseKey": "rear-delt-fly",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "cb893bbb38989ee1d235251891db1122d565fcfc8ec6af5a3a9ee92fb8d846bb",
+      "originalSha256": "60f050c793e23fbaaea6338367ba6055471d36987438cf867b4625e6b68cb734",
+      "referenceSha256": "6edcdf92b77376a714f7d3a552b0e148e2f0f409bcc1c5ec3e63610255638333",
+      "bytes": 59461
+    },
+    {
+      "path": "exercises/rear-delt-fly-1.jpg",
+      "exerciseKey": "rear-delt-fly",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "c679de6b57102e9f4d14414409ed8eebd38f82574d5cae213523dc0f920e130d",
+      "originalSha256": "afc6f7a5023e879d06bca3faa329e3a05831f3c0ca292f071c58e7c19f4bee60",
+      "referenceSha256": "ae4b412ff3a666d74189215b95712d7fafd1b5feaa1dc2e4a93cc0f855230240",
+      "bytes": 60244
+    },
+    {
+      "path": "exercises/front-raise-0.jpg",
+      "exerciseKey": "front-raise",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "919f1bf7f221b0fa5cc78ead69e663ff0e29174cb8848a9f19ee01887c041fc7",
+      "originalSha256": "bc8e70c141770a090f8a468f2ff60f5fd9e954c7cf7cb74280f67f921ce3f77f",
+      "referenceSha256": "0b12ff0413688bed00bc39c2e7af118c6cf13877f1eb49983a961a64ae487a6b",
+      "bytes": 41773
+    },
+    {
+      "path": "exercises/front-raise-1.jpg",
+      "exerciseKey": "front-raise",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "53dc6dd5c8edfcba627ad04e877bd36338241eba5dfa96b2203e9f7daf4a4c54",
+      "originalSha256": "f74c173616b0d6052588079f28e9dca994de04b26d5cb9b417f4c55aa282d943",
+      "referenceSha256": "17e600ed721cc2a6c20c5d5e43a00b2959661574ab84afa4db655891d36736dc",
+      "bytes": 42675
+    },
+    {
+      "path": "exercises/biceps-curl-0.jpg",
+      "exerciseKey": "biceps-curl",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "1764af880926e4040d20c12d0e42495be1401c4490949c03705c9cacf7b88e75",
+      "originalSha256": "dd79951d700e56aaf896e4ea6e029405086c227bd28fc6ae33d8911761f8148f",
+      "referenceSha256": "fad8458c2f70c39e1abb0a9554bba280da5abf9f8dc2d76f7c0be44ffdbfc99b",
+      "bytes": 42782
+    },
+    {
+      "path": "exercises/biceps-curl-1.jpg",
+      "exerciseKey": "biceps-curl",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "ec84321e38f8dd9125f8aa8c76da4fc664b1eb31c7bdcfd0f7d07b696df18325",
+      "originalSha256": "289cc08b1c42e0c321cd2d3c2748425aa0c45248510aba65d14ea82162d1ecb5",
+      "referenceSha256": "ec2c3a539aa80ea911a85e00ca9fb74502407e8ef0d8a4526e3b076a5a52b30a",
+      "bytes": 44005
+    },
+    {
+      "path": "exercises/hammer-curl-0.jpg",
+      "exerciseKey": "hammer-curl",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "669a90d82e0e46a1d075b41c71aed2c5ef58dfdf7e226ef60b2dc8a2c9454b02",
+      "originalSha256": "66935702417bb080179fec3a81c54e58b8a08136a86880fad28d008cb5b47a5e",
+      "referenceSha256": "f3c330d75545bed1cc325a4abf84940109db64fa5ab967b1963ecccccd3b2fe8",
+      "bytes": 42195
+    },
+    {
+      "path": "exercises/hammer-curl-1.jpg",
+      "exerciseKey": "hammer-curl",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "1636f49c12d3e1d33aee81d86f700951469654699858613e03abdffb44d89c91",
+      "originalSha256": "15df2be8dfda2cf05e0dc843b218d91ca497306d5bd9c406f54e4cff67dac732",
+      "referenceSha256": "42adf0d1577528fdfab45b360918320394a5017b082d2502ab3a00600622907e",
+      "bytes": 42992
+    },
+    {
+      "path": "exercises/preacher-curl-0.jpg",
+      "exerciseKey": "preacher-curl",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "d548e802e03c676c0e3c01f5dc89599dafe2c8f7ae0b4f32e8fefb0cfc81cef0",
+      "originalSha256": "b8f57a9ffbfbd4a7cfa9410af751508c4aba627aac2527e61cf090384b2e4973",
+      "referenceSha256": "b727674d48727a3bbba6a682fdaa228284ecc1875a2cd8b262bde2ac38cef0f4",
+      "bytes": 66800
+    },
+    {
+      "path": "exercises/preacher-curl-1.jpg",
+      "exerciseKey": "preacher-curl",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "f5025c49f2f58c709acc04876b45831927777c355c225aaf576d1c779a79ad77",
+      "originalSha256": "d5ff8f8869e4b7f04b8c5d275c15b096d1b36dd911fc74c164ce35573972e744",
+      "referenceSha256": "487fa4636df3e55b50161b391cfb683211f3d7a278bfe16d272f395daf2faa37",
+      "bytes": 69747
+    },
+    {
+      "path": "exercises/cable-curl-0.jpg",
+      "exerciseKey": "cable-curl",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "c64a6db24de5081b408d1aa3c6290c63ffd11060c06a377c069860ea94deea69",
+      "originalSha256": "dc21b5e198595b004778441bae6f4b61a3359f84881ce39a386a6475ea67a4fb",
+      "referenceSha256": "ccfe9ea6c72996c905bc82c032facf110246442ef6ccf28babee775277f0bc29",
+      "bytes": 62604
+    },
+    {
+      "path": "exercises/cable-curl-1.jpg",
+      "exerciseKey": "cable-curl",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "59214d37e8f8bd9c6b34ec938ca8f00e44a68b342e63e5c2df1bc3f7a76de2f0",
+      "originalSha256": "04e63a153144b3db592ba66463232fab05a859e790aa18d43ab6578cf786ea2b",
+      "referenceSha256": "5aa3493077fbf138f40bd71a476880395275599ff72ca30f04ce0a15313c201b",
+      "bytes": 65928
+    },
+    {
+      "path": "exercises/triceps-pushdown-0.jpg",
+      "exerciseKey": "triceps-pushdown",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "ade86c3647cbb308629d87502e886275a8e33794d54da94f71310d1e977adf99",
+      "originalSha256": "83c1046bf991af6715b6db10b771e5739b7e5c331d0afc23da01ae04c0a5bb8c",
+      "referenceSha256": "5f52b0f699fcd01bcf07053d9abe26e428f227816d62bc61a3232435715b5e7e",
+      "bytes": 54129
+    },
+    {
+      "path": "exercises/triceps-pushdown-1.jpg",
+      "exerciseKey": "triceps-pushdown",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "51d0c192953f121e0c8aa5da95a60046e9eb7b8ca2d295b2015eac9ffa76b142",
+      "originalSha256": "5810940b5dd7163770c8fada42aabc6ef2cedebf1405856130b1583b733f1a6e",
+      "referenceSha256": "76f7793452cebb4f00846f9fd5ce3306d90d4b1912b192125cd428c2d8b76a3c",
+      "bytes": 55959
+    },
+    {
+      "path": "exercises/overhead-triceps-extension-0.jpg",
+      "exerciseKey": "overhead-triceps-extension",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "65dc177091f1e66363f8dba22f2d12a30908ff1bbd2670fc7317dd660230c941",
+      "originalSha256": "2631863103a62739f0d5d5f1f1709524e35c3687d74fcae4425d2c26a58a13c8",
+      "referenceSha256": "1e9c8760bdaf3a8d7a69485b436e1df6e7444a02ad10d3d5c89f9ab0b1ddbcb8",
+      "bytes": 50704
+    },
+    {
+      "path": "exercises/overhead-triceps-extension-1.jpg",
+      "exerciseKey": "overhead-triceps-extension",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "98d5e0c2765993cb84dbb76e20b517ceeebf0a3bc283a47381792340230216f4",
+      "originalSha256": "ea0249438b19e1bed5b0a85006d2bc4ba395e3214b1541d10c62af16bd684a8a",
+      "referenceSha256": "566e9eae79da144a54df952012f508b05ce385f144b56753b821dbbee88b6052",
+      "bytes": 50636
+    },
+    {
+      "path": "exercises/skull-crusher-0.jpg",
+      "exerciseKey": "skull-crusher",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "91da77b74e958ea225321ac040520b4a1b2984b18cada941c330a88bdcd8c84e",
+      "originalSha256": "04ba243a9b66ea95f3f03fbc69534f26cad6a04c15497a71ed9e586813a29532",
+      "referenceSha256": "5ea3eb7db1b5f1e2f8af80d6dbfcc68831d4dea78f2ebf62e5950d80a27bcf56",
+      "bytes": 62073
+    },
+    {
+      "path": "exercises/skull-crusher-1.jpg",
+      "exerciseKey": "skull-crusher",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "2e189597c82c9b45a2255bec34643b386ebc346f964f52e63b305a576011edd9",
+      "originalSha256": "7a3586e2e6d31d508fd44100cb2fddf71ba3688dd9720d53fbfd89ddfdf62844",
+      "referenceSha256": "af4a3c804320429b94c646daea6a11c5681674cc553dde3027fd8d6b89595621",
+      "bytes": 58701
+    },
+    {
+      "path": "exercises/close-grip-bench-press-0.jpg",
+      "exerciseKey": "close-grip-bench-press",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "73efce40eee408d277cf117eca65c72ff680cd657249daac3a580e7f7b016362",
+      "originalSha256": "c450b5571aa94fcbd77da864d502f94db26e40fcc2cde974e76825f6ee070316",
+      "referenceSha256": "3a428440c0f95ee87234a260ca80cc1dfa205e3db8f8fa6098b7eeb2afb2cde8",
+      "bytes": 73927
+    },
+    {
+      "path": "exercises/close-grip-bench-press-1.jpg",
+      "exerciseKey": "close-grip-bench-press",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "a500117480ae679ddcb1cc139e52c552fcb2e699ce9bb51a3d7c29c817a9b34b",
+      "originalSha256": "f6c64e1720c09e8731057490c6b8affeae916cd32d667edc71cc400682496b41",
+      "referenceSha256": "108a66dc2dcb09d184157eb81b7fafba5f898b00654c39cb2f0c7f8bdfec5ceb",
+      "bytes": 72683
+    },
+    {
+      "path": "exercises/dip-0.jpg",
+      "exerciseKey": "dip",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "64716b12c5dcc16afca022ad79c5dca3eb1837f3b7e6e794222c4cce8f98ae08",
+      "originalSha256": "001ddfaa8750366b21f062f9d4a416cff05e8791a77907c0126100979c6cc74d",
+      "referenceSha256": "e724b6def4bc6299c937ddfdc92081fc260a7ac4680340705de16fdd0c00c8e3",
+      "bytes": 58617
+    },
+    {
+      "path": "exercises/dip-1.jpg",
+      "exerciseKey": "dip",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "f5ae1d66cdd32536d3f987ef972d8c4936a08d0221ade5bc4898be1e73b00ee7",
+      "originalSha256": "93c25c8c24d9a0a966d4c67a9107d2b7ffa293fb4673b0b22e4c39df554cb657",
+      "referenceSha256": "5de1f351e7dff44ca13d00c19bff082e6613725141cbe7ab38d9248e3c476f52",
+      "bytes": 55515
+    },
+    {
+      "path": "exercises/back-squat-0.jpg",
+      "exerciseKey": "back-squat",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "03855b9aa0ccbf0ef5db3f500e6f6af08a4f89d96c1ec8a0b268d01af998f2ed",
+      "originalSha256": "821c7191a705bc58260236dadce73cd78600f430e4717f05b23441f4fdd9e4d6",
+      "referenceSha256": "469a3c5a6eb35b88c45cda9fa7f9086032976fa3d45f5d844a0cc09a95574db5",
+      "bytes": 55718
+    },
+    {
+      "path": "exercises/back-squat-1.jpg",
+      "exerciseKey": "back-squat",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "f89e331ee3eba57a1c273ba4d2b39e91e63f4ba59e88fb118872426fb894f96c",
+      "originalSha256": "bee432e347a43e376fb741ea78c409f7735ef5f5b073c7a9448d0b01f470943f",
+      "referenceSha256": "8663a34f2d0a0a33d3d39b505cf3cdd38e282c1c9020d39d5587976e8d8a3020",
+      "bytes": 56684
+    },
+    {
+      "path": "exercises/front-squat-0.jpg",
+      "exerciseKey": "front-squat",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "107767001dc53ca87f8f1eed0f78ccfa874d5c8dd98759b997403000b499ac38",
+      "originalSha256": "bf4c60585af01059a64fdb381dfd0e2e6544967c36da9961876bba1e2e20ec19",
+      "referenceSha256": "f8a366b6913bd5af3072080720ba3ab7a74a7ef5754d1a39c200800cd6461f92",
+      "bytes": 54114
+    },
+    {
+      "path": "exercises/front-squat-1.jpg",
+      "exerciseKey": "front-squat",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "3c6b165b3ed5c2b65089e81378935193a7ccae1121551a927ac4e6fd91a0d8b4",
+      "originalSha256": "7989af99a62844618cf76eab36a3b4b594d570563d1dee056dca0bd92c47611d",
+      "referenceSha256": "6bb5c5eee794bd13d411271f0ad1cdeabdfecf5cdeb471727996555d07ff43fb",
+      "bytes": 58601
+    },
+    {
+      "path": "exercises/goblet-squat-0.jpg",
+      "exerciseKey": "goblet-squat",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "f40338d0ea388b1a0d77bb535a2fdc8581da082b62358f2b0db27232e671cbc9",
+      "originalSha256": "a2d135a684937f7ee8463aef2978022eb6682b605328b1f61755004899db1673",
+      "referenceSha256": "342ea87afb9fa03d9b1ac9c28c269f9ad2536d40b5a73b0bfb1ea25c9d605d02",
+      "bytes": 46512
+    },
+    {
+      "path": "exercises/goblet-squat-1.jpg",
+      "exerciseKey": "goblet-squat",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "ba40edfd18a2b6124e9b07d46ae02e4bed0d762d73ec64a9e60044e9d20c9f03",
+      "originalSha256": "6d6c7a888f55eff337c78c970a06304f7630e1a89c6bbaf3589060a8d37e22b0",
+      "referenceSha256": "49d5facb019c3be9302134edf1e4b786cc88fbe25413ee7ba3e8d278952ded85",
+      "bytes": 52702
+    },
+    {
+      "path": "exercises/romanian-deadlift-0.jpg",
+      "exerciseKey": "romanian-deadlift",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "0e854b0aa41e0655683850fed663272c807a935d163675a6b3c19c7dc1aa5058",
+      "originalSha256": "ea7cef3eec0f10e78d0ed09e0bfe7371dd151f4306109d8809ee90a2acd498ef",
+      "referenceSha256": "cd62a031d395afa1f63f660370e79d812ca0f9cf52718a33ee24d9fec2a9709f",
+      "bytes": 56650
+    },
+    {
+      "path": "exercises/romanian-deadlift-1.jpg",
+      "exerciseKey": "romanian-deadlift",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "d0481b14ba7ecfd1c6c96bf812159c3a09ce9b23244c8b5afda6cbabd237dffe",
+      "originalSha256": "5ef04eafc1ce1ee2f4b7164cd4c3006882d93b9181add4e4c2bf8a187637fea0",
+      "referenceSha256": "156406c703e8d4a172034e413b317b93907be82deaad5ea2f3cc0a9f181c7b9b",
+      "bytes": 56577
+    },
+    {
+      "path": "exercises/leg-press-0.jpg",
+      "exerciseKey": "leg-press",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "767a84f097c8d83b9cb75ff3704b4b69c29a4df203ccc4b455dd882131c25d76",
+      "originalSha256": "419db7cfd72b977b65ba9684a473c7e1d9e428603ca903bea10e80c3845cfeea",
+      "referenceSha256": "55079d514ae8d4dbc526731bb5120748e74a084ebcd546eaa890fa273427f0dc",
+      "bytes": 84080
+    },
+    {
+      "path": "exercises/leg-press-1.jpg",
+      "exerciseKey": "leg-press",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "9b31087bfb4e8ce1c26435fe439c09506ef5c9408dd6a3af12541f7af8ce8206",
+      "originalSha256": "c456c821d345f53c4a91860bb22594bfa193469c72d0502f495e09cf2bd08c51",
+      "referenceSha256": "f4e08d4ad4e6542f5dd923bbfabe9a28bf6c960bed02b1b9d65f6bafd6ceb051",
+      "bytes": 88352
+    },
+    {
+      "path": "exercises/bulgarian-split-squat-0.jpg",
+      "exerciseKey": "bulgarian-split-squat",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "a8e88ccb3698ec182826ee4538173536a91329ff1e6d310a46d838b0e4f32eae",
+      "originalSha256": "68beff1bd7972bf2b0f1b8b4c10f427088e314cc7020df250904d2aa985223bc",
+      "referenceSha256": "3c5813f67aed71721eda63b2c102bd4d3e841bf6a7357c07967470bdda2d8fc8",
+      "bytes": 49614
+    },
+    {
+      "path": "exercises/bulgarian-split-squat-1.jpg",
+      "exerciseKey": "bulgarian-split-squat",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "2d8fdd18f04cd15911d50455cb22685d96faf7c984078a0a43c5c4e3c5c5a893",
+      "originalSha256": "cbc7ba5bebb129776c0edd0a94107d07a7cb75ae7eaabf1e71b650be54dc7b75",
+      "referenceSha256": "376ed996e650ce4d796ca75a4c0de1ec2133ecc9a3e9b7a285bdd718309e4c08",
+      "bytes": 56081
+    },
+    {
+      "path": "exercises/walking-lunge-0.jpg",
+      "exerciseKey": "walking-lunge",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "6a47a40b33546847ed89ffa660b8844a313608de8520a1430c94a7b7dda40079",
+      "originalSha256": "d15a89194fbda0af4543b00ad0447b324d90c44abc46bd32aacb95b1242c4343",
+      "referenceSha256": "42421cd13040cc61a810d591af1b9fd85648063098057a8275b6451c73f74c6d",
+      "bytes": 42586
+    },
+    {
+      "path": "exercises/walking-lunge-1.jpg",
+      "exerciseKey": "walking-lunge",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "0169a806a242aadfa49eee455baf39d7c3060e9830833a245215af19d26ebd3a",
+      "originalSha256": "0bf97687797e119b3d767044abc12fd646d8efb5fbc08c75a061699f2e08d8fa",
+      "referenceSha256": "0d1273e80ffb41c2dade4721b8b1721e3e269b28e7824a526543670021499a74",
+      "bytes": 51290
+    },
+    {
+      "path": "exercises/hip-thrust-0.jpg",
+      "exerciseKey": "hip-thrust",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "8f873d6ae1e69c2940c45b37c23c1c989c9701de4e1ab05af611bc9bca2b926a",
+      "originalSha256": "5229f0bc6ca9ff2cfa8c57d1bf2034bcd296267017b4359442994f1ec2d49773",
+      "referenceSha256": "b2c82d4647df0621e2b0568f383d14e9577f2baa458668233c86d2f738efd4c1",
+      "bytes": 60845
+    },
+    {
+      "path": "exercises/hip-thrust-1.jpg",
+      "exerciseKey": "hip-thrust",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "8ccb50045f01524b762c566fcfe925e83e9a10334b7bc664b590ef030e15eb2e",
+      "originalSha256": "84c1944bb73359c4d315d787e135bb9a1f1fe193b3ecaaff297d7d18dc026853",
+      "referenceSha256": "de1a6390ff4b2720750ed3380c3c9b0c4c1fb5ae811810291b62d8a1fd726ad6",
+      "bytes": 61154
+    },
+    {
+      "path": "exercises/leg-extension-0.jpg",
+      "exerciseKey": "leg-extension",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "4d8e99c9a1502184204fe30643f659033e7aba9091caba6b864c3786c1279426",
+      "originalSha256": "94bc73d1459586b994b074a24e1e6484bb45067cb7202b21315df14e7b2577ad",
+      "referenceSha256": "54fd46441d63459e3cdd26f26b826ad049e835fb7f1984b42398fdfbdefb5bfa",
+      "bytes": 77689
+    },
+    {
+      "path": "exercises/leg-extension-1.jpg",
+      "exerciseKey": "leg-extension",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "f4c3a795651c60ed1eeebab7404f10530c0114fadb10fd04e6bf9f82a28f4685",
+      "originalSha256": "c1b966a89cd96079a476b8b466b5f57bb337301ad420c19dbda3acd601e0c418",
+      "referenceSha256": "9e04d0e306d8fee608305766b14a56df1d1312956d374152f58dcbf267d591a9",
+      "bytes": 74765
+    },
+    {
+      "path": "exercises/leg-curl-0.jpg",
+      "exerciseKey": "leg-curl",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "15cd2bb9372eb54a015daa92d8da81fdbef7a44131a3090aacba811bfb7ee824",
+      "originalSha256": "9f69942c7afedd95ecbdc3d7764fd948b5184bf24bcec75b3d588d485175a7ba",
+      "referenceSha256": "0875bf50a6615d4dc33df63110d3c6ee55b41606ed79a9fe705e17fcb4626095",
+      "bytes": 74259
+    },
+    {
+      "path": "exercises/leg-curl-1.jpg",
+      "exerciseKey": "leg-curl",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "ca8b5870af3d30ba85b0ea84cb94f69d81a257c14876cc57b2912e3df4973d2e",
+      "originalSha256": "a9902b092ca29fc9576d5a3e9b0e7879bed9f59bb8867dbf3f7263f8bd6df735",
+      "referenceSha256": "4ccf6f4a26dc97dcf8241cc55e08e22579b5a02bdebafe56d74f951ceab2bd06",
+      "bytes": 81374
+    },
+    {
+      "path": "exercises/standing-calf-raise-0.jpg",
+      "exerciseKey": "standing-calf-raise",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "6284f8c0b7209428608a621d6c334640c393855c4f0ae804097d900ee54334c2",
+      "originalSha256": "48520f290f37af4dcfb14c6e229b33953d431fa3e9c99813eab1f4a79cf522de",
+      "referenceSha256": "44922f411d204bb00dc86015981413e0ca503f0b9ba2346af25f345a91cf4848",
+      "bytes": 57871
+    },
+    {
+      "path": "exercises/standing-calf-raise-1.jpg",
+      "exerciseKey": "standing-calf-raise",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "c7a76b6c368a1a69ca84b3340f98694d1e39cccc69eef0262acb66380bd20b65",
+      "originalSha256": "8dc2294135da7b4704d52f64f633adac3ad75b5cf5b89189ee0ed08e6f78ae2c",
+      "referenceSha256": "f0990fed5d984fdf31c7b6a8420adb59ed6a3f286af6f228d53b68445caa1c51",
+      "bytes": 60821
+    },
+    {
+      "path": "exercises/seated-calf-raise-0.jpg",
+      "exerciseKey": "seated-calf-raise",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "d83994d996c173cfbb9b6b34dcb6a5825036a02d3e528246f3d8ab53f6abf4f0",
+      "originalSha256": "e85d32c83af738acf9d6a69ba5e98b10be5e6f68825df66ec9939d511428170a",
+      "referenceSha256": "6f1e5d06681b9d7050531622e065391fd3adb8d18e41a23fb80c62cf99c88d63",
+      "bytes": 71267
+    },
+    {
+      "path": "exercises/seated-calf-raise-1.jpg",
+      "exerciseKey": "seated-calf-raise",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "f518a634d7133f5875fee9321d5b0db487c88cc92b2a515d95870696e9c96a83",
+      "originalSha256": "1b8c6693a590170cfbd78347faa040141f9b594964de13be1753eb5c83072381",
+      "referenceSha256": "c397665d9d93377db1a579a6c7a3ab4b2b92428706df545fffcc7cb35e7ec738",
+      "bytes": 66490
+    },
+    {
+      "path": "exercises/hip-abduction-0.jpg",
+      "exerciseKey": "hip-abduction",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "8902926fc73bb6220d1f68b6a9f5c9323444107a0200e4a5575551971b2bbf9b",
+      "originalSha256": "f65b8472f497d37921b953940567931b8906f9be13b3076ef02c5840e2335bc5",
+      "referenceSha256": "572cef392f2a10c377153c5fe0acd5e0b4d0e881024ff6a7fdd4a6320dc7ed51",
+      "bytes": 80816
+    },
+    {
+      "path": "exercises/hip-abduction-1.jpg",
+      "exerciseKey": "hip-abduction",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "f3afbbe83c886961de0a1f289d929daabcb356f539125d5fc7c2b78bce5c4b70",
+      "originalSha256": "200a3761bcb0752637a5b1ef85bf66a9a5681cfb99097a8b5d06a1edbc1a0924",
+      "referenceSha256": "c438500671ec2dc6fa726086ec4a56903635ee65e37b3449174f18aaed1409c9",
+      "bytes": 79817
+    },
+    {
+      "path": "exercises/plank-0.jpg",
+      "exerciseKey": "plank",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "a1b7434d92be90fa1cfd8414fa05b6193dab690ece994f7e6b265353b893dc69",
+      "originalSha256": "6a7133a539ebfb156616230c5536d5b2ffe37d90368e6ea58cfd3947d69c8a17",
+      "referenceSha256": "7a6545152b4c918a84b7e0fd2c3c7d10d571f8fbda8e4459354eb24059ff245d",
+      "bytes": 44825
+    },
+    {
+      "path": "exercises/plank-1.jpg",
+      "exerciseKey": "plank",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "948a5053ccd2da1cd8caac17bd5c19782879977ce6f47a837e9d041a456e8ac8",
+      "originalSha256": "083b394ef33aa37772fb02e5a423facf729eb24cfe25a5354a794c7e43cebe03",
+      "referenceSha256": "7f6b690f7594dfab002fb27d36f8247957171b08d19020f24208afd4d5186043",
+      "bytes": 39418
+    },
+    {
+      "path": "exercises/hanging-leg-raise-0.jpg",
+      "exerciseKey": "hanging-leg-raise",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "62a6173402619495deb1f9f38eaf9cf2eab2748d13987a1ecab0a61de7f41a47",
+      "originalSha256": "c0cb58ef80f6fd652b23758cc2cdb2c1cb650005a7fadad49f4528b4571ed409",
+      "referenceSha256": "c166cd61aec9cd4cd3881a17602f7a6afd80df51329ea6a143e6ffcf9bebb2af",
+      "bytes": 58908
+    },
+    {
+      "path": "exercises/hanging-leg-raise-1.jpg",
+      "exerciseKey": "hanging-leg-raise",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "196e254a90291c30e28ea025d869a597a0dd323df8a7eb51db32137023f78bb2",
+      "originalSha256": "de1628cc747169965ce9e16961a03188cbe3c412c44219505aa8f5355f6821b9",
+      "referenceSha256": "c623bd4bb6848367407ddbc7c39d1611acf9c5001fe9a61360a580b78d86fa60",
+      "bytes": 57753
+    },
+    {
+      "path": "exercises/cable-crunch-0.jpg",
+      "exerciseKey": "cable-crunch",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "59a6bb91f7c2f9c43a2da8f95f22d474ab7b26e731bfedbef1c4e22db3fd5293",
+      "originalSha256": "f85d14b84bc898f59b9534214dc83e63c84a395fafa024dbfc9c3f6d6044ee04",
+      "referenceSha256": "196cc4cb510ecafec24c1648c851aa160d4652917d7c0137b4cf7fb1eeb9c668",
+      "bytes": 62786
+    },
+    {
+      "path": "exercises/cable-crunch-1.jpg",
+      "exerciseKey": "cable-crunch",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "3c1c1a48e76a9d74a8b8ea3b2962fbab5e3358d440bd73382fac25219b24dfab",
+      "originalSha256": "df34a32dac761fc1626f0cde06da72ba8599d5fe04da82ceb25e0e8c6ec688d4",
+      "referenceSha256": "e65fc1effc632eb78d8cda09ef95bf89c4bb235b15757e9a33306ca61a78f606",
+      "bytes": 66234
+    },
+    {
+      "path": "exercises/ab-wheel-rollout-0.jpg",
+      "exerciseKey": "ab-wheel-rollout",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "2f0cf74566e6a2808baee992e32c9e165ed56d1a49a09e22a71b44a8802eb237",
+      "originalSha256": "d0ce4179162ed9d93a88aeaf6c8e04b2bb6327029637a05ecf380b4f2fdcca64",
+      "referenceSha256": "ee135be474621be286a5d376b2f16cf5feda7ae50e919225b809eee1c5d8e597",
+      "bytes": 52086
+    },
+    {
+      "path": "exercises/ab-wheel-rollout-1.jpg",
+      "exerciseKey": "ab-wheel-rollout",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "6260d687e41580edafcce0f5cbdd3b2868d90f651d79497da5266413671557ec",
+      "originalSha256": "bc7049a19c24ddaa5ff5db40fe69c564aaa10d6ae12c078e32c2b8f662e2b308",
+      "referenceSha256": "f310ffb7672316ef29c1932ef8d530fb6e7615d6a04c2274a29fd276823c0a07",
+      "bytes": 43989
+    },
+    {
+      "path": "exercises/russian-twist-0.jpg",
+      "exerciseKey": "russian-twist",
+      "position": 0,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "8d4251bb8dba63521557047057a41186f3b15d09956d45cd035178f7c7df91ff",
+      "originalSha256": "c728b5aa6c44b7071aec593a92cbf75496fae6314e2ef12fe09abea24251fd71",
+      "referenceSha256": "e82f47fe7f7f9ba5c75e56b751d357f6e78eb3a5adba4da3aef8df44dfa7234f",
+      "bytes": 56888
+    },
+    {
+      "path": "exercises/russian-twist-1.jpg",
+      "exerciseKey": "russian-twist",
+      "position": 1,
+      "height": 768,
+      "width": 768,
+      "generatedDimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sha256": "e1b13000cbb37fb3f51368023f1e38c8b906653f887d5f1eb047eb22236a7e50",
+      "originalSha256": "21b83c514229d22ccdf2a466b66d14930f9c0c937eed5b3ff72a0a90a6f5d49b",
+      "referenceSha256": "7942e01c08ff47f71deea024bd6ed8d4766818d58229547770f22988b03c8da6",
+      "bytes": 57645
+    },
+    {
+      "path": "exercises/aerobics-pair.jpg",
+      "exerciseKey": "aerobics",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "13b3f04e29b9eca39d064115cfb37c101d66116290bad6effd2ce52221ad35c5",
+      "originalSha256": "6a4166467b086e3f9d7e7b6a2569ed31db0061de2bc9125b27f5fce6d43b8557",
+      "bytes": 107838
+    },
+    {
+      "path": "exercises/around-the-world-pair.jpg",
+      "exerciseKey": "around-the-world",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "5e07d7cd495d09c969f971edaf5c137cf81e7dea9182c233f43dcfbdbb01d01a",
+      "originalSha256": "f85212fa3960523a4b68cca620b779fec8003686adc0d8b9c66882a0f0ab42ba",
+      "bytes": 121952
+    },
+    {
+      "path": "exercises/back-extension-pair.jpg",
+      "exerciseKey": "back-extension",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "257f737267b4e3e4d839510797cbf3afe5f5db72e5feae0dd0271e280861b393",
+      "originalSha256": "56fa32e478749754531dce9153cfaa5e3999a876b78a8ef4e51f791cbfa3da9a",
+      "bytes": 121103
+    },
+    {
+      "path": "exercises/back-extension-machine-pair.jpg",
+      "exerciseKey": "back-extension-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "fb87815d35f6822099ea1bbb8cc86ee97f2b302964f3ea0b29a31b11563ffb70",
+      "originalSha256": "d387b68f10477f988422659c08e764e226e8ca03728ea72405a4c44c18e5c7cd",
+      "bytes": 155757
+    },
+    {
+      "path": "exercises/ball-slams-pair.jpg",
+      "exerciseKey": "ball-slams",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "509e762c8f68af75879d82810b6babdbd04bbe4942e13d3a103d01cbf2a0774f",
+      "originalSha256": "eb8b645992054cc967216a1b98a42d01c8292fb5503425452df67a176c9e9158",
+      "bytes": 83566
+    },
+    {
+      "path": "exercises/battle-ropes-pair.jpg",
+      "exerciseKey": "battle-ropes",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "fcf61de02842ee6a8a65322efa79e66963064d6e35ca751e3a19f4b000eca5d7",
+      "originalSha256": "41a9f5d349c31a549150ef6a7208598233334825b4f8b52aefa6fe2ee8d264f2",
+      "bytes": 116811
+    },
+    {
+      "path": "exercises/bench-dip-pair.jpg",
+      "exerciseKey": "bench-dip",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "1c5ee5e1c4844015cef174116eecc5b12a9e7ab0282ac65c91181feb4cfae15a",
+      "originalSha256": "b266756be4887e2239c7a1f8492ee68b52296bb799ae4cf1b4ca0f526c9dcdab",
+      "bytes": 114641
+    },
+    {
+      "path": "exercises/bench-press-cable-pair.jpg",
+      "exerciseKey": "bench-press-cable",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "c4f04310ba30148c1fe15c9e3cf2ebb3037cb1e29ea01cadf4a367dea28226fa",
+      "originalSha256": "50416bfe318fdc477e9c920db5cfcd0ff38164fde297c21dd5bdda9e012279fe",
+      "bytes": 155193
+    },
+    {
+      "path": "exercises/bench-press-smith-machine-pair.jpg",
+      "exerciseKey": "bench-press-smith-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "0ff5dda92bb82b47f7e1da07305cd7d5bd4bff068033f7689fbdf4b4a48dace6",
+      "originalSha256": "0af896173f1d31233ce1bde38b94666bd0a1a69d2c0990b1704a2cd3ba4a0684",
+      "bytes": 164433
+    },
+    {
+      "path": "exercises/bench-press-wide-grip-barbell-pair.jpg",
+      "exerciseKey": "bench-press-wide-grip-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "60b60aacda7aa8c346704e2ffcaf1b807d49aba716793934b05ac1e01e46b6d2",
+      "originalSha256": "826f5d77dece1ec1aafceba8bd3299bd0a255d2a7d84fbf1691972021b12cbfd",
+      "bytes": 150458
+    },
+    {
+      "path": "exercises/bent-over-row-band-pair.jpg",
+      "exerciseKey": "bent-over-row-band",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "293ff0271f21d9df10b41ea7cf03c72626623e35c4bcb052b8bd0236ce590402",
+      "originalSha256": "7b3d5892357ecfc5be6123a0898e0f5b22f7a2a2c8bbc49eef7251ad0f1cfd16",
+      "bytes": 109409
+    },
+    {
+      "path": "exercises/bent-over-row-dumbbell-pair.jpg",
+      "exerciseKey": "bent-over-row-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "9796dee8088adde11410971895b4d004231d0b0f95d18e6c11f8d2752efd90d8",
+      "originalSha256": "285f240d967d7bb7eb5f13457487e6d18a72e09d7e7f7326ff37ad8752593101",
+      "bytes": 109734
+    },
+    {
+      "path": "exercises/bent-over-row-underhand-barbell-pair.jpg",
+      "exerciseKey": "bent-over-row-underhand-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "0c24affb38aff67e0463d4b68c84706b982d4aaf5794296f06d4f4948e150e44",
+      "originalSha256": "d5124a25b9817f78badc59954dc20f01a0f5c7cecfe7e7ba6e93ac1e4b41995d",
+      "bytes": 132885
+    },
+    {
+      "path": "exercises/bicep-curl-barbell-pair.jpg",
+      "exerciseKey": "bicep-curl-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "1736d60bea89b03b3ddaee74f5bf5cabe4701aea093bf1bee8299126ccf32e25",
+      "originalSha256": "41bcb03b2548d38d56f62611f2719b3b0a3139c554107ab51208c886c631f7d7",
+      "bytes": 99534
+    },
+    {
+      "path": "exercises/bicep-curl-machine-pair.jpg",
+      "exerciseKey": "bicep-curl-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "c1a3b36270a779a4ad18c52478d804bd1a69a1feb294bc94eceb3e8d8b00ca87",
+      "originalSha256": "81e4659bfafeecb68de80dc9b71b84b6a2c4bdc4c50ddd79a53c3bdff1c270b0",
+      "bytes": 159666
+    },
+    {
+      "path": "exercises/bicycle-crunch-pair.jpg",
+      "exerciseKey": "bicycle-crunch",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "c6d7a3f283624b56fbe80717cdbc23422a51d4c8c1f95234cfba611c9a1a78b3",
+      "originalSha256": "357056fb85989ad7ce73b10c198aa5cc751a653b4f49338ba76a22289077c8cc",
+      "bytes": 101501
+    },
+    {
+      "path": "exercises/box-jump-pair.jpg",
+      "exerciseKey": "box-jump",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "9b326d501d9b22fcfb289da2a91e5066959eb67584ff6392f35e981727fdef0a",
+      "originalSha256": "958cdc96371cf8a5a4e06b911ead5a938192b482f5ce24241ab0ffd6fe606c9b",
+      "bytes": 98783
+    },
+    {
+      "path": "exercises/box-squat-barbell-pair.jpg",
+      "exerciseKey": "box-squat-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "8f47703163d8a64cbc932221d965066c973dd472cee2f4eca0f193854416cdec",
+      "originalSha256": "2a5aa319b343c999a61542848ef2baf108f15afa3c4d131f731a37764c6ceb75",
+      "bytes": 150013
+    },
+    {
+      "path": "exercises/burpee-pair.jpg",
+      "exerciseKey": "burpee",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "83b275d27947300a872b700262a772a70ad5f4e86f0077f6b628cbb2abf9fc6d",
+      "originalSha256": "5af2e289d3a784048d382a8e19746639628e62b11693cca65f229a8cf125b459",
+      "bytes": 80684
+    },
+    {
+      "path": "exercises/cable-kickback-pair.jpg",
+      "exerciseKey": "cable-kickback",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "b98d422be8339b958f8122032a8b1c942ca9ae01e924b62e2ea8e1a2e761bdfc",
+      "originalSha256": "6dcc45279db5cab78173d431ec4b217d2bd32ca8a99088429365d766c4c5570e",
+      "bytes": 133179
+    },
+    {
+      "path": "exercises/cable-pull-through-pair.jpg",
+      "exerciseKey": "cable-pull-through",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "809f431ec047e6423e6dbd9c2b19272fe1936f662f5aeae2891afbb06b6f7d4f",
+      "originalSha256": "33c2cf3ddce0de542d3ad6ac18f81a6e3e029bfab895368cca4ef9918c82eeb6",
+      "bytes": 112510
+    },
+    {
+      "path": "exercises/cable-twist-pair.jpg",
+      "exerciseKey": "cable-twist",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "1e5d82f658900c459226aff061b8510ffe55027bfe068dc6fe349305b98f3d70",
+      "originalSha256": "701b7496590048ca1f8608dae643f6b5e8a3c3a3df6e48cf2e7d694e18b17ea1",
+      "bytes": 122702
+    },
+    {
+      "path": "exercises/calf-press-on-leg-press-pair.jpg",
+      "exerciseKey": "calf-press-on-leg-press",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "6d835f1002e602a2d316d23bde2feda8e24067f39b2273365cdf7d232bc87d8c",
+      "originalSha256": "ee70764815dcc583635f76e2ae2a200747abf9966693a4a7026b7b619f7b848e",
+      "bytes": 162606
+    },
+    {
+      "path": "exercises/calf-press-on-seated-leg-press-pair.jpg",
+      "exerciseKey": "calf-press-on-seated-leg-press",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "420f4e08f8141d981bbafc1525ac0d36ebfbd1271158d9b0ef0090e6ef163c0c",
+      "originalSha256": "db21750e2989419a513ad4840783808eb451461f808ef5e2f233ac3cd22620ee",
+      "bytes": 150547
+    },
+    {
+      "path": "exercises/chest-dip-pair.jpg",
+      "exerciseKey": "chest-dip",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "7f5985232a04a84bdbb3372094a4bbe848932acd30308418eb1a04a5974b1400",
+      "originalSha256": "d8618ba1922283cbee86fc4d364a7fe08e24b82a9314fdc3dc4d40fd55553678",
+      "bytes": 113531
+    },
+    {
+      "path": "exercises/chest-dip-assisted-pair.jpg",
+      "exerciseKey": "chest-dip-assisted",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "ff72ff3377d2c028763746013a349dd7b592ede9c604529c90c0cde186fe950e",
+      "originalSha256": "2c67b34ef9ff661987a875bf03a788be6fe4928bea8b5339ba768fd927b7cdfd",
+      "bytes": 134321
+    },
+    {
+      "path": "exercises/chest-fly-pair.jpg",
+      "exerciseKey": "chest-fly",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "ee9c5c44f26f8fbe4add371aff718eddd6d83d2676b8cf37f5981e31e270002d",
+      "originalSha256": "11b21e18be9185757cb6e4cbf05060e26a01a91f006105e19c0bacc355f2b275",
+      "bytes": 143461
+    },
+    {
+      "path": "exercises/chest-fly-band-pair.jpg",
+      "exerciseKey": "chest-fly-band",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "5b61219a12592fbe1a19e8065540ee2996e7f8e79d97b12435b8e58cc5f80874",
+      "originalSha256": "115d6de66d380f09cc1e08e8622d48eae89ee185b89a3adf50fea208cdc8094b",
+      "bytes": 123334
+    },
+    {
+      "path": "exercises/chest-fly-dumbbell-pair.jpg",
+      "exerciseKey": "chest-fly-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "b43303095797ba630d48a3ce49e9895a436f7b358b7200438bdeb1b569484ef7",
+      "originalSha256": "d880c24c51897e537470378067472eab4e2bbd98a8f1777231872336affe2382",
+      "bytes": 126549
+    },
+    {
+      "path": "exercises/chest-press-band-pair.jpg",
+      "exerciseKey": "chest-press-band",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "867e22c733abc30110fca472284213ea2fa27dc4acb6b25caa24fe01e370ba79",
+      "originalSha256": "9c16c57faf6831c96dd16676ee114790f96fba31662953faed2c46a45d0a71ed",
+      "bytes": 112877
+    },
+    {
+      "path": "exercises/chin-up-pair.jpg",
+      "exerciseKey": "chin-up",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "839b878cb151a429f4e5b5e8c4cb00706cfb46da9b4c75400ecd8aff996eda77",
+      "originalSha256": "36a51ab13abfe5f76d475d8e9a8db19aac0cf44cb90f1b4ecf3b0738531df87f",
+      "bytes": 125587
+    },
+    {
+      "path": "exercises/chin-up-assisted-pair.jpg",
+      "exerciseKey": "chin-up-assisted",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "9f8a3a7d1740eebc12caa45b2c8d68cf96d05b0005155eeaf9d87051e77c4255",
+      "originalSha256": "4075648c2ab25d511b1c5c7640410cf5baa792293d209ea118c6863dc5e9e008",
+      "bytes": 144019
+    },
+    {
+      "path": "exercises/clean-barbell-pair.jpg",
+      "exerciseKey": "clean-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "512cb0e67b5758c0c79e80feb2e22a0f3305620f35a1c59e9ddd015bb532c505",
+      "originalSha256": "61b98f9f342a7ccabb295592ca5e1513a95dd4b73717eba9baff0a963bad7345",
+      "bytes": 126661
+    },
+    {
+      "path": "exercises/clean-and-jerk-barbell-pair.jpg",
+      "exerciseKey": "clean-and-jerk-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "d25bd27ac41c53739de607dd43fc37a19007d407831bbe13b7849797cc2b02bf",
+      "originalSha256": "b86151b59a6799d019bf6c5f69c16ba23909d010d348dab59b500dbeaf5d6b5b",
+      "bytes": 113311
+    },
+    {
+      "path": "exercises/climbing-pair.jpg",
+      "exerciseKey": "climbing",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "f74c790ea589c954b175fd58c0e1354fd6c71565c56e1dfe8e97a7e55eb91e99",
+      "originalSha256": "6af32d9ad087c114264f2a2032e27c64bd544a154ae24efbf49718d5c6af5504",
+      "bytes": 123501
+    },
+    {
+      "path": "exercises/concentration-curl-dumbbell-pair.jpg",
+      "exerciseKey": "concentration-curl-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "214c054ee0c7712a52ccd96a897a8d3fd44e11b171cca4aee2c4fba1085004ce",
+      "originalSha256": "ebeeeea6507d5873def13442885ea343d194530c17df47acb867d978f4af4689",
+      "bytes": 127753
+    },
+    {
+      "path": "exercises/cross-body-crunch-pair.jpg",
+      "exerciseKey": "cross-body-crunch",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "085f50d8bbce6c6fb1b587b95b54d78c9d28df4a32a0e5651f0332c90673d32e",
+      "originalSha256": "228cebb05c20a713ad46354e2d237ab7432b861c3a19e917994f0b7d7044103b",
+      "bytes": 100672
+    },
+    {
+      "path": "exercises/crunch-pair.jpg",
+      "exerciseKey": "crunch",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "37e7b34ca6bbb7b2bc6605a2c08a2b8f14563f8250e89edaa62b52064b330df9",
+      "originalSha256": "a25e49b6fd4c865876125958e0629ab7ba6fd12bc98dc827c2b950f067c59c0d",
+      "bytes": 97536
+    },
+    {
+      "path": "exercises/crunch-machine-pair.jpg",
+      "exerciseKey": "crunch-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "a2896400c1806fe1f6e69827a8e451ad43dbe24e0cc5ce2459cad103fa5b87cb",
+      "originalSha256": "3fee8dff568e9a9b9437d971d88bed79aba4bcfaa1d0a3e9860ae0418e8ed9aa",
+      "bytes": 159684
+    },
+    {
+      "path": "exercises/crunch-stability-ball-pair.jpg",
+      "exerciseKey": "crunch-stability-ball",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "f2fb13a2852ef596a396f9eb9a3e74ef1b74c900af4d845435fd1a02e5f87a09",
+      "originalSha256": "c31aa73782a846be6beaaf17142af4f8913c95c51bfb9be29fecc8802b6adfce",
+      "bytes": 102493
+    },
+    {
+      "path": "exercises/cycling-pair.jpg",
+      "exerciseKey": "cycling",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "24c42c3a6e31a40c929f988b7f853c956143d172d656ca40e30a3281cc60f9be",
+      "originalSha256": "9f4c87cdfe07debe4f12ecaaee5abcff06da4947279f9dddee2b23df3c859114",
+      "bytes": 206040
+    },
+    {
+      "path": "exercises/cycling-indoor-pair.jpg",
+      "exerciseKey": "cycling-indoor",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "59e700763a06f080b0a0dc38a378a0780b8de9e2820f52d0e6fbadfca4c9e0b0",
+      "originalSha256": "2825adaa2dbcb0837b1a1b32ff6304f7c3a75cbed1841e37ae2f3bd6b2275e96",
+      "bytes": 135123
+    },
+    {
+      "path": "exercises/deadlift-band-pair.jpg",
+      "exerciseKey": "deadlift-band",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "77e9a38ff25eb1c6b2651fedd2b5ff324ce11b11aff2be67ca5e79ee328ff725",
+      "originalSha256": "f1c6e311c4f2d888a38d746c42463941f1dd0c90eb206b6389b8501be8f1abea",
+      "bytes": 90481
+    },
+    {
+      "path": "exercises/deadlift-dumbbell-pair.jpg",
+      "exerciseKey": "deadlift-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "bee8015c304658eedc7da29cf268df3d2439a813f8394e6c64f575f12834d52f",
+      "originalSha256": "a6695aec3466803c3416e40fe2aafe97da833b322dd8678915c870d3ce4dbe48",
+      "bytes": 98216
+    },
+    {
+      "path": "exercises/deadlift-smith-machine-pair.jpg",
+      "exerciseKey": "deadlift-smith-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "c6b7a2f8e8c148abcb6cb2337447883c27631e5e2beb7ce74ce872b627226949",
+      "originalSha256": "02e0dc2a0d4c18b62ed4f5bf7857456943f907ac925d247655771af4831ea108",
+      "bytes": 143261
+    },
+    {
+      "path": "exercises/deadlift-high-pull-barbell-pair.jpg",
+      "exerciseKey": "deadlift-high-pull-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "84da6afc42c286ea0b96fb1a745537ae06ee955a1e6cda479127a4b8d1a7232a",
+      "originalSha256": "ca828049511a880ddb9529a219a5b2e18f43149a9dccf65d2311df6368e3c816",
+      "bytes": 116790
+    },
+    {
+      "path": "exercises/decline-bench-press-barbell-pair.jpg",
+      "exerciseKey": "decline-bench-press-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "28f485351fb908e3834d7aa6b523c3da55fc551020edd9975ed315fde95781ce",
+      "originalSha256": "5e7006e1d711a819254960f9fceb54592fde711f0c78b8f81ad35f93cfe66ca0",
+      "bytes": 146961
+    },
+    {
+      "path": "exercises/decline-bench-press-dumbbell-pair.jpg",
+      "exerciseKey": "decline-bench-press-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "aa6e16e7f31db1671c04a219963f80bc18076d89c349f3f9c76f1c7d485473cd",
+      "originalSha256": "fe70259b8aa31b0292b0bda982b182737f046e2f6afab26e08d44371115aaac6",
+      "bytes": 145581
+    },
+    {
+      "path": "exercises/decline-bench-press-smith-machine-pair.jpg",
+      "exerciseKey": "decline-bench-press-smith-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "344796f9c3987b2cabdf4d41dd991c6959de5abbab585ae636037d8802d23e69",
+      "originalSha256": "4c64652d012e053cc252b43d401487948de365179801446045c79d942302e657",
+      "bytes": 164213
+    },
+    {
+      "path": "exercises/decline-crunch-pair.jpg",
+      "exerciseKey": "decline-crunch",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "4049cb52c91363f6f644524fbd90c25d34df0191a3ddf2b9b7334e53333e0be6",
+      "originalSha256": "1256662e30fe24c11641c6d31b8856aaa05c7397ef47be175bf458524b09c76f",
+      "bytes": 116942
+    },
+    {
+      "path": "exercises/deficit-deadlift-barbell-pair.jpg",
+      "exerciseKey": "deficit-deadlift-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "80f01e3ae9f1745d627009298b543cac68c929267aa30e1c51870b540eb8db06",
+      "originalSha256": "282b146cc256377c640b64d43bbe0638c00ac7a9b8907d5c591282239e6f76d7",
+      "bytes": 114447
+    },
+    {
+      "path": "exercises/elliptical-machine-pair.jpg",
+      "exerciseKey": "elliptical-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "7638e9416f6df7d2308799d9406794a9b89993cf7cb89a5507fbb0e344a0b19c",
+      "originalSha256": "53edf6a19a8f9cc7f7f6692fbd083baa44f83ec56056a9721f520825b6bd3473",
+      "bytes": 169963
+    },
+    {
+      "path": "exercises/flat-knee-raise-pair.jpg",
+      "exerciseKey": "flat-knee-raise",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "861158dba1494602e16f355ff9ad2ae05c1fa0693c758cba3deb0c94999fc4cb",
+      "originalSha256": "eebb026c1a4e76cc53d4135db64b517bcd4ba341995bcc50b961d1f920fb6af0",
+      "bytes": 104919
+    },
+    {
+      "path": "exercises/flat-leg-raise-pair.jpg",
+      "exerciseKey": "flat-leg-raise",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "8e1fb1f1a5a524abcb6b7323af00d8cbb0b79a7b871fb308a5b87e053c37d6b0",
+      "originalSha256": "a2e443d4978ef6d0e7fe2b4e138982369182b5aa80181917fdb4609abb76867b",
+      "bytes": 92188
+    },
+    {
+      "path": "exercises/floor-press-barbell-pair.jpg",
+      "exerciseKey": "floor-press-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "8456f4531409764d025e9a23de301230a6be1c17485972801e82a93b75f75fa6",
+      "originalSha256": "4ca2f2b184234b9ebc90fae360bd80a7fc4210e0ca6a1c864a6b8909a2b20f12",
+      "bytes": 118915
+    },
+    {
+      "path": "exercises/front-raise-band-pair.jpg",
+      "exerciseKey": "front-raise-band",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "b715b7ea75fef1c36b16bae213dfa959e4d388c233cf909a54cbb3ca5b75d347",
+      "originalSha256": "f9404c0bac03137b9a603258da6e705ca31af990151925eecf3af2b257aa1e9c",
+      "bytes": 103049
+    },
+    {
+      "path": "exercises/front-raise-barbell-pair.jpg",
+      "exerciseKey": "front-raise-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "6c72eb2e22c86b29d018e7b4eef0f885f080430806c0b4a64d18ae33110d9e10",
+      "originalSha256": "9b46dbf9850316ad8ea534a0592234236b6144e0093da43d4acde61ba9985847",
+      "bytes": 102926
+    },
+    {
+      "path": "exercises/front-raise-cable-pair.jpg",
+      "exerciseKey": "front-raise-cable",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "aba9de38e506a1e9145c5910e393d121f1a8a55ea6cbf9521f31efbcd039b065",
+      "originalSha256": "af64a0fbf4b2154e1592b221a68f6a33f5a1f1a0370b102a191f2fe987bcda4a",
+      "bytes": 134186
+    },
+    {
+      "path": "exercises/front-raise-plate-pair.jpg",
+      "exerciseKey": "front-raise-plate",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "f6f4d73389b0d3cb386ad81c1dfcfdeaf78e463858f2eaf0d5afec8e09f0f944",
+      "originalSha256": "cfa4bc9d1ea837fd22a1b9acec799fa7a93e3a8f67f1fe947bbde989c8c10ffa",
+      "bytes": 96737
+    },
+    {
+      "path": "exercises/glute-ham-raise-pair.jpg",
+      "exerciseKey": "glute-ham-raise",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "9dcb9378046b1042c8d01cda4b0ac31ab3a6594a3140021f58c025f72c73940f",
+      "originalSha256": "20f4f351630c0630f1c9499651a17b09c51d0266c5529bbee91d714bb931a42f",
+      "bytes": 115105
+    },
+    {
+      "path": "exercises/glute-kickback-machine-pair.jpg",
+      "exerciseKey": "glute-kickback-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "4efd5fbcfa1aa23b8824d9822f0d5d471b074df6d746fdd60c62e01b5894e2bf",
+      "originalSha256": "7ccfece98cb0d58e9c26df792caa23040559c1f83f3934875bfc83e89a3bf72c",
+      "bytes": 144219
+    },
+    {
+      "path": "exercises/good-morning-barbell-pair.jpg",
+      "exerciseKey": "good-morning-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "35186cc2009b02938cdfc85ff067e6092617db3f585a7abb627e19ffec7ed7b9",
+      "originalSha256": "439daaa53658d3fa13b1b99e0eb28990805abbbdf58508e461874d3dd2491b02",
+      "bytes": 115795
+    },
+    {
+      "path": "exercises/hack-squat-pair.jpg",
+      "exerciseKey": "hack-squat",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "ace5f083c640657093a34889f9b4dbb73ebf31cb5609d44324fe3c027caa0cd6",
+      "originalSha256": "14a60c2337f86230e846e3c41d3286b15e2df986b1581d579bf06b999dae5d7d",
+      "bytes": 170671
+    },
+    {
+      "path": "exercises/hack-squat-barbell-pair.jpg",
+      "exerciseKey": "hack-squat-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "83b96441a6ad990161fe4563bea6862442b8f7ed5b02b04e0c393246ab8a2ac7",
+      "originalSha256": "ded47bd9fe7382cf9bf5036f209c82072f941fe92e8c9aa69e85b1624dfe18fd",
+      "bytes": 116583
+    },
+    {
+      "path": "exercises/hammer-curl-band-pair.jpg",
+      "exerciseKey": "hammer-curl-band",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "d412c9ef959dae2f4e4a985cce50498d58e3c78a3f335135721756177405c7b5",
+      "originalSha256": "82e4a9416812d1b9538201b0389bd215404f004a624f8dd7d059fbd5efbff5c1",
+      "bytes": 102774
+    },
+    {
+      "path": "exercises/hammer-curl-cable-pair.jpg",
+      "exerciseKey": "hammer-curl-cable",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "6d37325542bed25cd7ca844f68172dffead1ad5df4d8b4561f586a88145689ff",
+      "originalSha256": "9575080350c0accfaec49a0c17bd9812e3c96001e6ab0672b69474021e8a6d52",
+      "bytes": 125078
+    },
+    {
+      "path": "exercises/handstand-push-up-pair.jpg",
+      "exerciseKey": "handstand-push-up",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "b5f348395a833f4fd3f1f8bfd69b890ff48c52ecefedc6c9b7ae57478d5bb7d9",
+      "originalSha256": "32ba8d6fcecc93280b18243e82fe54028c0f6a4b4f375be45a53c2b45558695b",
+      "bytes": 91487
+    },
+    {
+      "path": "exercises/hang-clean-barbell-pair.jpg",
+      "exerciseKey": "hang-clean-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "1a6ccbf69a2a73fdf5a06dbdf4189afe126d6191dabe9755aceb876780ec674b",
+      "originalSha256": "2e9202c3db24e65d4b51d1f6feba00ca4da9ef96d5070870ccced917251ceefd",
+      "bytes": 121113
+    },
+    {
+      "path": "exercises/hang-snatch-barbell-pair.jpg",
+      "exerciseKey": "hang-snatch-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "db1303ec0c259a2e2c947dd252dba2606485230890be7d593a2fbfef7dd1e859",
+      "originalSha256": "ad517de14785b661fb4df7b73f604ad39ed70b1a00d3e3b3a18ec77bfcecdbdd",
+      "bytes": 125081
+    },
+    {
+      "path": "exercises/hanging-knee-raise-pair.jpg",
+      "exerciseKey": "hanging-knee-raise",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "9a99ac5e4f26679ed70b2bab562635d46a4fae0ce9a0f5b0adbd8d30f2c7d663",
+      "originalSha256": "64f3b84f1af2ef6a03228b32fc3dbf9c3ce1f5a4caf1eeb24d916ed383d3fd85",
+      "bytes": 120800
+    },
+    {
+      "path": "exercises/high-knee-skips-pair.jpg",
+      "exerciseKey": "high-knee-skips",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "5e8cb1af8ed5c22450f5286fa3fa5c868c293d1fecd5c6b669bbb88874bec914",
+      "originalSha256": "d481687cb85b71edebfc967304846ed074e75456001a9c5d60a0aedf2a232d20",
+      "bytes": 96236
+    },
+    {
+      "path": "exercises/hiking-pair.jpg",
+      "exerciseKey": "hiking",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "1965feec3d57f53a475d4ab264e20e93f6f2d516b6c43f1fccb931361bb9b086",
+      "originalSha256": "042267fee9c78df90edbb3540b9d039d59c5284e8242a30f673f94b1a4c5e1d7",
+      "bytes": 106102
+    },
+    {
+      "path": "exercises/hip-adductor-machine-pair.jpg",
+      "exerciseKey": "hip-adductor-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "dc90f78de737fefdac16815759c2daef0300468254bd20067da9de5cb5b4851e",
+      "originalSha256": "b09e5c7301a8bc35b327f350b4f543880f2913e1f2bd907549bca5a3cd8afa61",
+      "bytes": 157723
+    },
+    {
+      "path": "exercises/hip-thrust-bodyweight-pair.jpg",
+      "exerciseKey": "hip-thrust-bodyweight",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "4bde52a8347594f408c2ce5c38eb29183ebb76c109099d5488f59d735fa9e6fc",
+      "originalSha256": "b2cd0c4e084b4a7478a8afe7352e2fb6b0394e374f2f14eb2cf802791472cace",
+      "bytes": 101461
+    },
+    {
+      "path": "exercises/incline-bench-press-barbell-pair.jpg",
+      "exerciseKey": "incline-bench-press-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "d061073e4e72ef40566f9036b482b632412af6580230b3e807dfa6e1576f8e13",
+      "originalSha256": "01a053b6f11712ef4610ae7239b8ef80619daa06315b9dc78813c25ea5852418",
+      "bytes": 145263
+    },
+    {
+      "path": "exercises/incline-bench-press-cable-pair.jpg",
+      "exerciseKey": "incline-bench-press-cable",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "dcfdaad32b69361d37d1ad1962ce1904d97eb8f68f976028f7ddd0d1f25c41e0",
+      "originalSha256": "45eee45e19aa6927611e47cfb0d03d51f498007b0524edae383cf5194b7b4618",
+      "bytes": 164535
+    },
+    {
+      "path": "exercises/incline-bench-press-smith-machine-pair.jpg",
+      "exerciseKey": "incline-bench-press-smith-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "69eceb81c8bdcddbc3d92e4cd7430f99794d5659a5bfe6a99aa0a84562bf524e",
+      "originalSha256": "9fe49d0717e65e41bf5d2b62c4601e2ec84f570224368def0daed45a4490d362",
+      "bytes": 169662
+    },
+    {
+      "path": "exercises/incline-chest-fly-dumbbell-pair.jpg",
+      "exerciseKey": "incline-chest-fly-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "234d06bc2a6a52817c8b65e67e4ba1c4495ecd68b6f052131dec4a20a13e3d48",
+      "originalSha256": "a71286d6494a2fb0e7c15040ff9573fdd946ad20cae7674be7354f1dda6d735c",
+      "bytes": 126848
+    },
+    {
+      "path": "exercises/incline-chest-press-machine-pair.jpg",
+      "exerciseKey": "incline-chest-press-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "d5776778628db6d8e943bd217622b34f76269c5184920d76e9b81279a011443b",
+      "originalSha256": "ae36c9742dd85074ab077fb0fe8d633a4bacb30461b963f5040fa009f6656023",
+      "bytes": 165109
+    },
+    {
+      "path": "exercises/incline-curl-dumbbell-pair.jpg",
+      "exerciseKey": "incline-curl-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "3792b3aa31e17b058945a9dae0ecd46a18de983ae03058ced207136d086b4b54",
+      "originalSha256": "6d1836778a1eb9d45cfc1a5de1abca6f50cd682ed6529de61164bec59b7a0fd3",
+      "bytes": 133599
+    },
+    {
+      "path": "exercises/inverted-row-bodyweight-pair.jpg",
+      "exerciseKey": "inverted-row-bodyweight",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "92bcc8fcc2d2fb672c1bfcc42851dd2c1839707b2a2a2f0cfa3491076b830f08",
+      "originalSha256": "740640d3cc300803e11d2b1bf0ec7234d244c7a78077ac7305da17dd53d6b581",
+      "bytes": 119308
+    },
+    {
+      "path": "exercises/iso-lateral-chest-press-machine-pair.jpg",
+      "exerciseKey": "iso-lateral-chest-press-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "7da5497964d831ada732413fea2557eaf16047131ba6c98b55b4bd2725639d65",
+      "originalSha256": "cfdfa2b033cdddc99735fed734378539c78df4764e0f4ca7433622ad7ed305af",
+      "bytes": 167821
+    },
+    {
+      "path": "exercises/iso-lateral-row-machine-pair.jpg",
+      "exerciseKey": "iso-lateral-row-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "0021766d401e9da61d0b95ab86f3380c6169bcedd16710587ac47dcc85683124",
+      "originalSha256": "ec9ad99764691a5b04319e6804779567d41c022db826052ff6a38b815a4b257a",
+      "bytes": 161559
+    },
+    {
+      "path": "exercises/jackknife-sit-up-pair.jpg",
+      "exerciseKey": "jackknife-sit-up",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "326fe6224fda0d5267d7147b5d804da3574abb9f89dcdc76d1aeef91a6431443",
+      "originalSha256": "4237540495f621d38e9b411f8b2d16734e8c55a3efaddf2d61ecf9cdf8715a32",
+      "bytes": 95226
+    },
+    {
+      "path": "exercises/jump-rope-pair.jpg",
+      "exerciseKey": "jump-rope",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "7dc7665b6a2b55208686c44b761f09d03ff2eeeb5b5cc7007b64ce6609439eb4",
+      "originalSha256": "0a89da8b1798b50fe464a6ad8ce2ef5093f4c376382f493c2f9044cce4ce8c7f",
+      "bytes": 90539
+    },
+    {
+      "path": "exercises/jump-shrug-barbell-pair.jpg",
+      "exerciseKey": "jump-shrug-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "cf66cd590f8c679ce89c0b4bd53f3a481215a69c246f3cb46e5849a879de68cc",
+      "originalSha256": "35e42ef16a9fac48735ed9a8bd71d5d627631dcb6e4089c0730d7eaa24538887",
+      "bytes": 107269
+    },
+    {
+      "path": "exercises/jump-squat-pair.jpg",
+      "exerciseKey": "jump-squat",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "0ede7122fdf817c36fd6be266cde46c2a50e358bd3c43aff0c427273c61b34df",
+      "originalSha256": "79aee1ae661abb410b2cbaab33807a65f8fa08980ae579cbdbe962c6364259a5",
+      "bytes": 86938
+    },
+    {
+      "path": "exercises/jumping-jack-pair.jpg",
+      "exerciseKey": "jumping-jack",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "5dfa4bad428b4d7beadf7eb3f09ed0d021b8fac3f4e133f694edc514a89cbbc1",
+      "originalSha256": "3b62d63a5eba8ed8bafceaa0b4c76d04c33bb9d330ec98e183d9169eabf4da73",
+      "bytes": 88441
+    },
+    {
+      "path": "exercises/kettlebell-swing-pair.jpg",
+      "exerciseKey": "kettlebell-swing",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "6c4d7afffcfef1213430de94871643b9c28bb31bbcca475054557bd57410aa3d",
+      "originalSha256": "900d6093432a32b63913e0813bab33e47900780d4774a0ba6cd804f34e536f54",
+      "bytes": 78382
+    },
+    {
+      "path": "exercises/kettlebell-turkish-get-up-pair.jpg",
+      "exerciseKey": "kettlebell-turkish-get-up",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "a15aa7f42a81fdce9fae648a2a3ce2d638fce4d39d68bb1bf13178a08cee2f6b",
+      "originalSha256": "75edd75cacff8d6dd8d3e70bb88781256042ae55bcc3f2d88c0017c1550a504a",
+      "bytes": 97637
+    },
+    {
+      "path": "exercises/kipping-pull-up-pair.jpg",
+      "exerciseKey": "kipping-pull-up",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "2a518e9e0ef206561b67ac64cff1efdd728842970087ade38bcb36aa84c276ed",
+      "originalSha256": "08fc62252ebcac79af614fd1ae6154cdb85a605597db7a431cdb7baf1eed3718",
+      "bytes": 124741
+    },
+    {
+      "path": "exercises/knee-raise-captain-s-chair-pair.jpg",
+      "exerciseKey": "knee-raise-captain-s-chair",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "566c98796b2d6dd2f6e7492b066d62f42c9d80b3bad97fdea130acf8566af0a8",
+      "originalSha256": "16d5c9967799c50252ce266c917c954d07a4f20b30a985da4b945a847073c3ba",
+      "bytes": 124849
+    },
+    {
+      "path": "exercises/kneeling-pulldown-band-pair.jpg",
+      "exerciseKey": "kneeling-pulldown-band",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "3748a881a1666a757f9aab45a066ad11549393ad6848bcebcb36dfec5972bb6a",
+      "originalSha256": "7ca9eeab0c664eb969a5e81223c9c67e02133aadb97494be3e6cb119958a82bb",
+      "bytes": 126621
+    },
+    {
+      "path": "exercises/knees-to-elbows-pair.jpg",
+      "exerciseKey": "knees-to-elbows",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "c2247a0aea771da21bcc89d3a5d78e96870c5992c45c474a9d4b6511b3d90755",
+      "originalSha256": "ddd9d917cd1fa72a20b4a920ec3b28e8ac9a313ee3b3e5a97befa23d795f6fc5",
+      "bytes": 114831
+    },
+    {
+      "path": "exercises/lat-pulldown-cable-pair.jpg",
+      "exerciseKey": "lat-pulldown-cable",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "b46c48366b8aafc770efa0dcdb22676dbd8d78681f06d4f2eed1def4bc4d7be2",
+      "originalSha256": "73b53cbb5d26ee4107fc2bf72e17b5e19240c57443b99950be588740ed3cd8f1",
+      "bytes": 139643
+    },
+    {
+      "path": "exercises/lat-pulldown-machine-pair.jpg",
+      "exerciseKey": "lat-pulldown-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "babf25b5f0b90330cba42e92dfc52ef800f089e390ebbb7d24a10c005fb111a1",
+      "originalSha256": "aa0fae226167c18ef36d2985a4fe2cfa83ec55b0c97afc026f11a2529a2a74ba",
+      "bytes": 163435
+    },
+    {
+      "path": "exercises/lat-pulldown-single-arm-pair.jpg",
+      "exerciseKey": "lat-pulldown-single-arm",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "549c830a6443fabdcfe691f57538aeb9f526cc298444aa72cdecb1d84e077c44",
+      "originalSha256": "940d294ce8f9ee465f2ee1cbfb6a9f2c81812c573537da7ef963931cdaeaf4ec",
+      "bytes": 135487
+    },
+    {
+      "path": "exercises/lat-pulldown-underhand-band-pair.jpg",
+      "exerciseKey": "lat-pulldown-underhand-band",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "864ae845940047f61b324d9a72ac83856f58250dbd151e0bf616250431e27c2a",
+      "originalSha256": "374165d09cedcc81d092ce8b579c2160653a9d34eaa0fb0f6839be073805f05b",
+      "bytes": 136049
+    },
+    {
+      "path": "exercises/lat-pulldown-underhand-cable-pair.jpg",
+      "exerciseKey": "lat-pulldown-underhand-cable",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "0f4ce04819e8089cf03fe5b06c519c4a6649a3593d9585b291c074ba47db4a47",
+      "originalSha256": "44a8936af9266b0bfa0e99520f00a439ada24301f5b1bc0661591daf5eb835fb",
+      "bytes": 127254
+    },
+    {
+      "path": "exercises/lateral-box-jump-pair.jpg",
+      "exerciseKey": "lateral-box-jump",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "4a3fdfb51692da9b52cdb831c78bc8eae79b2bc6e345d543706c4884a73c0d77",
+      "originalSha256": "7e27f3ea102f9179f19a0e9dd811217a5843a64078704717e36079adaa7a48dc",
+      "bytes": 104972
+    },
+    {
+      "path": "exercises/lateral-raise-band-pair.jpg",
+      "exerciseKey": "lateral-raise-band",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "6c6adab79b1d8414c7cf0227bc4753a44b55262a7e7f7706ac8109c9e39ad24d",
+      "originalSha256": "143bc73b60a0f5482e60222c011f7966aa22e27499c4886dbae36234ab5b2dad",
+      "bytes": 104314
+    },
+    {
+      "path": "exercises/lateral-raise-cable-pair.jpg",
+      "exerciseKey": "lateral-raise-cable",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "9bba2023470383e4c7b06203aacac503280952559820a56a29e1fba882eb6709",
+      "originalSha256": "0a4dfea43be60f180822d24960202e1b0055e6c79cb9898d42992b31851315c2",
+      "bytes": 137261
+    },
+    {
+      "path": "exercises/lateral-raise-machine-pair.jpg",
+      "exerciseKey": "lateral-raise-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "1a9350a783d82294b43f19461c8b14def6f6f725ab51d2b6df8ab443581d5db2",
+      "originalSha256": "fb21238fa8e4007d222cedc16a35900bcdd369fa0aeb9efbbb8a3ff6a1b0b3a5",
+      "bytes": 160142
+    },
+    {
+      "path": "exercises/lunge-barbell-pair.jpg",
+      "exerciseKey": "lunge-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "3d319385a93f74a9e7c343dd1480c40315a445a760208038fb17f5f143b2cc14",
+      "originalSha256": "d59beb939f487d5270e07d75ab7b5158009046ad1246ca8cc6c66ecd7ea7d8f6",
+      "bytes": 107325
+    },
+    {
+      "path": "exercises/lunge-bodyweight-pair.jpg",
+      "exerciseKey": "lunge-bodyweight",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "e45d03e3463f19996df2b07ffba86c08fd706c726f69f77eff7ff3f59b6cebbc",
+      "originalSha256": "bc95de42a87ff7253520e9643651499635808493bda30d73d1bf576590d4d61b",
+      "bytes": 89095
+    },
+    {
+      "path": "exercises/lunge-dumbbell-pair.jpg",
+      "exerciseKey": "lunge-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "eda79c8581995de94120acfc55a289454548ad93f5152541237b6bddb6590991",
+      "originalSha256": "150e5688f16b55af9e7fc82327ae5c714db78fb7f53bacb74c1385366b9e23e5",
+      "bytes": 90560
+    },
+    {
+      "path": "exercises/mountain-climber-pair.jpg",
+      "exerciseKey": "mountain-climber",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "c2e9e8959df190fab97bb20cc728da30d6e957a2515801d29a858b0bbe510afd",
+      "originalSha256": "a4f0f8c8ba76b0927a18929fed3ec18f7576bc275d75aa39c648bb1167888d97",
+      "bytes": 94300
+    },
+    {
+      "path": "exercises/muscle-up-pair.jpg",
+      "exerciseKey": "muscle-up",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "0574b2153e01ae2a6f0dc61a81d1a5601379a9a5c4f4e44d81feb3c64fb5d32a",
+      "originalSha256": "a851e518289c46ab5c8e1072276cc4634457be8379d5310f3f42ca9c4e1f0248",
+      "bytes": 105634
+    },
+    {
+      "path": "exercises/oblique-crunch-pair.jpg",
+      "exerciseKey": "oblique-crunch",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "e814b10ded3d80082d7a53f319470f4a82ff3714406a9e115797ce62e19fc186",
+      "originalSha256": "20265e4263ca9b76c814f9da47c3987381dae0ec1e6163cb704bef80b5ecaf92",
+      "bytes": 96686
+    },
+    {
+      "path": "exercises/overhead-press-barbell-pair.jpg",
+      "exerciseKey": "overhead-press-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "ca838331e4eae40d3571fe33653fe5aa1634025a0d24366943848a6c4942c94b",
+      "originalSha256": "bce54adad78214680d22a38cb703f32eb6c3f963d471500ced73b69814fa0396",
+      "bytes": 95389
+    },
+    {
+      "path": "exercises/overhead-press-cable-pair.jpg",
+      "exerciseKey": "overhead-press-cable",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "f2e507cc06ee62e5fcc5ffafd63ae269beaf0de524986a3ae3d4a29c6d627b77",
+      "originalSha256": "ba137d52001aa26357972228e37d22fb0733b78d28054a27f0303c3c02eaf378",
+      "bytes": 175179
+    },
+    {
+      "path": "exercises/overhead-press-dumbbell-pair.jpg",
+      "exerciseKey": "overhead-press-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "eb1664f614a0a7010d060c215b5a7be82baba3ffdddada657dceda1ff887811e",
+      "originalSha256": "260df9da32fe6d4fdf8d2c218f9482b55b46222a1f3fd557ea15e4f06c7153b3",
+      "bytes": 89332
+    },
+    {
+      "path": "exercises/overhead-press-smith-machine-pair.jpg",
+      "exerciseKey": "overhead-press-smith-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "89932e674338f006440ee1502d5529a41ac63a6802de0875f1f6b431889114db",
+      "originalSha256": "4c072c5267d7b21faf667ea34ea601d27b23cb6b758b4fd65c61f60128884d8b",
+      "bytes": 163695
+    },
+    {
+      "path": "exercises/overhead-squat-barbell-pair.jpg",
+      "exerciseKey": "overhead-squat-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "ad532689b5af35d38b84a636613272656eaa78573adfad6bb8e9d5791847f430",
+      "originalSha256": "1e78773dbad6604e6e8a8bd024123aea6d85030a8800fceccb9a441066f7c418",
+      "bytes": 109832
+    },
+    {
+      "path": "exercises/pendlay-row-barbell-pair.jpg",
+      "exerciseKey": "pendlay-row-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "8062a48672d354016a52f940c5ce900722262caaf64717a2ce898ec4730b6505",
+      "originalSha256": "76df7cdb4d13e0ab780ddd4d57966668d152fff2f3033f429e7b3624abe63258",
+      "bytes": 118968
+    },
+    {
+      "path": "exercises/pistol-squat-pair.jpg",
+      "exerciseKey": "pistol-squat",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "ca2ed7103a66232376bb3b9f5b18f8b47510c0dbb32f01d8806428ca3db7e566",
+      "originalSha256": "9c0f714ddb141efeb6f22f81005ca9ad9da5659fff2ff60ad5e2e3009abd5e12",
+      "bytes": 96375
+    },
+    {
+      "path": "exercises/power-clean-pair.jpg",
+      "exerciseKey": "power-clean",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "a13b2d5eebd239e4056eb7f2cb40c8875fca553558887e5c9da69ccf92fa7fde",
+      "originalSha256": "5a1f317aea1dc4bf98d6c8ea03c5e33f2504294445468c08fc65543d545b3685",
+      "bytes": 118623
+    },
+    {
+      "path": "exercises/power-snatch-barbell-pair.jpg",
+      "exerciseKey": "power-snatch-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "20f46bbb8b7cb240b34e83576c07407e7c598edc2fcb4281403dea0682881e37",
+      "originalSha256": "4bfa687c58d09e97842215459736d1ab06b852969d1db7e2fbd474a572cb64df",
+      "bytes": 110467
+    },
+    {
+      "path": "exercises/preacher-curl-dumbbell-pair.jpg",
+      "exerciseKey": "preacher-curl-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "d23825a38c424a75d65d4a0dbe0914c9be379099d6eb86aae8e82d255342fb74",
+      "originalSha256": "12828c6640354f87eae21fe2d13ad82d46da7570ad140d9076c51336a8bf9fa7",
+      "bytes": 118373
+    },
+    {
+      "path": "exercises/preacher-curl-machine-pair.jpg",
+      "exerciseKey": "preacher-curl-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "325106a671a9021303f52c6ac25630c5a22db89016dfb1140167c09130e6ea44",
+      "originalSha256": "1c02cfbc57da18a0443aeefbedbfa5c4dcf4c9ccc09dc8942946b472990a0aa8",
+      "bytes": 166871
+    },
+    {
+      "path": "exercises/press-under-barbell-pair.jpg",
+      "exerciseKey": "press-under-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "836287adca3c1b299c99d19d7302d9dc22e0fe09f6fcb910febb0f93c4c1d391",
+      "originalSha256": "08a5449148cd7d1759d8696a0308a7f0c765b962e10dba540d2fb7392447cb8e",
+      "bytes": 112260
+    },
+    {
+      "path": "exercises/pull-up-assisted-pair.jpg",
+      "exerciseKey": "pull-up-assisted",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "40ecdb838318ecbb3f92c5dc207052a84e9587406ca0706926189a10ee284754",
+      "originalSha256": "79c5b8bb756b4b68a0269480e0566bf89c7c78e32c1a6004f13f1e636ad53d86",
+      "bytes": 134629
+    },
+    {
+      "path": "exercises/pullover-dumbbell-pair.jpg",
+      "exerciseKey": "pullover-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "e603ccf1aa68e0b4d6c6ac45c632968f32aa69d586e066ad6862e1d9c2a37a0d",
+      "originalSha256": "819ebb198811131442be7baad77a4a224bf1dcd6a1b761f5904b16e3a0b740f3",
+      "bytes": 117956
+    },
+    {
+      "path": "exercises/pullover-machine-pair.jpg",
+      "exerciseKey": "pullover-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "1ad0e6140ad7e3c9151410aee181846c7fee0cc2125102a5ad7d481bfab1cac3",
+      "originalSha256": "6e8586343f4b56686ac42ae6e298c54b43c30b3d1f513857552d91fcfb124f36",
+      "bytes": 160080
+    },
+    {
+      "path": "exercises/push-press-pair.jpg",
+      "exerciseKey": "push-press",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "00e5f5d58bbbf547a0ad438da85a750ee0abd6f4c1e187a345f2d87b92609232",
+      "originalSha256": "386674d68d50d49e53551f6d849db1e591720ae44e29038b618bbe964d5585dd",
+      "bytes": 108014
+    },
+    {
+      "path": "exercises/push-up-band-pair.jpg",
+      "exerciseKey": "push-up-band",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "b601e8e592998765016e92ecec5051294af4a6e4f643899da8ea0909e88f3845",
+      "originalSha256": "b781a35029d98b991daf3a735e917da40da4d20a3d17f01756cdeeddbe86e535",
+      "bytes": 105128
+    },
+    {
+      "path": "exercises/push-up-knees-pair.jpg",
+      "exerciseKey": "push-up-knees",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "dcd55d67a8cc4249594414193f19cceec22473a05a638a635c907bb21e934414",
+      "originalSha256": "5870cd11a9f7383f63a4fe7a4d16617e7c230b6a33142b77b5944b1627d4b802",
+      "bytes": 109433
+    },
+    {
+      "path": "exercises/rack-pull-barbell-pair.jpg",
+      "exerciseKey": "rack-pull-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "28b5b99bb3fc8fdbcbabf6998c3d7e3f418033ced0215001a526ce16a7432e42",
+      "originalSha256": "a0b2527c24cd5e3ad3d7fd620dd766227c801086e23950032e3878f82b171095",
+      "bytes": 178709
+    },
+    {
+      "path": "exercises/reverse-crunch-pair.jpg",
+      "exerciseKey": "reverse-crunch",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "1362f3057574c16e19ada6810ebef72e3b68c715b6b4cd6fbb9be8ce2c1d6464",
+      "originalSha256": "a8a5118b77d59625aa2364c87873b6bd00e555db8b9341789faf2a382d9c7a8a",
+      "bytes": 94740
+    },
+    {
+      "path": "exercises/reverse-curl-band-pair.jpg",
+      "exerciseKey": "reverse-curl-band",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "f7f46db0664e1e472b200d1f8e47157b50c016afbb63055aa240ded8b89c8f84",
+      "originalSha256": "05cdb942e00d3cf6a4b5cb3dd5f0ff93397c6b13907c30948a90ab04c02857fb",
+      "bytes": 97344
+    },
+    {
+      "path": "exercises/reverse-curl-barbell-pair.jpg",
+      "exerciseKey": "reverse-curl-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "09afb9894ec198c8767f05c816272023eb187d62630b16e41eb563249b9b5cea",
+      "originalSha256": "7f5fd3b7695393926beea2e3edfc93732c7d683e96ec62880982767eff9d3c0b",
+      "bytes": 110418
+    },
+    {
+      "path": "exercises/reverse-curl-dumbbell-pair.jpg",
+      "exerciseKey": "reverse-curl-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "ce7b9bffa460217d495f35bce8b5d5213a8c33a0ecf8d7f5b485616c01e41af3",
+      "originalSha256": "f1d9c7944c0f0cf3db4514942f7205a3728093b1553c9097444fa20429f9ff27",
+      "bytes": 94462
+    },
+    {
+      "path": "exercises/reverse-fly-cable-pair.jpg",
+      "exerciseKey": "reverse-fly-cable",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "73893cb69788759002c86c2ff4c8ff3a7aeeaa90e1129ac3844eaba17f4461e5",
+      "originalSha256": "afc29ead1144eecab9ea1c51d58f75dec83497aed6f9c0fb297ebed7fdd466cb",
+      "bytes": 132061
+    },
+    {
+      "path": "exercises/reverse-fly-dumbbell-pair.jpg",
+      "exerciseKey": "reverse-fly-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "0b14835c054e81caa588a253611c6053f0b20c96f81110e7cd5340730e16a2e1",
+      "originalSha256": "d4c9baf08c2e9b4d6a8a88a4d8a39d02b823084d63dc71a23f3ca61eeaf34354",
+      "bytes": 104058
+    },
+    {
+      "path": "exercises/reverse-fly-machine-pair.jpg",
+      "exerciseKey": "reverse-fly-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "af8b60a25f5f28342b2377429794c646e161e8d65b63a15b64ad7ba246be24c0",
+      "originalSha256": "57529768a1855cbbbfd8da8e0ddcd9d4bd456c838a702a0473e2e1a2a68e098e",
+      "bytes": 153668
+    },
+    {
+      "path": "exercises/reverse-grip-concentration-curl-dumbbell-pair.jpg",
+      "exerciseKey": "reverse-grip-concentration-curl-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "b9a2c5dbf3ad19f2c4dca0744c935c36a41938c3000dba0f7ff8c38eab3ae8ce",
+      "originalSha256": "a5aec308dce311890144482e98a9c043f78e258efaab77f47ce09e400884dd87",
+      "bytes": 130526
+    },
+    {
+      "path": "exercises/reverse-plank-pair.jpg",
+      "exerciseKey": "reverse-plank",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "c39f8b5eacf2a5498838bc4676bcd172e1f405d34be311fd30f82644eef297a4",
+      "originalSha256": "6d73b3e9384f0dba357fade19213925979463752056b35e85a058641c34a77b0",
+      "bytes": 99713
+    },
+    {
+      "path": "exercises/romanian-deadlift-dumbbell-pair.jpg",
+      "exerciseKey": "romanian-deadlift-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "4cbc52d4df1ecbad03fa98819c083d1385f9501dc1f3aadd8bf13c83bebff90d",
+      "originalSha256": "c454033ebc5c85411498b00be0441c715e69a661831ba14b5a295a588f3fa135",
+      "bytes": 77251
+    },
+    {
+      "path": "exercises/rowing-machine-pair.jpg",
+      "exerciseKey": "rowing-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "c46456074824f1c8d19a8349c1ca6170a1123b6b2b9d4b996919b8809e06bb91",
+      "originalSha256": "4e5370142c815e08f8e18079014f8932eac7217d6519cc3a8ef9ed9a975b5417",
+      "bytes": 113200
+    },
+    {
+      "path": "exercises/running-pair.jpg",
+      "exerciseKey": "running",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "f3a7feb6e83c5ac83abb1f20d0f56377ab829af855e50cae517012fd99610a8a",
+      "originalSha256": "03168c0c57540cd46df7db1cfaa2df8a4c679e7e6eda7c49c6a52151af5c429d",
+      "bytes": 104409
+    },
+    {
+      "path": "exercises/running-treadmill-pair.jpg",
+      "exerciseKey": "running-treadmill",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "0f6de1c04011f53d8395f04b2087c53cbf9e92bad6c240c75ae71950b5321979",
+      "originalSha256": "189431718d74272057aa3f992a49e240c9e8eb28be4af17a9fd99e40e840c4c3",
+      "bytes": 131705
+    },
+    {
+      "path": "exercises/russian-twist-bodyweight-pair.jpg",
+      "exerciseKey": "russian-twist-bodyweight",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "81b5c031dc48ceae4ef452c22ab75a0b48e9c21063a6cf0e51a69c73b28d1ac5",
+      "originalSha256": "eb62f85c2c887d69b0dd16a3d0a81a2eb702a40b787c717dc1c59e8bc63d8e2c",
+      "bytes": 118970
+    },
+    {
+      "path": "exercises/seated-calf-raise-machine-pair.jpg",
+      "exerciseKey": "seated-calf-raise-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "25070071c990e2ce0480ed9e55cfcc935f8438981a3a8e2f48b912d8ce4334e8",
+      "originalSha256": "fcf39f9b641322d9bd6c56f29bf9dbd13a20ab92fc150c9ef05fb11f7468027a",
+      "bytes": 142217
+    },
+    {
+      "path": "exercises/seated-leg-curl-machine-pair.jpg",
+      "exerciseKey": "seated-leg-curl-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "96ba2637cd85093665de596fd6ebf27f02e4f9fdf59e19c9f9d5046abc9bcdb9",
+      "originalSha256": "b7db4f1726e83c095e8c447766a3ff66fec39f6e7d02bd1b846ccbc23597f534",
+      "bytes": 144939
+    },
+    {
+      "path": "exercises/seated-leg-press-machine-pair.jpg",
+      "exerciseKey": "seated-leg-press-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "0ad6348cb7d36e10caec1e0e3594b9ccbc6ced918dcddf20072920df86f654cf",
+      "originalSha256": "21f44c015f59a5c4cd53e008dd47907b12a806c189ef9210eae2428bb8bbbcef",
+      "bytes": 153338
+    },
+    {
+      "path": "exercises/seated-palms-up-wrist-curl-dumbbell-pair.jpg",
+      "exerciseKey": "seated-palms-up-wrist-curl-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "43e0289eff6f351fdf794d1a3aa69f78543d7898596c98cc8640a3be6769c764",
+      "originalSha256": "c22ab788253ada51b4a8cbbf48101c68b30d384b4588c2ad05843e9a464dd5a7",
+      "bytes": 128866
+    },
+    {
+      "path": "exercises/seated-row-machine-pair.jpg",
+      "exerciseKey": "seated-row-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "95bbd4336a28930dfa428bf1813c33adab6aa4f54ef214692d036bf66e14d845",
+      "originalSha256": "3f25b3786526b2082f191e3b970d6f31ca4c32a71e341e97143bce9b494f80ce",
+      "bytes": 183397
+    },
+    {
+      "path": "exercises/seated-wide-grip-row-cable-pair.jpg",
+      "exerciseKey": "seated-wide-grip-row-cable",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "7b3b2d174ce21ea399558148d53eabdcb99d8066466d52e38598075ee52be7d1",
+      "originalSha256": "4371349b78feeb18ffc6fd6c0e81dbbaaf5dc39a5856b6a81bd847b0f8b2c8b4",
+      "bytes": 152357
+    },
+    {
+      "path": "exercises/shoulder-press-machine-pair.jpg",
+      "exerciseKey": "shoulder-press-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "4ed573ab7cef3300653ee412aeb35e1ee9162010334d44b8bc1771bb2c02d005",
+      "originalSha256": "3d3357d4ae5753fc250d22e5d430c4f596ab860b19d7fc480d329fb5f6c36b77",
+      "bytes": 159436
+    },
+    {
+      "path": "exercises/shoulder-press-plate-loaded-pair.jpg",
+      "exerciseKey": "shoulder-press-plate-loaded",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "80a0320b1737f27b3f92ff42203ffecfe05511a15c9877d45798d3d1d6651700",
+      "originalSha256": "e9d9e820ee321f7c887ccdff59406292b014352e90c177a37d0342fd7e9ddb40",
+      "bytes": 163033
+    },
+    {
+      "path": "exercises/shrug-barbell-pair.jpg",
+      "exerciseKey": "shrug-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "540199773cf7ddc4c5e5cd1ded70f38167b602197922059094156953560409d9",
+      "originalSha256": "3c52e8c008a36e2f871c1947272dbc3614208477e23adb5cfd6a9dbfef06acad",
+      "bytes": 103225
+    },
+    {
+      "path": "exercises/shrug-dumbbell-pair.jpg",
+      "exerciseKey": "shrug-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "82896eb743ab61b835eae2e2221b88436cd3f2d23daa766c85011c9ea75817a5",
+      "originalSha256": "4c984b18635369422f98004d59dfcc461e64fb8d536f0540fd81af4ace75a89b",
+      "bytes": 94724
+    },
+    {
+      "path": "exercises/shrug-machine-pair.jpg",
+      "exerciseKey": "shrug-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "7a2d0b7f16e0f589a4f2fb3f772eb87c282953d14dfca2b5f181f2cb185598d2",
+      "originalSha256": "5263117019d72d9388c8f16fc478aeba0f3f2b0726a0d0eecd3f78c561dcb4ea",
+      "bytes": 140966
+    },
+    {
+      "path": "exercises/shrug-smith-machine-pair.jpg",
+      "exerciseKey": "shrug-smith-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "3e99ad1d8431e7e173e7102de126bb290a3e18ecbb59b5910ae8ffa912b89a0a",
+      "originalSha256": "37a39e5415276cac70940b8e973e84493178b51b3ceab381a2a96a55a393aeed",
+      "bytes": 155652
+    },
+    {
+      "path": "exercises/side-bend-band-pair.jpg",
+      "exerciseKey": "side-bend-band",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "3aa7d76235f9dc922aad509680e4de196154a0c718556b7e1d7e28fa85a27dc6",
+      "originalSha256": "6c2ea2ca85cfad7a40bc35bccc040f2ea5846e9d2bba3c76f88c05bd8b1d7c0c",
+      "bytes": 98937
+    },
+    {
+      "path": "exercises/side-bend-cable-pair.jpg",
+      "exerciseKey": "side-bend-cable",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "4e718df49cdab8bd308b519b9cd040f8695ac8d65032b9113a5d75b2ae226149",
+      "originalSha256": "d81110f2847c8304ef35eec4922937b94711d1e50454831577c3466552765d2d",
+      "bytes": 132633
+    },
+    {
+      "path": "exercises/side-bend-dumbbell-pair.jpg",
+      "exerciseKey": "side-bend-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "61d16a090390b1bd1c14dbf4c7005f766eac593efe7420d76adb51d63f12339a",
+      "originalSha256": "81d5b450c6e5d3ccd44a3a1759e874bcac5812a6ca8221a2d390642ad178f8a7",
+      "bytes": 95995
+    },
+    {
+      "path": "exercises/side-plank-pair.jpg",
+      "exerciseKey": "side-plank",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "226e584f0920edfd50931ff64bba745d9569e42bf64027ab972afee630dfedb7",
+      "originalSha256": "c374b54cc5eff6c645f5057031d5132668ab77950193394c3c3709a3cd160d77",
+      "bytes": 102028
+    },
+    {
+      "path": "exercises/single-leg-bridge-pair.jpg",
+      "exerciseKey": "single-leg-bridge",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "604e7b495180f44118b5fe14cd535c2285b3f434432c048cb10038a67ed95926",
+      "originalSha256": "152701cc5d9fc779b4ae7bada9246590e5b63cb1d289f5b584e3d4d27e067982",
+      "bytes": 97624
+    },
+    {
+      "path": "exercises/sit-up-pair.jpg",
+      "exerciseKey": "sit-up",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "43583a92419bd66e940171e7b91507767f53126e4d4cad7cd3601662d4679c73",
+      "originalSha256": "f911fe0f93d288d57f29cc915c1fb17cde432c1d7401e6d0a7443ed8c0d0230a",
+      "bytes": 104476
+    },
+    {
+      "path": "exercises/skating-pair.jpg",
+      "exerciseKey": "skating",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "a487beaae108fad66bd7fc6681bbab7a2949d9429b2e7f1d24dc37ad5d357361",
+      "originalSha256": "b997b0a87ac36e2526d707ed7c7c1507e16e3c47e924a8e45c6c51d208157c49",
+      "bytes": 123871
+    },
+    {
+      "path": "exercises/skiing-pair.jpg",
+      "exerciseKey": "skiing",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "1640e4561906d8217c0dd60f716003cd5ce27ba0274b5e7df9b42412a014963a",
+      "originalSha256": "abf494f488dfcea048ca57555b772e3decbc961a88b21349393008a2d8a43e03",
+      "bytes": 124960
+    },
+    {
+      "path": "exercises/skullcrusher-dumbbell-pair.jpg",
+      "exerciseKey": "skullcrusher-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "549549059f4f368fdf777988d5726a05e3f46271d7b0ee739d1ef0431c2185d4",
+      "originalSha256": "e99f4e2c2ab36711af42df08aab9513769cd11743fb8cfbae68c11f95714f0c4",
+      "bytes": 131833
+    },
+    {
+      "path": "exercises/snatch-barbell-pair.jpg",
+      "exerciseKey": "snatch-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "a7bf6a320d1e5aa15270da7263e3a78fa2490583f6c950c52c626ccf24dcca74",
+      "originalSha256": "9af963b4a60636440ea8ffb58b6dcc6a12b0c6a995a648cf56087911fca6249a",
+      "bytes": 116332
+    },
+    {
+      "path": "exercises/snatch-pull-barbell-pair.jpg",
+      "exerciseKey": "snatch-pull-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "f69e0818117410e24225cb9808af58d92985aace62383a5cdf48dce855d459e8",
+      "originalSha256": "4b8ff0cbcdb08ec4c62becba307d2cbbfaf9ea55414c623fe6d4bee7987318e0",
+      "bytes": 111815
+    },
+    {
+      "path": "exercises/snowboarding-pair.jpg",
+      "exerciseKey": "snowboarding",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "c5f638643a565ea4dbc5705526a489fd6f8bfdb26e6045770ad76ddc165b2b2d",
+      "originalSha256": "56625c41efc2c0393c9f02eab4332fcd16885b59cef389a5db31420c69c77fd3",
+      "bytes": 118883
+    },
+    {
+      "path": "exercises/split-jerk-barbell-pair.jpg",
+      "exerciseKey": "split-jerk-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "c1a8505bcc74adb9330ea1caff9b7ef665ded8522e91eea5c5349b0d4644d3f7",
+      "originalSha256": "66f3e7ac7636e32e2634659bfee4526f9a55796a5d2ff90a226d325c154ea7da",
+      "bytes": 107337
+    },
+    {
+      "path": "exercises/squat-band-pair.jpg",
+      "exerciseKey": "squat-band",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "23d69605096291cc81c7b08b68e56371013a96279cdd47dc5b2babb291c0784e",
+      "originalSha256": "64a30a6e36386d4a63177f62d43df60d90054a784aa1f34dffea52fe7ff1053f",
+      "bytes": 99317
+    },
+    {
+      "path": "exercises/squat-bodyweight-pair.jpg",
+      "exerciseKey": "squat-bodyweight",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "4802c14d3cb4f0cea40efc8c69f6e4015fdad14036aa1413f6bda7a9cc76f83e",
+      "originalSha256": "826e642124ddcf074c9d9b2a2c7b7a580cb4e8b8efb9d01f991021a37eaba57d",
+      "bytes": 96563
+    },
+    {
+      "path": "exercises/squat-dumbbell-pair.jpg",
+      "exerciseKey": "squat-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "8934a624829ceefef956f2c2b33aeac83272b0d18e12e84aa1d581c1b3af80b3",
+      "originalSha256": "d6848a92c94b1f9ad524bd23c67477623b9ebefe73c5e4317e393de4c3a09797",
+      "bytes": 101586
+    },
+    {
+      "path": "exercises/squat-machine-pair.jpg",
+      "exerciseKey": "squat-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "26d1186df25570a9c83714e72b594cfd4fbbc3579d0c1725952f9cce002739d3",
+      "originalSha256": "c7de799541114d76b73b7891fc69463e005d875d4831d75c1147eab8453e7b18",
+      "bytes": 148690
+    },
+    {
+      "path": "exercises/squat-smith-machine-pair.jpg",
+      "exerciseKey": "squat-smith-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "d7a72ca94f527e3606debb587a93fb43694bcfedc28cb1bbaa912ea60f011121",
+      "originalSha256": "fc1af130bd02b7c785a8d48415f9e2b1e670fe61eba1d15aab6389acf9705815",
+      "bytes": 144691
+    },
+    {
+      "path": "exercises/squat-row-band-pair.jpg",
+      "exerciseKey": "squat-row-band",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "6d272ba61a8cc13ea822ec93265d61bbf03c00142f747f17b4e0ecc1922d8c56",
+      "originalSha256": "ad49bbcb5023aad032638c64be6e74d541714519d3bf77a7335eaf0d3c4155ce",
+      "bytes": 118766
+    },
+    {
+      "path": "exercises/standing-calf-raise-barbell-pair.jpg",
+      "exerciseKey": "standing-calf-raise-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "c3f80d75532bd7b2d8160872653a199aee35af35be5978535c166cf585092361",
+      "originalSha256": "1fac529405379a705c75db539fc0021f41978a0638dfdd6e68c16c6ea4667b0a",
+      "bytes": 138134
+    },
+    {
+      "path": "exercises/standing-calf-raise-bodyweight-pair.jpg",
+      "exerciseKey": "standing-calf-raise-bodyweight",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "db21920c369a445a4c6f92c3ffdab986bf29218d92b4b114cc2d4c103f488239",
+      "originalSha256": "202d5e0d01b0c665ae6db7edbff8d2579da59a32e1440919576dedb837807490",
+      "bytes": 88230
+    },
+    {
+      "path": "exercises/standing-calf-raise-dumbbell-pair.jpg",
+      "exerciseKey": "standing-calf-raise-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "7e76ffde680121e5dd15b0053b934dcc866fd0c820ba345fbe91a8fbb7bbfb98",
+      "originalSha256": "efe80281ced16f5e0b7f0c16c8f5c88d234a92d70c90308567c2787f4b646370",
+      "bytes": 87047
+    },
+    {
+      "path": "exercises/standing-calf-raise-smith-machine-pair.jpg",
+      "exerciseKey": "standing-calf-raise-smith-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "b4492a5c2745d42d16579625bdafdc8cb10e8f22857f22392078f4316a75830c",
+      "originalSha256": "ea6de3f97188e54cf01b75c3b3368b79a0ed98b159bd5a9f600621dc066dd82b",
+      "bytes": 148683
+    },
+    {
+      "path": "exercises/step-up-pair.jpg",
+      "exerciseKey": "step-up",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "70f0702bb680c432e566c04429d0ea48d5aa0f8916d270ee12b1286e89d3380e",
+      "originalSha256": "cde7b6b446148dfec4616f5f18154b0f8a030e917e31f1cc365a93bce0811d2b",
+      "bytes": 93602
+    },
+    {
+      "path": "exercises/stiff-leg-deadlift-barbell-pair.jpg",
+      "exerciseKey": "stiff-leg-deadlift-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "2da9c730f50f00e4dc4e2beaf6cf70c73dee441b6d212b5bc57cd688d9af363b",
+      "originalSha256": "192664ad6d35924cfb86bb5b8247fd356ade34c6bdb164498b9abbab4e7caa2c",
+      "bytes": 95986
+    },
+    {
+      "path": "exercises/stiff-leg-deadlift-dumbbell-pair.jpg",
+      "exerciseKey": "stiff-leg-deadlift-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "93385d9c305b40888b8839764b201c13586e4539f4f17721f6553ce8535063a5",
+      "originalSha256": "ec49dd1dbeefd997ad6099a9ae53548b0ce491207b08c8f346142b3624aa1a1f",
+      "bytes": 89671
+    },
+    {
+      "path": "exercises/straight-leg-deadlift-band-pair.jpg",
+      "exerciseKey": "straight-leg-deadlift-band",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "94415fb24c3da29ba09c8e8f6a057746ea5d4d55399ddf40213f54f3a0cc2ec4",
+      "originalSha256": "e16ecd3c1f0f1afcc47acca4855b2163122685363db931e46eca3e807a5b9a5f",
+      "bytes": 89185
+    },
+    {
+      "path": "exercises/stretching-pair.jpg",
+      "exerciseKey": "stretching",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "8d565442116ed7cac949d36f47e7d8e133bfd562facef2a02bc8e2d86a88bfd3",
+      "originalSha256": "e63e06ae0cabe4944432f6aa4f448dc54aea4e103784da5100dfe8d44454856b",
+      "bytes": 88745
+    },
+    {
+      "path": "exercises/strict-military-press-barbell-pair.jpg",
+      "exerciseKey": "strict-military-press-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "cbeb538fb2e00b8fc54125678e40ffccd6b1bc6e051a633c8f092436bbf16e96",
+      "originalSha256": "f68774a6b7ecb3c231021c69f2106cb921a61c626dc705b36dd4ec818d2b6649",
+      "bytes": 97150
+    },
+    {
+      "path": "exercises/sumo-deadlift-barbell-pair.jpg",
+      "exerciseKey": "sumo-deadlift-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "f83466a9b0aa7208d67d35e712cdecbc41555c0eb9150b07e7af07990756348f",
+      "originalSha256": "6c08e5bb2caf196e93b9e55a01eb27b33b8bf4688939f37ced49b4cac534f35e",
+      "bytes": 113290
+    },
+    {
+      "path": "exercises/sumo-deadlift-high-pull-barbell-pair.jpg",
+      "exerciseKey": "sumo-deadlift-high-pull-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "d29175f8674b041b7ebeaab88b3e1f280700bd27efe1c39a82baabbe62434779",
+      "originalSha256": "f2dd9963eff281ab632010c203f814ef00b7d72d00d038a4079d7e1ba2184b15",
+      "bytes": 113956
+    },
+    {
+      "path": "exercises/superman-pair.jpg",
+      "exerciseKey": "superman",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "3158fe51b50b48672ea632eeb6b47c453d1aeed0d5fe80884f536ea91d88f8cb",
+      "originalSha256": "7561aa1e58be0c26f507f43f9696ee7b950bb45e899407a8cd875a4eae5daeea",
+      "bytes": 81935
+    },
+    {
+      "path": "exercises/swimming-pair.jpg",
+      "exerciseKey": "swimming",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "cfd9c857eadc254ed20d866c8a7f8b655f7e2afb971a25a7ab7123f82c97644e",
+      "originalSha256": "64771daa77f4dfe32c4c8654ae6bb4b087403d3c2ed97c4b421d654b4b2e8383",
+      "bytes": 82383
+    },
+    {
+      "path": "exercises/t-bar-row-pair.jpg",
+      "exerciseKey": "t-bar-row",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "81c5ab2efd2d207fb9d7904993ad568c92244c2efe703863fe28d29650301b89",
+      "originalSha256": "f1e8bf2c68523953bf54632cfa71938201ec3ce37a73c73cfb60e6845768914b",
+      "bytes": 115589
+    },
+    {
+      "path": "exercises/thruster-barbell-pair.jpg",
+      "exerciseKey": "thruster-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "68f11455f81ba211e41d01e417ee03c14c5d289b937a7f41d236da442ebbdc12",
+      "originalSha256": "d3932eeeba32f7cc6d198ee33b0aea1ea5fd556f05deefa308f2a9782a0e7906",
+      "bytes": 99544
+    },
+    {
+      "path": "exercises/thruster-kettlebell-pair.jpg",
+      "exerciseKey": "thruster-kettlebell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "bd95939d3a51c37bc28dacb54cbbc9a153cf10d1862f644c0efbbf2bafa34c7c",
+      "originalSha256": "8993e8b8d3bb1347c316d7fb12d0cbd98c9b9da4b3c6e40cd336451b0f27c86e",
+      "bytes": 93427
+    },
+    {
+      "path": "exercises/toes-to-bar-pair.jpg",
+      "exerciseKey": "toes-to-bar",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "1b314c91a99ed070c43d05d6f1c961e4924694ad407fe70bb093b4477cf2fda8",
+      "originalSha256": "43e31c61269cec273d0e35524a06bc975e60cf2e82d1af4e75603f34a5ed8fe1",
+      "bytes": 122659
+    },
+    {
+      "path": "exercises/torso-rotation-machine-pair.jpg",
+      "exerciseKey": "torso-rotation-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "e5108296265c2c8d9b5871a621ddc3df7b5601528ee206ebc972c7a256614f14",
+      "originalSha256": "39b2fd183f2b5b7b1f26d817b021a63a477e28ac6d40ab774aca11d105b8383b",
+      "bytes": 157173
+    },
+    {
+      "path": "exercises/trap-bar-deadlift-pair.jpg",
+      "exerciseKey": "trap-bar-deadlift",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "af181bb4dd71f01d56274e5edafb7a6a771015b12021da4fd5653fc521455fe6",
+      "originalSha256": "5cd5fb92644ff88adc9e64898f3a0233ce19b91b13c5027b734ae2b2dfbbaf85",
+      "bytes": 122481
+    },
+    {
+      "path": "exercises/triceps-dip-assisted-pair.jpg",
+      "exerciseKey": "triceps-dip-assisted",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "d4af5f4215459eef07931c5e374e5e52d0bc1e8cc6009d2d734dc60e5b1e7a35",
+      "originalSha256": "d79b9dc45bad917f6e6fb892e8ce47e9f697c6f18fa1385d142eda30a7306f95",
+      "bytes": 154868
+    },
+    {
+      "path": "exercises/triceps-extension-pair.jpg",
+      "exerciseKey": "triceps-extension",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "a41edd80a940012de243f39978f02c51b48555851a07ef92652a9417cee4b4e1",
+      "originalSha256": "bbcaaccf9cba8dbabcc42f7731180b7cb219272bf30f39c11b8c73cef020d73c",
+      "bytes": 94118
+    },
+    {
+      "path": "exercises/triceps-extension-barbell-pair.jpg",
+      "exerciseKey": "triceps-extension-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "b22107587f31272b54d3b928178517eec06ee65e809ff63e3b1ab70698014c19",
+      "originalSha256": "dfddd3e8483a5374e8246cf6e76fef644f073509eacd9e4d30499912e5a0dccc",
+      "bytes": 98543
+    },
+    {
+      "path": "exercises/triceps-extension-cable-pair.jpg",
+      "exerciseKey": "triceps-extension-cable",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "bf54f1dc811c31c9f3fbbecd25750edac440369575543e014c254d09fc17fbd0",
+      "originalSha256": "74fd8fc4eef8fcaa630bc320966e7e63d00111563b5b9d582c3ee4a87f75fc69",
+      "bytes": 131584
+    },
+    {
+      "path": "exercises/triceps-extension-machine-pair.jpg",
+      "exerciseKey": "triceps-extension-machine",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "e0ab5386d9ab383fb7127d4f6f23f2d181531189c84c5724d0b6c4187f2aa62c",
+      "originalSha256": "3253de0ee4a7f0263df82b8536705182306df0fe89198a4f9c7dfae3a8c6ed4a",
+      "bytes": 164598
+    },
+    {
+      "path": "exercises/upright-row-barbell-pair.jpg",
+      "exerciseKey": "upright-row-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "cfefe640012a0bcc66c6e0798b08ef00b355c771f5336ec5a86ad48be86b2891",
+      "originalSha256": "17cbebb8d07a5316e44d596b56a814079391e457dc3bae605af1fb4ce268eac7",
+      "bytes": 105034
+    },
+    {
+      "path": "exercises/upright-row-cable-pair.jpg",
+      "exerciseKey": "upright-row-cable",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "3fadcc76c7d25e1f2f813e9747ea879676aa3433434eb9546f2f6e9f45878fa8",
+      "originalSha256": "0a4be614e43d81bd640426dafc2de3d3726c8001684f87001e1a6b6f9c963a10",
+      "bytes": 147827
+    },
+    {
+      "path": "exercises/upright-row-dumbbell-pair.jpg",
+      "exerciseKey": "upright-row-dumbbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "ed5623a77647d501aaad0c69d32d51e74c314500762504c4eb8c0aada2b95db9",
+      "originalSha256": "8896c0b3559eb886d3f98325f8937519e88528c2708140b0398df09b9a5fd5c9",
+      "bytes": 100433
+    },
+    {
+      "path": "exercises/v-up-pair.jpg",
+      "exerciseKey": "v-up",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "ec6f6b7b0274f44bd50cc305a74b392991dd460534919545028f1da4702cb3ba",
+      "originalSha256": "7354a40ec55d52eec513bd20c7202e4bef68865e4d75c4bf778ece9a4221024a",
+      "bytes": 90615
+    },
+    {
+      "path": "exercises/walking-pair.jpg",
+      "exerciseKey": "walking",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "2b4fbf25a3a4f1e3112e16ca34ec327653c058f3f9e78739a384b59a4472fe5c",
+      "originalSha256": "b88ef84fc15d8c44148f32282e19cb70470086c4963d46ebf247f830f75570f1",
+      "bytes": 101215
+    },
+    {
+      "path": "exercises/wide-pull-up-pair.jpg",
+      "exerciseKey": "wide-pull-up",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "5463cd6c9ef7f0e0238ea6fb0f84ba28a50ec6be177a597265e2ebfeb9a7ea53",
+      "originalSha256": "2d0788bb363707ebd07b4f64f46c7eef4e0df1f29df7c4f13af1b6cd11be5792",
+      "bytes": 129230
+    },
+    {
+      "path": "exercises/wrist-roller-pair.jpg",
+      "exerciseKey": "wrist-roller",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "9362e493ce52f4bb37101b880959edda6f8941f0e74262748ebb5c4310e83477",
+      "originalSha256": "1400c19a97f32762aa7b8e4baf4afadad36534f936d86fab16befbd9b0e82be9",
+      "bytes": 101499
+    },
+    {
+      "path": "exercises/yoga-pair.jpg",
+      "exerciseKey": "yoga",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "733ebb6f925b17323ae17018141a28f37a01335f79e469bc59e180b001ddd2b3",
+      "originalSha256": "a0213a45bc0362b9c984e00fb6505d2b20f757b880370bfe44efaca7b9abbc42",
+      "bytes": 104015
+    },
+    {
+      "path": "exercises/zercher-squat-barbell-pair.jpg",
+      "exerciseKey": "zercher-squat-barbell",
+      "positions": [
+        0,
+        1
+      ],
+      "layout": "paired",
+      "height": 768,
+      "width": 1536,
+      "generatedDimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "sha256": "c2ee2a79cfac84a1b156753f2d4d87a17dea44e859945468906fa44288d1d267",
+      "originalSha256": "fb25384f1155891df3ee7a839407ef3661f685fe7df64fb1267bf555775dd536",
+      "bytes": 118855
+    }
+  ]
+}

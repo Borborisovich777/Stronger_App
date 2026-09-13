@@ -1,3 +1,4 @@
+import { isCompletedTrackedSet, isTimedTracking, resolveExerciseTracking, resolveExerciseWeightMode, tracksEstimatedStrength, tracksLoad } from "./exercise-tracking";
 import type { ExerciseCategory } from "./exercises";
 import type { WorkoutExercise, WorkoutSession, WorkoutSet } from "./storage";
 
@@ -211,6 +212,7 @@ type MutableCategoryMetrics = Omit<ReportCategoryMetrics, "daysTrained"> & {
 };
 
 type WorkingSetEvidence = {
+  comparisonKey: string;
   exerciseKey: string;
   name: string;
   sessionId: string;
@@ -258,6 +260,10 @@ const CATEGORY_ORDER: ReportExerciseCategory[] = [
   "Arms",
   "Legs",
   "Core",
+  "Cardio",
+  "Full body",
+  "Olympic",
+  "Mobility",
   "Unclassified",
 ];
 
@@ -310,8 +316,16 @@ function estimatedOneRepMax(weightKg: number, reps: number): number | null {
   return reps === 1 ? weightKg : weightKg * (1 + reps / 30);
 }
 
-function completedForReporting(set: WorkoutSet): boolean {
-  return set.completed && set.reps > 0;
+function completedForReporting(set: WorkoutSet, exercise?: WorkoutExercise): boolean {
+  return exercise ? isCompletedTrackedSet(set, exercise) : set.completed && set.reps > 0;
+}
+
+function measurementsForReporting(set: WorkoutSet, exercise: WorkoutExercise): WorkoutSet {
+  return {
+    ...set,
+    weightKg: tracksLoad(exercise) ? set.weightKg : 0,
+    reps: isTimedTracking(resolveExerciseTracking(exercise)) ? 0 : set.reps,
+  };
 }
 
 function laterEvidence(first: WorkingSetEvidence, second: WorkingSetEvidence): WorkingSetEvidence {
@@ -357,9 +371,11 @@ function buildReportHighlights(
     if (!isPrevious && !isCurrent) continue;
     const timestamp = session.finishedAt ?? session.startedAt;
     for (const exercise of session.exercises) {
+      if (!tracksLoad(exercise)) continue;
       for (const set of exercise.sets) {
-        if (set.dropSetOf || !completedForReporting(set)) continue;
+        if (set.dropSetOf || !completedForReporting(set, exercise)) continue;
         const evidence: WorkingSetEvidence = {
+          comparisonKey: `${exercise.exerciseKey}:${resolveExerciseWeightMode(exercise)}`,
           exerciseKey: exercise.exerciseKey,
           name: exercise.name,
           sessionId: session.id,
@@ -368,59 +384,59 @@ function buildReportHighlights(
           timestamp,
           weightKg: set.weightKg,
           reps: set.reps,
-          estimatedOneRepMaxKg: estimatedOneRepMax(set.weightKg, set.reps),
+          estimatedOneRepMaxKg: tracksEstimatedStrength(exercise) ? estimatedOneRepMax(set.weightKg, set.reps) : null,
         };
         if (isPrevious) {
           previousWeight.set(
-            evidence.exerciseKey,
-            Math.max(previousWeight.get(evidence.exerciseKey) ?? -Infinity, evidence.weightKg),
+            evidence.comparisonKey,
+            Math.max(previousWeight.get(evidence.comparisonKey) ?? -Infinity, evidence.weightKg),
           );
           if (evidence.estimatedOneRepMaxKg !== null) {
             previousEstimate.set(
-              evidence.exerciseKey,
-              Math.max(previousEstimate.get(evidence.exerciseKey) ?? -Infinity, evidence.estimatedOneRepMaxKg),
+              evidence.comparisonKey,
+              Math.max(previousEstimate.get(evidence.comparisonKey) ?? -Infinity, evidence.estimatedOneRepMaxKg),
             );
           }
-          const previousAtWeight = previousReps.get(evidence.exerciseKey) ?? new Map<number, number>();
+          const previousAtWeight = previousReps.get(evidence.comparisonKey) ?? new Map<number, number>();
           previousAtWeight.set(
             evidence.weightKg,
             Math.max(previousAtWeight.get(evidence.weightKg) ?? 0, evidence.reps),
           );
-          previousReps.set(evidence.exerciseKey, previousAtWeight);
+          previousReps.set(evidence.comparisonKey, previousAtWeight);
           continue;
         }
 
         bestWeight.set(
-          evidence.exerciseKey,
-          strongerEvidence(bestWeight.get(evidence.exerciseKey), evidence, (item) => item.weightKg),
+          evidence.comparisonKey,
+          strongerEvidence(bestWeight.get(evidence.comparisonKey), evidence, (item) => item.weightKg),
         );
         if (evidence.estimatedOneRepMaxKg !== null) {
           bestEstimate.set(
-            evidence.exerciseKey,
+            evidence.comparisonKey,
             strongerEvidence(
-              bestEstimate.get(evidence.exerciseKey),
+              bestEstimate.get(evidence.comparisonKey),
               evidence,
               (item) => item.estimatedOneRepMaxKg ?? -Infinity,
             ),
           );
         }
-        const currentAtWeight = bestReps.get(evidence.exerciseKey) ?? new Map<number, WorkingSetEvidence>();
+        const currentAtWeight = bestReps.get(evidence.comparisonKey) ?? new Map<number, WorkingSetEvidence>();
         currentAtWeight.set(
           evidence.weightKg,
           strongerEvidence(currentAtWeight.get(evidence.weightKg), evidence, (item) => item.reps),
         );
-        bestReps.set(evidence.exerciseKey, currentAtWeight);
+        bestReps.set(evidence.comparisonKey, currentAtWeight);
       }
     }
   }
 
   const highlights: ReportHighlight[] = [];
-  for (const [exerciseKey, evidence] of bestWeight) {
-    const previousValue = previousWeight.get(exerciseKey);
+  for (const [comparisonKey, evidence] of bestWeight) {
+    const previousValue = previousWeight.get(comparisonKey);
     if (previousValue !== undefined && materiallyGreater(evidence.weightKg, previousValue)) {
       highlights.push({
         kind: "weight-pr",
-        exerciseKey,
+        exerciseKey: evidence.exerciseKey,
         name: evidence.name,
         sessionId: evidence.sessionId,
         setId: evidence.setId,
@@ -433,15 +449,15 @@ function buildReportHighlights(
       });
     }
   }
-  for (const [exerciseKey, repsAtWeight] of bestReps) {
-    const previousAtWeight = previousReps.get(exerciseKey);
+  for (const [comparisonKey, repsAtWeight] of bestReps) {
+    const previousAtWeight = previousReps.get(comparisonKey);
     if (!previousAtWeight) continue;
     for (const [weightKg, evidence] of repsAtWeight) {
       const previousValue = previousAtWeight.get(weightKg);
       if (previousValue === undefined || evidence.reps <= previousValue) continue;
       highlights.push({
         kind: "rep-at-weight-pr",
-        exerciseKey,
+        exerciseKey: evidence.exerciseKey,
         name: evidence.name,
         sessionId: evidence.sessionId,
         setId: evidence.setId,
@@ -454,13 +470,13 @@ function buildReportHighlights(
       });
     }
   }
-  for (const [exerciseKey, evidence] of bestEstimate) {
+  for (const [comparisonKey, evidence] of bestEstimate) {
     const currentValue = evidence.estimatedOneRepMaxKg;
-    const previousValue = previousEstimate.get(exerciseKey);
+    const previousValue = previousEstimate.get(comparisonKey);
     if (currentValue === null || previousValue === undefined || !materiallyGreater(currentValue, previousValue)) continue;
     highlights.push({
       kind: "estimated-1rm-improvement",
-      exerciseKey,
+      exerciseKey: evidence.exerciseKey,
       name: evidence.name,
       sessionId: evidence.sessionId,
       setId: evidence.setId,
@@ -591,13 +607,13 @@ function addDrop(
   accumulator.externalLoadVolumeKg += set.weightKg * set.reps;
 }
 
-function addWorkingSetToSessionExercise(metrics: ReportSessionExerciseMetrics, set: WorkoutSet): void {
+function addWorkingSetToSessionExercise(metrics: ReportSessionExerciseMetrics, set: WorkoutSet, exercise: WorkoutExercise): void {
   metrics.workingSets += 1;
   metrics.workingReps += set.reps;
   metrics.totalReps += set.reps;
   metrics.externalLoadVolumeKg += set.weightKg * set.reps;
-  metrics.bestWeightKg = Math.max(metrics.bestWeightKg ?? -Infinity, set.weightKg);
-  const estimate = estimatedOneRepMax(set.weightKg, set.reps);
+  if (tracksLoad(exercise)) metrics.bestWeightKg = Math.max(metrics.bestWeightKg ?? -Infinity, set.weightKg);
+  const estimate = tracksEstimatedStrength(exercise) ? estimatedOneRepMax(set.weightKg, set.reps) : null;
   if (estimate !== null) {
     metrics.bestEstimatedOneRepMaxKg = Math.max(metrics.bestEstimatedOneRepMaxKg ?? -Infinity, estimate);
   }
@@ -681,17 +697,17 @@ function categoryMetrics(
   };
 }
 
-function addWorkingSetToExercise(metrics: MutableExerciseMetrics, set: WorkoutSet): void {
+function addWorkingSetToExercise(metrics: MutableExerciseMetrics, set: WorkoutSet, exercise: WorkoutExercise): void {
   metrics.workingSets += 1;
   metrics.workingReps += set.reps;
   metrics.totalReps += set.reps;
   metrics.externalLoadVolumeKg += set.weightKg * set.reps;
-  metrics.bestWeightKg = Math.max(metrics.bestWeightKg ?? -Infinity, set.weightKg);
-  const estimate = estimatedOneRepMax(set.weightKg, set.reps);
+  if (tracksLoad(exercise)) metrics.bestWeightKg = Math.max(metrics.bestWeightKg ?? -Infinity, set.weightKg);
+  const estimate = tracksEstimatedStrength(exercise) ? estimatedOneRepMax(set.weightKg, set.reps) : null;
   if (estimate !== null) {
     metrics.bestEstimatedOneRepMaxKg = Math.max(metrics.bestEstimatedOneRepMaxKg ?? -Infinity, estimate);
   }
-  metrics.bestRepsByWeight.set(set.weightKg, Math.max(metrics.bestRepsByWeight.get(set.weightKg) ?? 0, set.reps));
+  if (tracksLoad(exercise)) metrics.bestRepsByWeight.set(set.weightKg, Math.max(metrics.bestRepsByWeight.get(set.weightKg) ?? 0, set.reps));
 }
 
 function addDropToExercise(metrics: MutableExerciseMetrics, set: WorkoutSet): void {
@@ -746,11 +762,12 @@ function aggregatePeriod(
       let mutableSessionExercise = sessionMetrics.exercises.get(exercise.exerciseKey);
 
       for (const set of exercise.sets) {
+        const measuredSet = measurementsForReporting(set, exercise);
         if (!set.dropSetOf) {
           roots.set(set.id, set);
           activeRootId = set.id;
           dropChainValid = true;
-          if (!completedForReporting(set)) {
+          if (!completedForReporting(set, exercise)) {
             quality.excludedWorkingSetRows += 1;
             if (!set.completed) quality.incompleteWorkingSetRows += 1;
             else quality.zeroRepWorkingSetRows += 1;
@@ -762,10 +779,10 @@ function aggregatePeriod(
           mutableExercise = exerciseMetrics(mutableExercise, exercise, category, session);
           mutableCategory = categoryMetrics(mutableCategory, category);
           mutableSessionExercise = sessionExerciseMetrics(mutableSessionExercise, exercise, category);
-          addWorkingSet(sessionMetrics, set);
-          addWorkingSetToSessionExercise(mutableSessionExercise, set);
-          addWorkingSetToExercise(mutableExercise, set);
-          addWorkingSetToCategory(mutableCategory, set);
+          addWorkingSet(sessionMetrics, measuredSet);
+          addWorkingSetToSessionExercise(mutableSessionExercise, measuredSet, exercise);
+          addWorkingSetToExercise(mutableExercise, measuredSet, exercise);
+          addWorkingSetToCategory(mutableCategory, measuredSet);
           mutableExercise.dates.add(session.workoutDate);
           mutableExercise.sessionIds.add(session.id);
           mutableCategory.dates.add(session.workoutDate);
@@ -774,7 +791,7 @@ function aggregatePeriod(
 
           if (set.effort) effortValues[set.effort.scale].push(set.effort.value);
           else quality.missingEffortWorkingSets += 1;
-          if (set.weightKg === 0) quality.zeroExternalLoadWorkingSets += 1;
+          if (tracksLoad(exercise) && set.weightKg === 0) quality.zeroExternalLoadWorkingSets += 1;
           if (category === "Unclassified") {
             quality.unclassifiedWorkingSets += 1;
             quality.unclassifiedExerciseKeys.add(exercise.exerciseKey);
@@ -787,7 +804,7 @@ function aggregatePeriod(
           continue;
         }
 
-        if (!completedForReporting(set)) {
+        if (!completedForReporting(set, exercise)) {
           quality.excludedDropRows += 1;
           if (!set.completed) quality.incompleteDropRows += 1;
           else quality.zeroRepDropRows += 1;
@@ -796,7 +813,7 @@ function aggregatePeriod(
           previous = set;
           continue;
         }
-        if (!dropChainValid || !structurallyValidDrop(set, activeRootId, roots, previous)) {
+        if (!tracksLoad(exercise) || !dropChainValid || !structurallyValidDrop(set, activeRootId, roots, previous)) {
           quality.excludedDropRows += 1;
           quality.invalidDropSegments += 1;
           sessionMetrics.excludedRows += 1;
@@ -808,16 +825,16 @@ function aggregatePeriod(
         mutableExercise = exerciseMetrics(mutableExercise, exercise, category, session);
         mutableCategory = categoryMetrics(mutableCategory, category);
         mutableSessionExercise = sessionExerciseMetrics(mutableSessionExercise, exercise, category);
-        addDrop(sessionMetrics, set);
-        addDropToSessionExercise(mutableSessionExercise, set);
-        addDropToExercise(mutableExercise, set);
-        addDropToCategory(mutableCategory, set);
+        addDrop(sessionMetrics, measuredSet);
+        addDropToSessionExercise(mutableSessionExercise, measuredSet);
+        addDropToExercise(mutableExercise, measuredSet);
+        addDropToCategory(mutableCategory, measuredSet);
         mutableExercise.dates.add(session.workoutDate);
         mutableExercise.sessionIds.add(session.id);
         mutableCategory.dates.add(session.workoutDate);
         sessionMetrics.exerciseKeys.add(exercise.exerciseKey);
         sessionMetrics.categories.add(category);
-        if (set.weightKg === 0) quality.zeroExternalLoadDrops += 1;
+        if (tracksLoad(exercise) && set.weightKg === 0) quality.zeroExternalLoadDrops += 1;
         previous = set;
       }
 
@@ -1016,14 +1033,14 @@ function activeWorkoutHasReportableWork(
 ): boolean {
   if (!activeWorkout || !withinRange(activeWorkout.workoutDate, range)) return false;
   return activeWorkout.exercises.some((exercise) =>
-    exercise.sets.some((set) => !set.dropSetOf && completedForReporting(set)),
+    exercise.sets.some((set) => !set.dropSetOf && completedForReporting(set, exercise)),
   );
 }
 
 function firstReportableWorkoutDate(history: readonly WorkoutSession[]): string | null {
   const dates = history
     .filter((session) => session.exercises.some((exercise) =>
-      exercise.sets.some((set) => !set.dropSetOf && completedForReporting(set)),
+      exercise.sets.some((set) => !set.dropSetOf && completedForReporting(set, exercise)),
     ))
     .map((session) => session.workoutDate)
     .sort();

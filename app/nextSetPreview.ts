@@ -1,3 +1,4 @@
+import { resolveExerciseTracking, resolveExerciseWeightMode, tracksLoad } from "./exercise-tracking";
 import type { SetEffort, WorkoutExercise, WorkoutSession, WorkoutSet } from "./storage";
 
 export type NextSetEvidence = {
@@ -40,11 +41,13 @@ function evidenceFromSet(set: WorkoutSet): NextSetEvidence {
 
 function latestComparableSession(
   history: readonly WorkoutSession[],
-  exerciseKey: string,
+  currentExercise: WorkoutExercise,
 ): { session: WorkoutSession; exercise: WorkoutExercise } | null {
   let latest: { session: WorkoutSession; exercise: WorkoutExercise; timestamp: number } | null = null;
   for (const session of history) {
-    const exercise = session.exercises.find((candidate) => candidate.exerciseKey === exerciseKey);
+    const exercise = session.exercises.find((candidate) => candidate.exerciseKey === currentExercise.exerciseKey &&
+      resolveExerciseTracking(candidate) === resolveExerciseTracking(currentExercise) &&
+      resolveExerciseWeightMode(candidate) === resolveExerciseWeightMode(currentExercise));
     if (!exercise?.sets.some((set) => set.completed && !set.dropSetOf)) continue;
     const timestamp = session.finishedAt ?? session.startedAt;
     if (!latest || timestamp > latest.timestamp) latest = { session, exercise, timestamp };
@@ -59,6 +62,7 @@ export function buildNextSetPreview(
   maximumWeightKg: number,
   requireCurrentEffort = false,
 ): NextSetPreview | null {
+  if (!tracksLoad(exercise)) return null;
   if (!Number.isFinite(incrementKg) || incrementKg <= 0 ||
     !Number.isFinite(maximumWeightKg) || maximumWeightKg <= 0) return null;
 
@@ -74,7 +78,7 @@ export function buildNextSetPreview(
   if (!precedingSet || (requireCurrentEffort && !precedingSet.effort) ||
     !meetsPlan(precedingSet, nextSet.weightKg, nextSet.reps)) return null;
 
-  const comparable = latestComparableSession(history, exercise.exerciseKey);
+  const comparable = latestComparableSession(history, exercise);
   if (!comparable) return null;
   const qualifyingHistorySet = comparable.exercise.sets
     .filter((set) => !set.dropSetOf)

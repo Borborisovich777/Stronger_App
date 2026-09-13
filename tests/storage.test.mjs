@@ -1,23 +1,12 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import ts from "typescript";
+import { importTypeScriptModule } from "./helpers/import-typescript.mjs";
 
 const projectRoot = new URL("../", import.meta.url);
-let storageModuleImport = 0;
 
 async function importStorageModule() {
-  const source = await readFile(new URL("app/storage.ts", projectRoot), "utf8");
-  const transpiled = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ES2022,
-    },
-    fileName: "storage.ts",
-  });
-  const encoded = Buffer.from(transpiled.outputText).toString("base64");
-  storageModuleImport += 1;
-  return import(`data:text/javascript;base64,${encoded}#${storageModuleImport}`);
+  return importTypeScriptModule(new URL("app/storage.ts", projectRoot), { fresh: true });
 }
 
 async function readJson(path) {

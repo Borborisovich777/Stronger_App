@@ -1,3 +1,4 @@
+import { resolveExerciseTracking, resolveExerciseWeightMode } from "./exercise-tracking";
 import type { WorkoutSession } from "./storage";
 
 const CSV_HEADERS = [
@@ -23,6 +24,10 @@ const CSV_HEADERS = [
   "set_type",
   "drop_set_of",
   "drop_order",
+  "tracking",
+  "weight_mode",
+  "set_duration_seconds",
+  "distance_meters",
 ] as const;
 
 type CsvValue = string | number | null | undefined;
@@ -78,6 +83,10 @@ export function buildHistoryCsv(history: WorkoutSession[]): string {
         set.dropSetOf
           ? exercise.sets.slice(0, setIndex).filter((candidate) => candidate.dropSetOf === set.dropSetOf).length + 1
           : "",
+        resolveExerciseTracking(exercise),
+        resolveExerciseWeightMode(exercise),
+        set.durationSeconds ?? "",
+        set.distanceMeters ?? "",
       ])),
     );
 
@@ -91,7 +100,7 @@ export function buildHistoryCsv(history: WorkoutSession[]): string {
       session.id,
       "", "",
       session.sourceRoutineId ?? "",
-      "", "", "",
+      "", "", "", "", "", "", "",
     ])];
   });
 

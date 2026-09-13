@@ -1,20 +1,11 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
-import ts from "typescript";
+import { importTypeScriptModule } from "./helpers/import-typescript.mjs";
 
 const projectRoot = new URL("../", import.meta.url);
 
 async function importDropSetsModule() {
-  const source = await readFile(new URL("app/dropSets.ts", projectRoot), "utf8");
-  const transpiled = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ES2022,
-    },
-    fileName: "dropSets.ts",
-  });
-  return import(`data:text/javascript;base64,${Buffer.from(transpiled.outputText).toString("base64")}`);
+  return importTypeScriptModule(new URL("app/dropSets.ts", projectRoot));
 }
 
 const dropSets = await importDropSetsModule();
@@ -111,4 +102,16 @@ test("removing a working set cascades to its drops while removing one drop is na
     dropSets.removeSetWithContinuations(original, "work-1").sets.map((item) => item.id),
     ["work-2"],
   );
+});
+
+test("timed work counts as a completed working set but cannot create drop continuations", () => {
+  const timed = { ...exercise([{ id: "run", weightKg: 0, reps: 0, durationSeconds: 600, distanceMeters: 1500, completed: true }]), tracking: "distance-duration" };
+  const session = { id: "session", name: "Cardio", workoutDate: "2026-09-03", startedAt: 100, exercises: [timed] };
+  assert.equal(dropSets.completedWorkingSets(session).length, 1);
+  assert.equal(dropSets.completedSetSegments(session).length, 1);
+  assert.equal(dropSets.completedDropSegments(session).length, 0);
+  assert.equal(dropSets.insertDropSegment(timed, "run", "drop"), timed);
+  const assistance = { ...exercise([set("assist", 30, 8, true)]), tracking: "weight-reps", weightMode: "assistance" };
+  assert.equal(dropSets.insertDropSegment(assistance, "assist", "drop"), assistance);
+  assert.equal(dropSets.workingSetNumber({ sets: timed.sets }, timed.sets[0]), 1);
 });

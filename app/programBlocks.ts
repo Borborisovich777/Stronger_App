@@ -1,4 +1,5 @@
-import type { ProgramBlock, ProgramBlockWeek, Routine } from "./storage";
+import { resolveExerciseTracking, resolveExerciseWeightMode } from "./exercise-tracking";
+import type { ProgramBlock, ProgramBlockWeek, Routine, RoutineExercise } from "./storage";
 
 export function copyRoutineToProgramBlock(
   routine: Routine,
@@ -31,6 +32,14 @@ export function updateProgramBlockWeek(
   };
 }
 
-export function programBlockTargetWeight(weightKg: number, week: ProgramBlockWeek): number {
+export function programBlockTargetWeight(weightKg: number, week: ProgramBlockWeek, exercise?: RoutineExercise): number {
+  if (exercise && (resolveExerciseTracking(exercise) !== "weight-reps" || resolveExerciseWeightMode(exercise) === "assistance")) return weightKg;
   return weightKg * week.loadPercent / 100;
+}
+
+export function programBlockExerciseTarget(exercise: RoutineExercise, week: ProgramBlockWeek): RoutineExercise {
+  return {
+    ...exercise,
+    targetWeightKg: programBlockTargetWeight(exercise.targetWeightKg, week, exercise),
+  };
 }

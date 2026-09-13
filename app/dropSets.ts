@@ -1,3 +1,4 @@
+import { isCompletedTrackedSet, tracksLoad } from "./exercise-tracking";
 import type { WorkoutExercise, WorkoutSession, WorkoutSet } from "./storage";
 
 export const DEFAULT_DROP_PERCENT = 20;
@@ -6,25 +7,25 @@ export function isDropSegment(set: WorkoutSet): boolean {
   return set.dropSetOf !== undefined;
 }
 
-export function workingSets(exercise: WorkoutExercise): WorkoutSet[] {
+export function workingSets(exercise: Pick<WorkoutExercise, "sets">): WorkoutSet[] {
   return exercise.sets.filter((set) => !isDropSegment(set));
 }
 
 export function completedWorkingSets(session: WorkoutSession): WorkoutSet[] {
   return session.exercises.flatMap((exercise) => workingSets(exercise)
-    .filter((set) => set.completed && set.reps > 0));
+    .filter((set) => isCompletedTrackedSet(set, exercise)));
 }
 
 export function completedDropSegments(session: WorkoutSession): WorkoutSet[] {
   return session.exercises.flatMap((exercise) => exercise.sets
-    .filter((set) => set.completed && set.reps > 0 && isDropSegment(set)));
+    .filter((set) => isCompletedTrackedSet(set, exercise) && isDropSegment(set) && tracksLoad(exercise)));
 }
 
 export function completedSetSegments(session: WorkoutSession): WorkoutSet[] {
-  return session.exercises.flatMap((exercise) => exercise.sets.filter((set) => set.completed && set.reps > 0));
+  return session.exercises.flatMap((exercise) => exercise.sets.filter((set) => isCompletedTrackedSet(set, exercise)));
 }
 
-export function dropSegmentsFor(exercise: WorkoutExercise, rootSetId: string): WorkoutSet[] {
+export function dropSegmentsFor(exercise: Pick<WorkoutExercise, "sets">, rootSetId: string): WorkoutSet[] {
   return exercise.sets.filter((set) => set.dropSetOf === rootSetId);
 }
 
@@ -32,24 +33,24 @@ export function rootSetId(set: WorkoutSet): string {
   return set.dropSetOf ?? set.id;
 }
 
-export function workingSetNumber(exercise: WorkoutExercise, set: WorkoutSet): number {
+export function workingSetNumber(exercise: Pick<WorkoutExercise, "sets">, set: WorkoutSet): number {
   const rootId = rootSetId(set);
   return workingSets(exercise).findIndex((candidate) => candidate.id === rootId) + 1;
 }
 
-export function dropNumber(exercise: WorkoutExercise, set: WorkoutSet): number {
+export function dropNumber(exercise: Pick<WorkoutExercise, "sets">, set: WorkoutSet): number {
   if (!set.dropSetOf) return 0;
   return dropSegmentsFor(exercise, set.dropSetOf).findIndex((candidate) => candidate.id === set.id) + 1;
 }
 
-export function precedingSegment(exercise: WorkoutExercise, set: WorkoutSet): WorkoutSet | undefined {
+export function precedingSegment(exercise: Pick<WorkoutExercise, "sets">, set: WorkoutSet): WorkoutSet | undefined {
   const index = exercise.sets.findIndex((candidate) => candidate.id === set.id);
   if (index <= 0) return undefined;
   const previous = exercise.sets[index - 1];
   return rootSetId(previous) === rootSetId(set) ? previous : undefined;
 }
 
-export function isFinalSetSegment(exercise: WorkoutExercise, set: WorkoutSet): boolean {
+export function isFinalSetSegment(exercise: Pick<WorkoutExercise, "sets">, set: WorkoutSet): boolean {
   const index = exercise.sets.findIndex((candidate) => candidate.id === set.id);
   const next = exercise.sets[index + 1];
   return !next || rootSetId(next) !== rootSetId(set);
@@ -65,6 +66,7 @@ export function insertDropSegment(
   sourceSetId: string,
   newSetId: string,
 ): WorkoutExercise {
+  if (!tracksLoad(exercise)) return exercise;
   const source = exercise.sets.find((set) => set.id === sourceSetId);
   if (!source) return exercise;
   const groupId = rootSetId(source);

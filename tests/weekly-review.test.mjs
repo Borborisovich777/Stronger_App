@@ -1,20 +1,11 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
-import ts from "typescript";
+import { importTypeScriptModule } from "./helpers/import-typescript.mjs";
 
 const projectRoot = new URL("../", import.meta.url);
 
 async function importWeeklyReviewModule() {
-  const source = await readFile(new URL("app/weeklyReview.ts", projectRoot), "utf8");
-  const transpiled = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ES2022,
-    },
-    fileName: "weeklyReview.ts",
-  });
-  return import(`data:text/javascript;base64,${Buffer.from(transpiled.outputText).toString("base64")}`);
+  return importTypeScriptModule(new URL("app/weeklyReview.ts", projectRoot));
 }
 
 const weeklyReview = await importWeeklyReviewModule();
@@ -131,4 +122,21 @@ test("progress is capped and invalid external targets fall back safely", () => {
   const review = weeklyReview.buildWeeklyReview(history, routines, 0, "2026-08-29");
   assert.equal(review.targetSessions, 1);
   assert.equal(review.progressPercent, 100);
+});
+
+test("timed-only sessions count toward the week and routine rotation without assistance PRs", () => {
+  const routines = [{ id: "cardio", name: "Cardio", exercises: [] }, { id: "strength", name: "Strength", exercises: [] }];
+  const trackedSession = (id, workoutDate, timestamp, row) => ({
+    id, name: id, workoutDate, startedAt: timestamp, finishedAt: timestamp + 1000, sourceRoutineId: "cardio",
+    exercises: [{ id: `${id}-exercise`, name: "Activity", exerciseKey: "activity", restSeconds: 0, ...row }],
+  });
+  const history = [
+    trackedSession("old-assist", "2026-08-20", 1, { tracking: "weight-reps", weightMode: "assistance", sets: [{ id: "old-set", weightKg: 20, reps: 8, completed: true }] }),
+    trackedSession("new-assist", "2026-09-02", 2, { tracking: "weight-reps", weightMode: "assistance", sets: [{ id: "new-set", weightKg: 40, reps: 8, completed: true }] }),
+    trackedSession("cardio", "2026-09-03", 3, { tracking: "distance-duration", sets: [{ id: "cardio-set", weightKg: 0, reps: 0, durationSeconds: 600, distanceMeters: 1500, completed: true }] }),
+  ];
+  const result = weeklyReview.buildWeeklyReview(history, routines, 3, "2026-09-03");
+  assert.equal(result.completedSessions, 2);
+  assert.equal(result.nextRoutine.id, "strength");
+  assert.deepEqual(result.personalRecords, []);
 });

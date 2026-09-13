@@ -1,20 +1,11 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
-import ts from "typescript";
+import { importTypeScriptModule } from "./helpers/import-typescript.mjs";
 
 const projectRoot = new URL("../", import.meta.url);
 
 async function importNextSetPreviewModule() {
-  const source = await readFile(new URL("app/nextSetPreview.ts", projectRoot), "utf8");
-  const transpiled = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ES2022,
-    },
-    fileName: "nextSetPreview.ts",
-  });
-  return import(`data:text/javascript;base64,${Buffer.from(transpiled.outputText).toString("base64")}`);
+  return importTypeScriptModule(new URL("app/nextSetPreview.ts", projectRoot));
 }
 
 const nextSetPreview = await importNextSetPreviewModule();
@@ -179,4 +170,15 @@ test("drop continuations do not shift working-set progression evidence", () => {
   assert.equal(result?.nextSetNumber, 2);
   assert.equal(result?.todayEvidence.weightKg, 60);
   assert.equal(result?.historyEvidence.weightKg, 60);
+});
+
+test("load suggestions exclude assistance and non-load tracking and require the same recorded weight mode", () => {
+  const current = exercise([set("done", 20, 8, true), set("next", 20, 8, false)]);
+  const history = [session("old", 1, [set("old-set", 20, 8, true)])];
+  for (const values of [{ tracking: "weight-reps", weightMode: "assistance" }, { tracking: "reps" }, { tracking: "duration" }, { tracking: "distance-duration" }]) {
+    assert.equal(nextSetPreview.buildNextSetPreview({ ...current, ...values }, history, 2.5, 1000), null);
+  }
+  assert.equal(nextSetPreview.buildNextSetPreview({ ...current, tracking: "weight-reps", weightMode: "added" }, history, 2.5, 1000), null);
+  const matchingHistory = [{ ...history[0], exercises: [{ ...history[0].exercises[0], tracking: "weight-reps", weightMode: "added" }] }];
+  assert.equal(nextSetPreview.buildNextSetPreview({ ...current, tracking: "weight-reps", weightMode: "added" }, matchingHistory, 2.5, 1000).suggestedWeightKg, 22.5);
 });
