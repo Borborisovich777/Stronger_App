@@ -9,18 +9,6 @@ let nextId = 0;
 const id = (prefix) => `${prefix}-${++nextId}`;
 const find = (key) => templates.WORKOUT_TEMPLATES.find((template) => template.id === key);
 
-test("starter templates have deterministic unique identities and never share mutable data", () => {
-  const a = storage.createDefaultData();
-  const b = storage.createDefaultData();
-  assert.deepEqual(a, b);
-  assert.deepEqual(a.routines.map((routine) => routine.name), templates.WORKOUT_TEMPLATES.map((template) => template.name));
-  const ids = a.routines.flatMap((routine) => [routine.id, ...routine.exercises.map((exercise) => exercise.id)]);
-  assert.equal(new Set(ids).size, ids.length);
-  a.routines[0].exercises[0].targetWeightKg = 25;
-  a.routines[1].name = "My edited template";
-  assert.deepEqual(storage.createDefaultData(), b);
-});
-
 test("the compact design preview remains valid independently of the starter catalog", async () => {
   const preview = await importTypeScriptModule(new URL("app/preview-data.ts", root));
   const data = preview.createPreviewData();

@@ -3713,12 +3713,19 @@ body.is-reordering-exercises {
   text-align: center;
 }
 
+.workout-libraries {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+
 .exercise-library-entry {
-  display: flex;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
   width: 100%;
-  margin: 24px 0 0;
   padding: 13px;
-  align-items: center;
+  align-items: start;
   gap: 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
@@ -3727,13 +3734,24 @@ body.is-reordering-exercises {
 }
 
 .exercise-library-entry .exercise-thumbnail {
-  width: 60px;
-  height: 60px;
-  flex-basis: 60px;
+  width: 48px;
+  height: 48px;
+  flex-basis: 48px;
+}
+
+.template-library-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-radius: var(--radius-sm);
 }
 
 .exercise-library-entry > span:nth-child(2) {
   display: grid;
+  min-width: 0;
   gap: 4px;
 }
 
@@ -3743,10 +3761,15 @@ body.is-reordering-exercises {
 }
 
 .exercise-library-entry-action {
-  margin-left: auto;
+  grid-column: 2;
+  align-self: end;
   color: var(--accent-ink);
   font-size: 0.75rem;
   font-weight: 750;
+}
+
+@media (max-width: 480px) {
+  .workout-libraries { grid-template-columns: minmax(0, 1fr); }
 }
 
 .exercise-library-intro {

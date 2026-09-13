@@ -1,5 +1,4 @@
 import { isCompletedTrackedSet, resolveExerciseTracking, resolveExerciseWeightMode, type ExerciseTracking, type ExerciseWeightMode } from "./exercise-tracking";
-import { createDefaultRoutines } from "./workoutTemplates";
 
 export const CURRENT_FORMAT_VERSION = 1 as const;
 export const BACKUP_KIND = "stronger-backup" as const;
@@ -343,7 +342,7 @@ export function createDefaultData(): StrongerData {
     history: [],
     customExercises: [],
     programBlocks: [],
-    routines: createDefaultRoutines(),
+    routines: [],
   };
 }
 

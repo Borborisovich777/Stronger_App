@@ -1,6 +1,6 @@
 # Prepared workout templates
 
-On a fresh installation, all 14 prepared sessions appear directly under Workout → Templates, ready to start or edit without an import or setup step. A Browse action also lets users inspect alternatives, customize, and save extra copies. Existing routines and workout history are not replaced.
+The Template library appears next to Exercise library on Workout, with all 14 prepared sessions available from the first visit. Users browse the catalog, choose one session, customize it, and save an independent copy. New installations start with an empty saved-template list. Existing routines and workout history are not replaced.
 
 ## Review at a glance
 
@@ -295,7 +295,8 @@ Use this as a complete session. Per-side exercises include both sides in each se
 ## Implementation and review checks
 
 - Existing data remains format version 1. Optional text notes on routines and routine exercises are validated and round-trip through backups.
-- Defaults are created only when no workout data exists, or after an explicit reset. Existing users keep their saved data, including an intentionally empty template list. Starter copies have stable IDs and no shared mutable data.
+- New installations and explicit resets start with an empty saved-template list; the bundled catalog remains available. Existing users keep their saved data, including any prepared sessions already saved by earlier versions.
 - Browsing and customizing make no changes until Save template; saving adds a new routine with fresh IDs.
 - Optional exercises are excluded by default. Alternative selection does not transfer load or history across exercise identities.
 - The local ?preview=fresh page shows the first-launch home screen; ?preview=templates opens the catalog. Both use temporary state and never read or write workout storage. Reloading resets these previews.
+- The local ?preview=existing page demonstrates browsing and saving an individual template alongside an existing routine and workout history, using temporary state only.

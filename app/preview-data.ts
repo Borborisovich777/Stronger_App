@@ -63,3 +63,11 @@ export function createPreviewData() {
   data.activeWorkout.exercises[0].sets = data.activeWorkout.exercises[0].sets.map((set, index) => ({ ...set, completed: index < 3 }));
   return data;
 }
+
+/** An existing saved routine and history, isolated from real browser storage. */
+export function createExistingUserPreviewData() {
+  const data = createPreviewData();
+  data.routines = data.routines.filter((routine) => routine.id === "routine-preview-pull");
+  data.activeWorkout = null;
+  return data;
+}

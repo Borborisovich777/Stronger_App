@@ -16,7 +16,7 @@ Your workout records stay in the browser storage on your device. Stronger does n
 
 - Installable on an iPhone Home Screen
 - Works offline after the first successful online load
-- Fourteen ready-to-start templates included on a fresh installation
+- Built-in library of fourteen workout templates to browse and save individually
 - Searchable library of 257 exercises with 3D mannequin illustrations and instructions
 - Different-equipment alternatives for selected movement patterns
 - Custom exercises saved to your personal library
@@ -92,7 +92,7 @@ Stronger has four main areas:
 
 ## Create and edit templates
 
-On a fresh installation, Stronger shows 14 prepared templates directly under **Workout → Templates**: two each for Chest, Back, Arms, Shoulders, Legs, Calisthenics, and Full body. No import or setup is needed. Each is editable; existing installations keep their saved templates and history.
+Stronger includes 14 prepared sessions in **Workout → Template library**, next to **Exercise library**: two each for Chest, Back, Arms, Shoulders, Legs, Calisthenics, and Full body. The catalog is available from the first visit without an import. New users start with an empty **Your templates** list and save the sessions they choose; existing installations keep their saved templates and history.
 
 To create a template:
 
@@ -116,7 +116,7 @@ Use **Settings → Templates → Delete** to delete an entire template. Deleting
 
 ### Ready-made workout library
 
-All 14 sessions are included as starter templates on a fresh installation. Choose **Workout → Templates → Browse** to inspect the catalog or add another copy, including on an existing installation. Open a session to see its exercise order, rep or time ranges, rest periods, equipment choices, and optional accessories.
+Open **Workout → Template library**, beside **Exercise library**, to browse all 14 prepared sessions. **Your templates → Browse** opens the same catalog. Choose a session to see its exercise order, rep or time ranges, rest periods, equipment choices, and optional accessories. The catalog is included for everyone, but sessions are added to your saved list one at a time when you choose and save them.
 
 Choose alternatives and include optional exercises, then tap **Customize this template**. Review starting weights and targets in the editor and tap **Save template** to add an independent copy. Existing templates and history stay intact. All public starting loads are zero for you to set; zero added load means bodyweight only. Prior results for the same exercise can still prefill a workout, so check its displayed loads and reps before logging.
 
@@ -168,7 +168,7 @@ You can start from a saved template or create a blank workout.
 ### Start from a template
 
 1. Open **Workout**.
-2. Under **Templates**, tap the row for any starter or saved template. This starts the workout directly.
+2. Under **Your templates**, tap the row for any saved template. This starts the workout directly.
 3. Begin logging sets.
 
 Starting a template creates a working copy for today in its saved exercise order. Weight and reps are prefilled from previous results when available, with the template's exercise defaults as a fallback. Historical results also appear in **Previous**. Changes made inside the active workout do not silently rewrite the original template.

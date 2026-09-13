@@ -121,8 +121,9 @@ import { ExerciseGuide, ExercisePhoto } from "./ExerciseGuide";
 import { findExistingExercise, matchesExerciseSearch, mergeExerciseCatalog } from "./exercise-search";
 import { buildExerciseProgress, defaultSetMeasurements, ExerciseTracking, ExerciseWeightMode, findPreviousSet, findPreviousDropSet, formatDistanceKm, formatSetDuration, isTimedTracking, resolveExerciseTracking, resolveExerciseWeightMode, SetMeasurements, SetMeasurementUpdate, setCompletionError } from "./exercise-tracking";
 import { ArrowDown, ArrowUp, CaretDown, Check, ClockCounterClockwise, DotsThree, Barbell, GearSix, NotePencil, Plus, Timer, Trash, TrendUp, X } from "@phosphor-icons/react";
-import { createPreviewData } from "./preview-data";
+import { createExistingUserPreviewData, createPreviewData } from "./preview-data";
 import { TemplateLibrary } from "./TemplateLibrary";
+import { WORKOUT_TEMPLATES } from "./workoutTemplates";
 
 type Tab = "workout" | "history" | "progress" | "settings";
 type ThemeMode = "light" | "dark";
@@ -1179,8 +1180,8 @@ function EmptyState({ title, copy }: { title: string; copy: string }) {
 
 export default function StrongerApp() {
   const [previewKind] = useState(() => import.meta.env.DEV ? new URLSearchParams(window.location.search).get("preview") : null);
-  const previewMode = previewKind === "compact" || previewKind === "templates" || previewKind === "fresh";
-  const [data, setData] = useState<StrongerData>(() => previewKind === "compact" ? createPreviewData() : createDefaultData());
+  const previewMode = previewKind === "compact" || previewKind === "templates" || previewKind === "fresh" || previewKind === "existing";
+  const [data, setData] = useState<StrongerData>(() => previewKind === "compact" ? createPreviewData() : previewKind === "existing" ? createExistingUserPreviewData() : createDefaultData());
   const [hydrated, setHydrated] = useState(previewMode);
   const [storageRecoveryRequired, setStorageRecoveryRequired] = useState(false);
   const [canOverwriteUnreadableStorage, setCanOverwriteUnreadableStorage] = useState(false);
@@ -2895,12 +2896,13 @@ export default function StrongerApp() {
 
               <section className="section-block">
                 <div className="section-heading">
-                  <div><h2>Templates</h2></div>
+                  <div><h2>Your templates</h2></div>
                   <div className="template-heading-actions">
                     <button className="text-button" type="button" onClick={() => setShowTemplateLibrary(true)}>Browse</button>
                     <button className="text-button" type="button" onClick={() => setRoutineDraft({ id: makeId("routine"), name: "", exercises: [] })}>New</button>
                   </div>
                 </div>
+                {!data.routines.length ? <p className="section-copy">No saved templates yet. Browse the template library to choose a workout, or create your own.</p> : null}
                 <div className="routine-list">
                   {data.routines.map((routine, index) => (
                     <article className="routine-card" key={routine.id}>
@@ -2945,11 +2947,18 @@ export default function StrongerApp() {
               </section>
             </>
           )}
-          {!isLogging ? <button className="exercise-library-entry" type="button" onClick={() => setShowExerciseLibrary(true)}>
-            <ExercisePhoto exerciseKey="bench-press" name="Bench press" thumbnail />
-            <span><strong>Exercise library</strong><small>Explore {BUILT_IN_EXERCISES.length} movements with 3D illustrations & instructions</small></span>
-            <span className="exercise-library-entry-action">Browse</span>
-          </button> : null}
+          {!isLogging ? <div className="workout-libraries">
+            <button className="exercise-library-entry" type="button" onClick={() => setShowExerciseLibrary(true)}>
+              <ExercisePhoto exerciseKey="bench-press" name="Bench press" thumbnail />
+              <span><strong>Exercise library</strong><small>Explore {BUILT_IN_EXERCISES.length} movements with 3D illustrations & instructions</small></span>
+              <span className="exercise-library-entry-action">Browse</span>
+            </button>
+            <button className="exercise-library-entry" type="button" onClick={() => setShowTemplateLibrary(true)}>
+              <span className="template-library-icon" aria-hidden="true"><NotePencil size={26} /></span>
+              <span><strong>Template library</strong><small>Browse {WORKOUT_TEMPLATES.length} workouts. Choose one, customize it, and save.</small></span>
+              <span className="exercise-library-entry-action">Browse</span>
+            </button>
+          </div> : null}
         </main>
       ) : null}
 

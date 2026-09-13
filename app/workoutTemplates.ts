@@ -256,13 +256,3 @@ export function createRoutineFromTemplate(template: WorkoutTemplate, choices: Te
     })),
   };
 }
-
-/** Fresh-install defaults: independent copies with stable IDs for storage comparisons. */
-export function createDefaultRoutines(): Routine[] {
-  return WORKOUT_TEMPLATES.map((template) => {
-    let exerciseIndex = 0;
-    return createRoutineFromTemplate(template, {}, (prefix) => prefix === "routine"
-      ? `routine-${template.id}`
-      : `routine-${template.id}-exercise-${++exerciseIndex}`);
-  });
-}
