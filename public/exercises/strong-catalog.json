@@ -1,0 +1,1329 @@
+{
+  "catalog": "Strong public global exercise library snapshot",
+  "sourceUrl": "https://github.com/tolik518/strong-api-workout-sync/blob/fc2f671c15df76f4d1c98dac155cce22a36ab933/measurements.json",
+  "snapshotCommit": "fc2f671c15df76f4d1c98dac155cce22a36ab933",
+  "snapshotCommitDate": "2025-03-15T20:00:23Z",
+  "retrievedAt": "2026-09-13",
+  "completeness": "253 unique global EXERCISE records; matches total:253. Published snapshot, not a verified current live response. Independent August 2026 public client documentation reports the same count and its 20-record fixture matches all 20 names and IDs.",
+  "sourceCount": 253,
+  "localCount": 257,
+  "preservedOriginalKeys": [
+    "bench-press",
+    "incline-dumbbell-press",
+    "dumbbell-bench-press",
+    "chest-press-machine",
+    "push-up",
+    "cable-fly",
+    "pec-deck",
+    "deadlift",
+    "barbell-row",
+    "lat-pulldown",
+    "pull-up",
+    "assisted-pull-up",
+    "seated-cable-row",
+    "one-arm-dumbbell-row",
+    "chest-supported-row",
+    "straight-arm-pulldown",
+    "face-pull",
+    "shoulder-press",
+    "dumbbell-shoulder-press",
+    "arnold-press",
+    "lateral-raise",
+    "rear-delt-fly",
+    "front-raise",
+    "biceps-curl",
+    "hammer-curl",
+    "preacher-curl",
+    "cable-curl",
+    "triceps-pushdown",
+    "overhead-triceps-extension",
+    "skull-crusher",
+    "close-grip-bench-press",
+    "dip",
+    "back-squat",
+    "front-squat",
+    "goblet-squat",
+    "romanian-deadlift",
+    "leg-press",
+    "bulgarian-split-squat",
+    "walking-lunge",
+    "hip-thrust",
+    "leg-extension",
+    "leg-curl",
+    "standing-calf-raise",
+    "seated-calf-raise",
+    "hip-abduction",
+    "plank",
+    "hanging-leg-raise",
+    "cable-crunch",
+    "ab-wheel-rollout",
+    "russian-twist"
+  ],
+  "coverage": [
+    {
+      "strongId": "591439ee-94d1-4997-acb0-e5674e3b2f5c",
+      "strongName": "Ab Wheel",
+      "exerciseKey": "ab-wheel-rollout"
+    },
+    {
+      "strongId": "05aa6d82-6388-4c3d-87a5-8d8edc1b3431",
+      "strongName": "Aerobics",
+      "exerciseKey": "aerobics"
+    },
+    {
+      "strongId": "3c24e378-0ae0-4b62-bfd5-bed2e8bffdfa",
+      "strongName": "Arnold Press (Dumbbell)",
+      "exerciseKey": "arnold-press"
+    },
+    {
+      "strongId": "d74736d6-ac37-408f-adaf-9766f17ee9a9",
+      "strongName": "Around the World",
+      "exerciseKey": "around-the-world"
+    },
+    {
+      "strongId": "b8bd2e32-2133-4d66-866f-4b4239be2999",
+      "strongName": "Back Extension",
+      "exerciseKey": "back-extension"
+    },
+    {
+      "strongId": "93d038a6-92fc-484d-a948-9fad070ff5b1",
+      "strongName": "Back Extension (Machine)",
+      "exerciseKey": "back-extension-machine"
+    },
+    {
+      "strongId": "0373b862-bde8-4335-ab03-763cca57455c",
+      "strongName": "Ball Slams",
+      "exerciseKey": "ball-slams"
+    },
+    {
+      "strongId": "2c9ef821-6ea5-43a5-acbe-380477101d70",
+      "strongName": "Battle Ropes",
+      "exerciseKey": "battle-ropes"
+    },
+    {
+      "strongId": "fbbd32d2-595a-4c4a-86de-05a06ef12908",
+      "strongName": "Bench Dip",
+      "exerciseKey": "bench-dip"
+    },
+    {
+      "strongId": "ca9ee259-a69f-4839-bbf9-46ba8cf0d7d6",
+      "strongName": "Bench Press (Barbell)",
+      "exerciseKey": "bench-press"
+    },
+    {
+      "strongId": "59bb3ebb-acab-426b-aedf-6149b8ef9100",
+      "strongName": "Bench Press (Cable)",
+      "exerciseKey": "bench-press-cable"
+    },
+    {
+      "strongId": "737d7664-5231-44f9-a112-a4c087f67675",
+      "strongName": "Bench Press (Dumbbell)",
+      "exerciseKey": "dumbbell-bench-press"
+    },
+    {
+      "strongId": "b0c8a069-aae9-40d4-b842-a61a3c7cacde",
+      "strongName": "Bench Press (Smith Machine)",
+      "exerciseKey": "bench-press-smith-machine"
+    },
+    {
+      "strongId": "de39b561-a90f-4212-95a3-84789c6f4813",
+      "strongName": "Bench Press - Close Grip (Barbell)",
+      "exerciseKey": "close-grip-bench-press"
+    },
+    {
+      "strongId": "6b6456e0-3725-4a0a-8306-1bd555f4e5b5",
+      "strongName": "Bench Press - Wide Grip (Barbell)",
+      "exerciseKey": "bench-press-wide-grip-barbell"
+    },
+    {
+      "strongId": "860bcb49-7f45-4212-9441-e9497e1220fc",
+      "strongName": "Bent Over One Arm Row (Dumbbell)",
+      "exerciseKey": "one-arm-dumbbell-row"
+    },
+    {
+      "strongId": "828ec5b3-fc2f-4f29-b372-607dde9c799a",
+      "strongName": "Bent Over Row (Band)",
+      "exerciseKey": "bent-over-row-band"
+    },
+    {
+      "strongId": "2ca2b6d5-f16d-4eac-89a2-05e1be0ceee7",
+      "strongName": "Bent Over Row (Barbell)",
+      "exerciseKey": "barbell-row"
+    },
+    {
+      "strongId": "c37a6d8d-d7d9-411b-a419-5066f341be00",
+      "strongName": "Bent Over Row (Dumbbell)",
+      "exerciseKey": "bent-over-row-dumbbell"
+    },
+    {
+      "strongId": "6f66b6ce-846b-4f1c-b1ce-dd0fc0f542c2",
+      "strongName": "Bent Over Row - Underhand (Barbell)",
+      "exerciseKey": "bent-over-row-underhand-barbell"
+    },
+    {
+      "strongId": "5819ecdc-a430-47fd-984d-9b221bb337ea",
+      "strongName": "Bicep Curl (Barbell)",
+      "exerciseKey": "bicep-curl-barbell"
+    },
+    {
+      "strongId": "70709ccd-1f01-4725-98ad-193d2004babf",
+      "strongName": "Bicep Curl (Cable)",
+      "exerciseKey": "cable-curl"
+    },
+    {
+      "strongId": "4247db47-0f44-4314-851d-8ab4dce3317d",
+      "strongName": "Bicep Curl (Dumbbell)",
+      "exerciseKey": "biceps-curl"
+    },
+    {
+      "strongId": "e6cb00c6-1460-4440-9c19-7fd6f4badf8d",
+      "strongName": "Bicep Curl (Machine)",
+      "exerciseKey": "bicep-curl-machine"
+    },
+    {
+      "strongId": "37388e32-6714-4e27-8dcf-50d4b6ce6292",
+      "strongName": "Bicycle Crunch",
+      "exerciseKey": "bicycle-crunch"
+    },
+    {
+      "strongId": "c6123164-6caa-46f2-aa22-c02b9b52815d",
+      "strongName": "Box Jump",
+      "exerciseKey": "box-jump"
+    },
+    {
+      "strongId": "9ee6c51e-6b22-46ee-abb6-e716cb94ad42",
+      "strongName": "Box Squat (Barbell)",
+      "exerciseKey": "box-squat-barbell"
+    },
+    {
+      "strongId": "eadcbaab-af0c-4f83-9e1b-c0ad5f03a0a0",
+      "strongName": "Bulgarian Split Squat",
+      "exerciseKey": "bulgarian-split-squat"
+    },
+    {
+      "strongId": "886d4155-ee4e-40ee-9da6-bda3dd44824d",
+      "strongName": "Burpee",
+      "exerciseKey": "burpee"
+    },
+    {
+      "strongId": "b101465f-bec5-40cd-9434-0d832e5c655e",
+      "strongName": "Cable Crossover",
+      "exerciseKey": "cable-fly"
+    },
+    {
+      "strongId": "6102ebdd-f375-4cdb-8f3e-b50fbe0086ef",
+      "strongName": "Cable Crunch",
+      "exerciseKey": "cable-crunch"
+    },
+    {
+      "strongId": "b45be635-5eac-4d46-8071-607c1b1834cc",
+      "strongName": "Cable Kickback",
+      "exerciseKey": "cable-kickback"
+    },
+    {
+      "strongId": "c8fc2454-6b09-4e28-a762-397cca489fd2",
+      "strongName": "Cable Pull Through",
+      "exerciseKey": "cable-pull-through"
+    },
+    {
+      "strongId": "75c0cf08-e391-466c-83c5-565d1b278244",
+      "strongName": "Cable Twist",
+      "exerciseKey": "cable-twist"
+    },
+    {
+      "strongId": "819a0ba2-0a52-41f9-81dc-8f00c1f5a55d",
+      "strongName": "Calf Press on Leg Press",
+      "exerciseKey": "calf-press-on-leg-press"
+    },
+    {
+      "strongId": "21ddb847-98cd-4f6c-bea5-1df51163973d",
+      "strongName": "Calf Press on Seated Leg Press",
+      "exerciseKey": "calf-press-on-seated-leg-press"
+    },
+    {
+      "strongId": "d340b2a7-9a2a-4130-b7bc-8903847ed565",
+      "strongName": "Chest Dip",
+      "exerciseKey": "chest-dip"
+    },
+    {
+      "strongId": "78e4a335-96b9-4492-a0f0-0ea26a6f69ca",
+      "strongName": "Chest Dip (Assisted)",
+      "exerciseKey": "chest-dip-assisted"
+    },
+    {
+      "strongId": "a60fd1af-31d7-4235-92cd-57f76d1c39e9",
+      "strongName": "Chest Fly",
+      "exerciseKey": "chest-fly"
+    },
+    {
+      "strongId": "494b775e-663e-44ea-8cfb-6129de11236f",
+      "strongName": "Chest Fly (Band)",
+      "exerciseKey": "chest-fly-band"
+    },
+    {
+      "strongId": "b820cd1b-1eff-46c5-80b6-12055f927082",
+      "strongName": "Chest Fly (Dumbbell)",
+      "exerciseKey": "chest-fly-dumbbell"
+    },
+    {
+      "strongId": "3c226a8c-4399-4d98-a1fa-339e1672a163",
+      "strongName": "Chest Press (Band)",
+      "exerciseKey": "chest-press-band"
+    },
+    {
+      "strongId": "6ae27da7-92b9-4af9-b2a9-e0afd827c188",
+      "strongName": "Chest Press (Machine)",
+      "exerciseKey": "chest-press-machine"
+    },
+    {
+      "strongId": "52141694-cabc-4776-91c5-503b3ef6d0ff",
+      "strongName": "Chin Up",
+      "exerciseKey": "chin-up"
+    },
+    {
+      "strongId": "ac66c13f-2764-4a74-b4ad-01223fd0a9f5",
+      "strongName": "Chin Up (Assisted)",
+      "exerciseKey": "chin-up-assisted"
+    },
+    {
+      "strongId": "e4bd5013-4679-4091-8695-310a67b2e2df",
+      "strongName": "Clean (Barbell)",
+      "exerciseKey": "clean-barbell"
+    },
+    {
+      "strongId": "bb8099c1-43ad-4fb7-bf0e-a736a4f7b58c",
+      "strongName": "Clean and Jerk (Barbell)",
+      "exerciseKey": "clean-and-jerk-barbell"
+    },
+    {
+      "strongId": "0ea248ec-76d2-47b1-aba5-c35160a3236f",
+      "strongName": "Climbing",
+      "exerciseKey": "climbing"
+    },
+    {
+      "strongId": "2d2c4ccc-6755-4e13-a70b-feeb37f05505",
+      "strongName": "Concentration Curl (Dumbbell)",
+      "exerciseKey": "concentration-curl-dumbbell"
+    },
+    {
+      "strongId": "9ecccc7c-1846-4f58-8b63-fe4694915296",
+      "strongName": "Cross Body Crunch",
+      "exerciseKey": "cross-body-crunch"
+    },
+    {
+      "strongId": "2dc47f38-396c-492a-94e2-f4aa9d012308",
+      "strongName": "Crunch",
+      "exerciseKey": "crunch"
+    },
+    {
+      "strongId": "bb94b95b-ecb0-4b90-94e3-8f6e557f774b",
+      "strongName": "Crunch (Machine)",
+      "exerciseKey": "crunch-machine"
+    },
+    {
+      "strongId": "61e7712d-f60f-47d3-921a-f02d5b72b808",
+      "strongName": "Crunch (Stability Ball)",
+      "exerciseKey": "crunch-stability-ball"
+    },
+    {
+      "strongId": "609a559a-a6a7-424b-8ac9-3d61d254e6d3",
+      "strongName": "Cycling",
+      "exerciseKey": "cycling"
+    },
+    {
+      "strongId": "9a426b99-2830-4249-8314-bab46945fb77",
+      "strongName": "Cycling (Indoor)",
+      "exerciseKey": "cycling-indoor"
+    },
+    {
+      "strongId": "6edf0381-ebaf-4163-9f0f-f6099f9e29ff",
+      "strongName": "Deadlift (Band)",
+      "exerciseKey": "deadlift-band"
+    },
+    {
+      "strongId": "b748103d-3014-4cae-a349-cec433528c3a",
+      "strongName": "Deadlift (Barbell)",
+      "exerciseKey": "deadlift"
+    },
+    {
+      "strongId": "84a59482-5faf-451d-b5a9-6e98e868f006",
+      "strongName": "Deadlift (Dumbbell)",
+      "exerciseKey": "deadlift-dumbbell"
+    },
+    {
+      "strongId": "9000fcaf-155a-410e-b774-ee1dce73b62d",
+      "strongName": "Deadlift (Smith Machine)",
+      "exerciseKey": "deadlift-smith-machine"
+    },
+    {
+      "strongId": "33474127-a045-46b7-b70d-4165cac41463",
+      "strongName": "Deadlift High Pull (Barbell)",
+      "exerciseKey": "deadlift-high-pull-barbell"
+    },
+    {
+      "strongId": "9fd88d17-da0e-4abb-b5a6-77a934697877",
+      "strongName": "Decline Bench Press (Barbell)",
+      "exerciseKey": "decline-bench-press-barbell"
+    },
+    {
+      "strongId": "6f7f2abf-43f9-414c-8fc9-cc02193c9669",
+      "strongName": "Decline Bench Press (Dumbbell)",
+      "exerciseKey": "decline-bench-press-dumbbell"
+    },
+    {
+      "strongId": "4a8de470-a971-45db-830e-5f4b28db0894",
+      "strongName": "Decline Bench Press (Smith Machine)",
+      "exerciseKey": "decline-bench-press-smith-machine"
+    },
+    {
+      "strongId": "b17772de-f3ec-471b-8485-08ecffe4a595",
+      "strongName": "Decline Crunch",
+      "exerciseKey": "decline-crunch"
+    },
+    {
+      "strongId": "c0748e6e-3a6a-4217-8912-0c2cc92ec704",
+      "strongName": "Deficit Deadlift (Barbell)",
+      "exerciseKey": "deficit-deadlift-barbell"
+    },
+    {
+      "strongId": "4464e3b1-c412-4047-a5b9-8cdb7c8fe7b3",
+      "strongName": "Elliptical Machine",
+      "exerciseKey": "elliptical-machine"
+    },
+    {
+      "strongId": "0abcf1b6-58f6-4ec9-be63-32bd5c3cfd33",
+      "strongName": "Face Pull (Cable)",
+      "exerciseKey": "face-pull"
+    },
+    {
+      "strongId": "44fc5df2-520e-45d5-8810-c9e74b174e49",
+      "strongName": "Flat Knee Raise",
+      "exerciseKey": "flat-knee-raise"
+    },
+    {
+      "strongId": "c331ae12-b44a-426f-ac97-4c5169c0a74f",
+      "strongName": "Flat Leg Raise",
+      "exerciseKey": "flat-leg-raise"
+    },
+    {
+      "strongId": "8ea57d93-b289-47ee-9f0b-ecd4d8eb4fa3",
+      "strongName": "Floor Press (Barbell)",
+      "exerciseKey": "floor-press-barbell"
+    },
+    {
+      "strongId": "ec4d5ff5-bd4d-4b33-b785-7db1c36054f8",
+      "strongName": "Front Raise (Band)",
+      "exerciseKey": "front-raise-band"
+    },
+    {
+      "strongId": "594e8ce0-a34a-4349-8dc0-7ac45950b8c8",
+      "strongName": "Front Raise (Barbell)",
+      "exerciseKey": "front-raise-barbell"
+    },
+    {
+      "strongId": "b292faa1-44cf-4aa3-9670-43200c2d1832",
+      "strongName": "Front Raise (Cable)",
+      "exerciseKey": "front-raise-cable"
+    },
+    {
+      "strongId": "3916b75a-9ebd-4e7f-a781-097f49efb2cc",
+      "strongName": "Front Raise (Dumbbell)",
+      "exerciseKey": "front-raise"
+    },
+    {
+      "strongId": "a1b1a1cb-dacc-4d18-bf62-95d597db6715",
+      "strongName": "Front Raise (Plate)",
+      "exerciseKey": "front-raise-plate"
+    },
+    {
+      "strongId": "8ef3f10f-0e9a-4302-bf8f-ae98c0152933",
+      "strongName": "Front Squat (Barbell)",
+      "exerciseKey": "front-squat"
+    },
+    {
+      "strongId": "bf2b8a82-3e96-47ca-a106-796e23193444",
+      "strongName": "Glute Ham Raise",
+      "exerciseKey": "glute-ham-raise"
+    },
+    {
+      "strongId": "88b0165c-0c7c-423a-949d-0171baa354c2",
+      "strongName": "Glute Kickback (Machine)",
+      "exerciseKey": "glute-kickback-machine"
+    },
+    {
+      "strongId": "fe4e5949-5f51-4c60-a31f-b45bd9ad8023",
+      "strongName": "Goblet Squat (Kettlebell)",
+      "exerciseKey": "goblet-squat"
+    },
+    {
+      "strongId": "8bf32b15-4ee9-49bc-87ae-57284e44b433",
+      "strongName": "Good Morning (Barbell)",
+      "exerciseKey": "good-morning-barbell"
+    },
+    {
+      "strongId": "2c0cfe0e-df0b-4e85-946c-8acef3ffa7e5",
+      "strongName": "Hack Squat",
+      "exerciseKey": "hack-squat"
+    },
+    {
+      "strongId": "894a9de0-b8f3-4f7f-8102-6bf9cc8c5c6e",
+      "strongName": "Hack Squat (Barbell)",
+      "exerciseKey": "hack-squat-barbell"
+    },
+    {
+      "strongId": "16828b87-c3bb-4641-ab68-c0c0d38d6bea",
+      "strongName": "Hammer Curl (Band)",
+      "exerciseKey": "hammer-curl-band"
+    },
+    {
+      "strongId": "4a304d9a-9a7a-440f-bb9a-9fd5cde6b590",
+      "strongName": "Hammer Curl (Cable)",
+      "exerciseKey": "hammer-curl-cable"
+    },
+    {
+      "strongId": "ce7c6a7f-38f6-4783-93ff-cd3fb5e66260",
+      "strongName": "Hammer Curl (Dumbbell)",
+      "exerciseKey": "hammer-curl"
+    },
+    {
+      "strongId": "3395ead5-bd9b-4d02-be71-dc2b1ee5f16d",
+      "strongName": "Handstand Push Up",
+      "exerciseKey": "handstand-push-up"
+    },
+    {
+      "strongId": "a5fbd395-09b3-473e-95a2-7275750666ad",
+      "strongName": "Hang Clean (Barbell)",
+      "exerciseKey": "hang-clean-barbell"
+    },
+    {
+      "strongId": "e6336f12-c2ff-4a76-b64e-3a1bc0d0a528",
+      "strongName": "Hang Snatch (Barbell)",
+      "exerciseKey": "hang-snatch-barbell"
+    },
+    {
+      "strongId": "4d2ae4fc-1cf8-4d12-b1f6-b1d607b9b8b4",
+      "strongName": "Hanging Knee Raise",
+      "exerciseKey": "hanging-knee-raise"
+    },
+    {
+      "strongId": "8eba64e0-5e50-4f85-ad66-7faeb87e5bb0",
+      "strongName": "Hanging Leg Raise",
+      "exerciseKey": "hanging-leg-raise"
+    },
+    {
+      "strongId": "29b69647-23ec-4da7-9299-89b8eb1fbf68",
+      "strongName": "High Knee Skips",
+      "exerciseKey": "high-knee-skips"
+    },
+    {
+      "strongId": "8ca4f443-ff3b-4501-97da-47c0792b2e40",
+      "strongName": "Hiking",
+      "exerciseKey": "hiking"
+    },
+    {
+      "strongId": "bad7dcc2-fac7-4ec8-8c03-1ec6bb471069",
+      "strongName": "Hip Abductor (Machine)",
+      "exerciseKey": "hip-abduction"
+    },
+    {
+      "strongId": "312f0076-00f8-47a4-9365-38c80b99cb91",
+      "strongName": "Hip Adductor (Machine)",
+      "exerciseKey": "hip-adductor-machine"
+    },
+    {
+      "strongId": "b76cb4ce-53c9-42f8-b520-6f663ee8546b",
+      "strongName": "Hip Thrust (Barbell)",
+      "exerciseKey": "hip-thrust"
+    },
+    {
+      "strongId": "70192f8e-971a-4c67-ab93-ed05932b24e6",
+      "strongName": "Hip Thrust (Bodyweight)",
+      "exerciseKey": "hip-thrust-bodyweight"
+    },
+    {
+      "strongId": "63d3c1b2-26b5-49bc-9ed9-3ea000e5768d",
+      "strongName": "Incline Bench Press (Barbell)",
+      "exerciseKey": "incline-bench-press-barbell"
+    },
+    {
+      "strongId": "7f6f4c96-4893-4f40-a7f4-2baf53cb3d04",
+      "strongName": "Incline Bench Press (Cable)",
+      "exerciseKey": "incline-bench-press-cable"
+    },
+    {
+      "strongId": "6416d266-c84c-4aa6-a8b0-7582619c1bcb",
+      "strongName": "Incline Bench Press (Dumbbell)",
+      "exerciseKey": "incline-dumbbell-press"
+    },
+    {
+      "strongId": "980cb0df-4ef3-4af7-9333-48ee9f3943ce",
+      "strongName": "Incline Bench Press (Smith Machine)",
+      "exerciseKey": "incline-bench-press-smith-machine"
+    },
+    {
+      "strongId": "b17b3529-a04b-4860-84ea-16b6de4b65cc",
+      "strongName": "Incline Chest Fly (Dumbbell)",
+      "exerciseKey": "incline-chest-fly-dumbbell"
+    },
+    {
+      "strongId": "247fe479-b90c-40a3-baf1-07f3c05ed014",
+      "strongName": "Incline Chest Press (Machine)",
+      "exerciseKey": "incline-chest-press-machine"
+    },
+    {
+      "strongId": "a45a5776-cbfc-4abf-9a05-f5c7d110c8ff",
+      "strongName": "Incline Curl (Dumbbell)",
+      "exerciseKey": "incline-curl-dumbbell"
+    },
+    {
+      "strongId": "ed06489a-f597-4cc1-81d0-eef7804f1fc5",
+      "strongName": "Incline Row (Dumbbell)",
+      "exerciseKey": "chest-supported-row"
+    },
+    {
+      "strongId": "9a999f16-ca2a-47bf-a96c-b4977a6173ff",
+      "strongName": "Inverted Row (Bodyweight)",
+      "exerciseKey": "inverted-row-bodyweight"
+    },
+    {
+      "strongId": "b710665a-f88e-4d31-99bf-5ecb7b5f6500",
+      "strongName": "Iso-Lateral Chest Press (Machine)",
+      "exerciseKey": "iso-lateral-chest-press-machine"
+    },
+    {
+      "strongId": "65e1c38c-2013-40df-9d57-716a7f7f71e1",
+      "strongName": "Iso-Lateral Row (Machine)",
+      "exerciseKey": "iso-lateral-row-machine"
+    },
+    {
+      "strongId": "1ea74f7f-6828-4a9e-8bbb-0c17523ec40a",
+      "strongName": "Jackknife Sit Up",
+      "exerciseKey": "jackknife-sit-up"
+    },
+    {
+      "strongId": "6f3480e3-5172-4499-9bba-a4516698d6b9",
+      "strongName": "Jump Rope",
+      "exerciseKey": "jump-rope"
+    },
+    {
+      "strongId": "e4c5920a-0b6b-485c-9b38-9ec25eaae77b",
+      "strongName": "Jump Shrug (Barbell)",
+      "exerciseKey": "jump-shrug-barbell"
+    },
+    {
+      "strongId": "2de0ec86-52dd-4b20-bae1-375c412adfa6",
+      "strongName": "Jump Squat",
+      "exerciseKey": "jump-squat"
+    },
+    {
+      "strongId": "71bfded1-f19a-418e-8f97-0e23b2e63535",
+      "strongName": "Jumping Jack",
+      "exerciseKey": "jumping-jack"
+    },
+    {
+      "strongId": "74a43a3f-5e0b-43c8-953e-f7e9c7d72986",
+      "strongName": "Kettlebell Swing",
+      "exerciseKey": "kettlebell-swing"
+    },
+    {
+      "strongId": "e676f31d-5fa2-4a61-bed6-af0ff6c17c77",
+      "strongName": "Kettlebell Turkish Get Up",
+      "exerciseKey": "kettlebell-turkish-get-up"
+    },
+    {
+      "strongId": "faa4fd79-b28f-40d9-b528-023a0ae23b26",
+      "strongName": "Kipping Pull Up",
+      "exerciseKey": "kipping-pull-up"
+    },
+    {
+      "strongId": "3ee4f524-773c-453b-bcb9-192f9c6a2efa",
+      "strongName": "Knee Raise (Captain's Chair)",
+      "exerciseKey": "knee-raise-captain-s-chair"
+    },
+    {
+      "strongId": "eff696f8-07e3-4745-aa31-a0def4c93ed1",
+      "strongName": "Kneeling Pulldown (Band)",
+      "exerciseKey": "kneeling-pulldown-band"
+    },
+    {
+      "strongId": "6df7b87b-4467-43b6-9458-6ade61838823",
+      "strongName": "Knees to Elbows",
+      "exerciseKey": "knees-to-elbows"
+    },
+    {
+      "strongId": "b92aa3dd-98e1-4e99-a229-434be54c1ae5",
+      "strongName": "Lat Pulldown (Cable)",
+      "exerciseKey": "lat-pulldown-cable"
+    },
+    {
+      "strongId": "a8121bda-a232-4da2-be80-85bbe05c53d7",
+      "strongName": "Lat Pulldown (Machine)",
+      "exerciseKey": "lat-pulldown-machine"
+    },
+    {
+      "strongId": "b1c68d18-cdc5-466a-96ea-c233473541dc",
+      "strongName": "Lat Pulldown (Single Arm)",
+      "exerciseKey": "lat-pulldown-single-arm"
+    },
+    {
+      "strongId": "2f413df1-9169-4b49-bc97-be82ae29b0a5",
+      "strongName": "Lat Pulldown - Underhand (Band)",
+      "exerciseKey": "lat-pulldown-underhand-band"
+    },
+    {
+      "strongId": "fbd89dfb-0de7-4808-86d7-979d6f35126a",
+      "strongName": "Lat Pulldown - Underhand (Cable)",
+      "exerciseKey": "lat-pulldown-underhand-cable"
+    },
+    {
+      "strongId": "f12e2a9b-02ea-4d38-9127-aa6234786d3a",
+      "strongName": "Lat Pulldown - Wide Grip (Cable)",
+      "exerciseKey": "lat-pulldown"
+    },
+    {
+      "strongId": "d1f2e4d1-2529-4d33-bfd1-3c22b7d99dbd",
+      "strongName": "Lateral Box Jump",
+      "exerciseKey": "lateral-box-jump"
+    },
+    {
+      "strongId": "3a438aef-3262-4b10-af0b-07a17c6694a7",
+      "strongName": "Lateral Raise (Band)",
+      "exerciseKey": "lateral-raise-band"
+    },
+    {
+      "strongId": "091ba495-1623-4578-95f0-5bd1aeebf3e9",
+      "strongName": "Lateral Raise (Cable)",
+      "exerciseKey": "lateral-raise-cable"
+    },
+    {
+      "strongId": "ae345023-155f-4c14-b6e9-fcafc87619e3",
+      "strongName": "Lateral Raise (Dumbbell)",
+      "exerciseKey": "lateral-raise"
+    },
+    {
+      "strongId": "d3f21789-0e0c-4c2a-a633-3617f383a11d",
+      "strongName": "Lateral Raise (Machine)",
+      "exerciseKey": "lateral-raise-machine"
+    },
+    {
+      "strongId": "7d1df88e-8610-495b-83a3-d68aabbfee8a",
+      "strongName": "Leg Extension (Machine)",
+      "exerciseKey": "leg-extension"
+    },
+    {
+      "strongId": "a467f043-c96e-43c8-9133-a33eb8e62ded",
+      "strongName": "Leg Press",
+      "exerciseKey": "leg-press"
+    },
+    {
+      "strongId": "f6e4ceab-9cd9-43ec-8f16-650f8caba2b4",
+      "strongName": "Lunge (Barbell)",
+      "exerciseKey": "lunge-barbell"
+    },
+    {
+      "strongId": "0891014c-f2f0-4883-acdd-6dead68ced8e",
+      "strongName": "Lunge (Bodyweight)",
+      "exerciseKey": "lunge-bodyweight"
+    },
+    {
+      "strongId": "94bd6a11-1ef7-4d52-a373-00200a7a21cb",
+      "strongName": "Lunge (Dumbbell)",
+      "exerciseKey": "lunge-dumbbell"
+    },
+    {
+      "strongId": "b2f5a8c1-b66a-4b4f-8f2a-72fbf578d943",
+      "strongName": "Lying Leg Curl (Machine)",
+      "exerciseKey": "leg-curl"
+    },
+    {
+      "strongId": "d29b9cde-54e4-41df-b3ef-2e7e9bb05806",
+      "strongName": "Mountain Climber",
+      "exerciseKey": "mountain-climber"
+    },
+    {
+      "strongId": "402c550a-194e-4b58-a2ec-b12e5b404547",
+      "strongName": "Muscle Up",
+      "exerciseKey": "muscle-up"
+    },
+    {
+      "strongId": "9d6c15df-f4a9-4e18-92b3-259a8f43a356",
+      "strongName": "Oblique Crunch",
+      "exerciseKey": "oblique-crunch"
+    },
+    {
+      "strongId": "4d563338-f2ed-430d-ae12-ec45482edf20",
+      "strongName": "Overhead Press (Barbell)",
+      "exerciseKey": "overhead-press-barbell"
+    },
+    {
+      "strongId": "45fbc14c-584e-473f-81f3-14ad422906be",
+      "strongName": "Overhead Press (Cable)",
+      "exerciseKey": "overhead-press-cable"
+    },
+    {
+      "strongId": "700ac5e1-6303-4c5d-921e-1007cd0998e5",
+      "strongName": "Overhead Press (Dumbbell)",
+      "exerciseKey": "overhead-press-dumbbell"
+    },
+    {
+      "strongId": "8951200e-5791-4885-bee1-cacac5d08c77",
+      "strongName": "Overhead Press (Smith Machine)",
+      "exerciseKey": "overhead-press-smith-machine"
+    },
+    {
+      "strongId": "c52fe00e-8ae8-4ea6-a287-4903f5c500ce",
+      "strongName": "Overhead Squat (Barbell)",
+      "exerciseKey": "overhead-squat-barbell"
+    },
+    {
+      "strongId": "487e8b08-458f-43da-a9f6-e339c8d548a9",
+      "strongName": "Pec Deck (Machine)",
+      "exerciseKey": "pec-deck"
+    },
+    {
+      "strongId": "2d20bcc4-2a19-4016-9583-f74cdccb1f16",
+      "strongName": "Pendlay Row (Barbell)",
+      "exerciseKey": "pendlay-row-barbell"
+    },
+    {
+      "strongId": "ad292205-db0e-4ced-9cef-f82b8aa243d5",
+      "strongName": "Pistol Squat",
+      "exerciseKey": "pistol-squat"
+    },
+    {
+      "strongId": "943cb841-6157-4021-b842-612bd9f8b4e0",
+      "strongName": "Plank",
+      "exerciseKey": "plank"
+    },
+    {
+      "strongId": "c40d8757-5c97-4543-bc13-5cb87c315bc2",
+      "strongName": "Power Clean",
+      "exerciseKey": "power-clean"
+    },
+    {
+      "strongId": "832eac71-da90-4faa-9031-8875081479d3",
+      "strongName": "Power Snatch (Barbell)",
+      "exerciseKey": "power-snatch-barbell"
+    },
+    {
+      "strongId": "69a4be51-4b3b-4c89-8a54-7e83997f058c",
+      "strongName": "Preacher Curl (Barbell)",
+      "exerciseKey": "preacher-curl"
+    },
+    {
+      "strongId": "815c8007-0c79-4f8d-a2b8-873f7c03be9a",
+      "strongName": "Preacher Curl (Dumbbell)",
+      "exerciseKey": "preacher-curl-dumbbell"
+    },
+    {
+      "strongId": "a8eb5de6-5b77-4e81-adab-0835729506c7",
+      "strongName": "Preacher Curl (Machine)",
+      "exerciseKey": "preacher-curl-machine"
+    },
+    {
+      "strongId": "83d40255-ea20-41de-9e13-d4893c100707",
+      "strongName": "Press Under (Barbell)",
+      "exerciseKey": "press-under-barbell"
+    },
+    {
+      "strongId": "adb75e5a-c873-4f57-bdf0-0043710ba90d",
+      "strongName": "Pull Up",
+      "exerciseKey": "pull-up"
+    },
+    {
+      "strongId": "820ee004-4443-49d3-aeeb-50b0a53298dc",
+      "strongName": "Pull Up (Assisted)",
+      "exerciseKey": "pull-up-assisted"
+    },
+    {
+      "strongId": "f267d09a-c60e-4b29-83d3-d50f00ce88da",
+      "strongName": "Pull Up (Band)",
+      "exerciseKey": "assisted-pull-up"
+    },
+    {
+      "strongId": "1a9537c6-f56a-4d4e-a491-c5c172cfa5ed",
+      "strongName": "Pullover (Dumbbell)",
+      "exerciseKey": "pullover-dumbbell"
+    },
+    {
+      "strongId": "04e2090c-a84e-47a1-81c5-55103b28ed2f",
+      "strongName": "Pullover (Machine)",
+      "exerciseKey": "pullover-machine"
+    },
+    {
+      "strongId": "2506457c-207c-4a15-86b4-281257cb2c4d",
+      "strongName": "Push Press",
+      "exerciseKey": "push-press"
+    },
+    {
+      "strongId": "f0f86563-85fc-49a8-9ec7-f95ddd318ab4",
+      "strongName": "Push Up",
+      "exerciseKey": "push-up"
+    },
+    {
+      "strongId": "e6af1fc0-c961-4e74-a815-61f61e4fe42b",
+      "strongName": "Push Up (Band)",
+      "exerciseKey": "push-up-band"
+    },
+    {
+      "strongId": "b444429e-86ba-4b58-9584-224c9148e0ab",
+      "strongName": "Push Up (Knees)",
+      "exerciseKey": "push-up-knees"
+    },
+    {
+      "strongId": "cffa1438-6d77-4a8d-8493-b8d7529d61ba",
+      "strongName": "Rack Pull (Barbell)",
+      "exerciseKey": "rack-pull-barbell"
+    },
+    {
+      "strongId": "910e476e-c32d-44a8-b0a5-68ee05d72011",
+      "strongName": "Reverse Crunch",
+      "exerciseKey": "reverse-crunch"
+    },
+    {
+      "strongId": "26c6975a-b7f5-4eec-8129-527a07a59d73",
+      "strongName": "Reverse Curl (Band)",
+      "exerciseKey": "reverse-curl-band"
+    },
+    {
+      "strongId": "222b6cd5-87f3-42b7-9a0e-1ab4f4de59ee",
+      "strongName": "Reverse Curl (Barbell)",
+      "exerciseKey": "reverse-curl-barbell"
+    },
+    {
+      "strongId": "e51ee0d8-bfa7-4bcf-b11d-86997a38c298",
+      "strongName": "Reverse Curl (Dumbbell)",
+      "exerciseKey": "reverse-curl-dumbbell"
+    },
+    {
+      "strongId": "56f23487-1b65-4d4e-bcba-9d7a424110ef",
+      "strongName": "Reverse Fly (Cable)",
+      "exerciseKey": "reverse-fly-cable"
+    },
+    {
+      "strongId": "edd6d6dd-2605-414a-bf0d-5ac3e41b8c06",
+      "strongName": "Reverse Fly (Dumbbell)",
+      "exerciseKey": "reverse-fly-dumbbell"
+    },
+    {
+      "strongId": "8dc8a29b-674b-43c9-bf6e-46b95f3414be",
+      "strongName": "Reverse Fly (Machine)",
+      "exerciseKey": "reverse-fly-machine"
+    },
+    {
+      "strongId": "a953b453-9eb2-4c4e-bc55-9962770702f1",
+      "strongName": "Reverse Grip Concentration Curl (Dumbbell)",
+      "exerciseKey": "reverse-grip-concentration-curl-dumbbell"
+    },
+    {
+      "strongId": "3d2c4225-a113-4501-bf6b-abe7503dee9e",
+      "strongName": "Reverse Plank",
+      "exerciseKey": "reverse-plank"
+    },
+    {
+      "strongId": "4bfc4dde-bd3d-4495-920d-eb646764e4de",
+      "strongName": "Romanian Deadlift (Barbell)",
+      "exerciseKey": "romanian-deadlift"
+    },
+    {
+      "strongId": "045d89bc-900c-444f-b72a-3852a05ef78f",
+      "strongName": "Romanian Deadlift (Dumbbell)",
+      "exerciseKey": "romanian-deadlift-dumbbell"
+    },
+    {
+      "strongId": "fbcdaa3f-9dbd-4622-b7bc-6f45e1267feb",
+      "strongName": "Rowing (Machine)",
+      "exerciseKey": "rowing-machine"
+    },
+    {
+      "strongId": "a35d3d7c-6093-47b9-b4dc-939c4d799169",
+      "strongName": "Running",
+      "exerciseKey": "running"
+    },
+    {
+      "strongId": "2a19b409-da25-48de-8205-3fb89f7e95f2",
+      "strongName": "Running (Treadmill)",
+      "exerciseKey": "running-treadmill"
+    },
+    {
+      "strongId": "f56c1c33-30be-4259-8ace-7ffc1bfea1d7",
+      "strongName": "Russian Twist",
+      "exerciseKey": "russian-twist-bodyweight"
+    },
+    {
+      "strongId": "231a78da-13dc-441d-ac31-03d5730e8168",
+      "strongName": "Seated Calf Raise (Machine)",
+      "exerciseKey": "seated-calf-raise-machine"
+    },
+    {
+      "strongId": "4b8c9374-ab32-4912-906a-202ef1b20ea6",
+      "strongName": "Seated Calf Raise (Plate Loaded)",
+      "exerciseKey": "seated-calf-raise"
+    },
+    {
+      "strongId": "c9ef4e7a-2bec-41b1-8e62-b68dc6d81fb2",
+      "strongName": "Seated Leg Curl (Machine)",
+      "exerciseKey": "seated-leg-curl-machine"
+    },
+    {
+      "strongId": "d53099b7-31f3-41fa-99e2-72fdf47c4503",
+      "strongName": "Seated Leg Press (Machine)",
+      "exerciseKey": "seated-leg-press-machine"
+    },
+    {
+      "strongId": "560e513c-9b0f-4375-a02d-464bd35fa054",
+      "strongName": "Seated Overhead Press (Barbell)",
+      "exerciseKey": "shoulder-press"
+    },
+    {
+      "strongId": "5db8f3d7-445e-48bb-bf4b-979b6dfdb1eb",
+      "strongName": "Seated Overhead Press (Dumbbell)",
+      "exerciseKey": "dumbbell-shoulder-press"
+    },
+    {
+      "strongId": "8304df34-df61-423e-a9c9-f0cce6f16428",
+      "strongName": "Seated Palms Up Wrist Curl (Dumbbell)",
+      "exerciseKey": "seated-palms-up-wrist-curl-dumbbell"
+    },
+    {
+      "strongId": "143f848f-3a01-40bd-88d1-613c3a88309e",
+      "strongName": "Seated Row (Cable)",
+      "exerciseKey": "seated-cable-row"
+    },
+    {
+      "strongId": "534954cb-6720-45c4-bf63-a0766142ec6c",
+      "strongName": "Seated Row (Machine)",
+      "exerciseKey": "seated-row-machine"
+    },
+    {
+      "strongId": "aa185f9c-9341-4260-b007-593e9b74db10",
+      "strongName": "Seated Wide-Grip Row (Cable)",
+      "exerciseKey": "seated-wide-grip-row-cable"
+    },
+    {
+      "strongId": "a3f1d57d-da0e-466d-a691-c03695d39418",
+      "strongName": "Shoulder Press (Machine)",
+      "exerciseKey": "shoulder-press-machine"
+    },
+    {
+      "strongId": "caa35db9-e106-4915-840c-e7205f6e7228",
+      "strongName": "Shoulder Press (Plate Loaded)",
+      "exerciseKey": "shoulder-press-plate-loaded"
+    },
+    {
+      "strongId": "ba31414c-4bd8-441b-9e1a-56a68220831b",
+      "strongName": "Shrug (Barbell)",
+      "exerciseKey": "shrug-barbell"
+    },
+    {
+      "strongId": "cbacf25c-6c34-42ec-bcfd-d1941d757dc1",
+      "strongName": "Shrug (Dumbbell)",
+      "exerciseKey": "shrug-dumbbell"
+    },
+    {
+      "strongId": "3e15b3fa-bd04-49ff-a622-633208a2d5df",
+      "strongName": "Shrug (Machine)",
+      "exerciseKey": "shrug-machine"
+    },
+    {
+      "strongId": "f31e19c8-1671-40e4-9089-e341fffe7751",
+      "strongName": "Shrug (Smith Machine)",
+      "exerciseKey": "shrug-smith-machine"
+    },
+    {
+      "strongId": "3b8b97d5-57eb-427c-85b1-4e9222593a97",
+      "strongName": "Side Bend (Band)",
+      "exerciseKey": "side-bend-band"
+    },
+    {
+      "strongId": "1edc86ac-5c4a-46b4-a29b-04141141ff6b",
+      "strongName": "Side Bend (Cable)",
+      "exerciseKey": "side-bend-cable"
+    },
+    {
+      "strongId": "79f272a9-2d7f-4df0-ac75-d7d973f1df25",
+      "strongName": "Side Bend (Dumbbell)",
+      "exerciseKey": "side-bend-dumbbell"
+    },
+    {
+      "strongId": "7837fcaf-0843-491c-bd3b-cf579cfa06b0",
+      "strongName": "Side Plank",
+      "exerciseKey": "side-plank"
+    },
+    {
+      "strongId": "acaf0999-7976-48f6-a5fc-80c0d6d7bb67",
+      "strongName": "Single Leg Bridge",
+      "exerciseKey": "single-leg-bridge"
+    },
+    {
+      "strongId": "784d5217-cc1a-4267-bb18-4bf611903c49",
+      "strongName": "Sit Up",
+      "exerciseKey": "sit-up"
+    },
+    {
+      "strongId": "95aef7e7-e232-4442-851e-2231e7b54317",
+      "strongName": "Skating",
+      "exerciseKey": "skating"
+    },
+    {
+      "strongId": "1a7d1360-cffb-4972-9e6b-70e7e5d3e6f0",
+      "strongName": "Skiing",
+      "exerciseKey": "skiing"
+    },
+    {
+      "strongId": "e5fa68c3-8f89-4fb8-a8b6-907c1feaceae",
+      "strongName": "Skullcrusher (Barbell)",
+      "exerciseKey": "skull-crusher"
+    },
+    {
+      "strongId": "237314ed-ead7-406c-92db-a20de0a9166f",
+      "strongName": "Skullcrusher (Dumbbell)",
+      "exerciseKey": "skullcrusher-dumbbell"
+    },
+    {
+      "strongId": "e7b25cc7-693d-4ede-991f-62d32d3d69e9",
+      "strongName": "Snatch (Barbell)",
+      "exerciseKey": "snatch-barbell"
+    },
+    {
+      "strongId": "fc0eaffb-e4d3-433e-8c19-7be1fdb0b0dc",
+      "strongName": "Snatch Pull (Barbell)",
+      "exerciseKey": "snatch-pull-barbell"
+    },
+    {
+      "strongId": "9f09ef70-ea15-49a1-b6a2-0d197e95bf3b",
+      "strongName": "Snowboarding",
+      "exerciseKey": "snowboarding"
+    },
+    {
+      "strongId": "04ac1091-7b4c-44fb-9d00-b04fe3c5b1a1",
+      "strongName": "Split Jerk (Barbell)",
+      "exerciseKey": "split-jerk-barbell"
+    },
+    {
+      "strongId": "0f71ee4c-5dad-4617-8e8d-e8e133afc2c1",
+      "strongName": "Squat (Band)",
+      "exerciseKey": "squat-band"
+    },
+    {
+      "strongId": "b2f5a2de-c684-4e94-a6e5-581e0695fcac",
+      "strongName": "Squat (Barbell)",
+      "exerciseKey": "back-squat"
+    },
+    {
+      "strongId": "752349b3-8813-48d2-b315-6ef4d9b4f3cb",
+      "strongName": "Squat (Bodyweight)",
+      "exerciseKey": "squat-bodyweight"
+    },
+    {
+      "strongId": "3e1394a8-dba1-45d0-bc5c-d6100f8f8154",
+      "strongName": "Squat (Dumbbell)",
+      "exerciseKey": "squat-dumbbell"
+    },
+    {
+      "strongId": "99afdf73-0e2f-4f2d-a10d-90299196b0db",
+      "strongName": "Squat (Machine)",
+      "exerciseKey": "squat-machine"
+    },
+    {
+      "strongId": "a61773eb-580a-448f-9b03-90aeb3c7c83d",
+      "strongName": "Squat (Smith Machine)",
+      "exerciseKey": "squat-smith-machine"
+    },
+    {
+      "strongId": "9bf68e10-b954-4d3d-af8b-c3ca21587a70",
+      "strongName": "Squat Row (Band)",
+      "exerciseKey": "squat-row-band"
+    },
+    {
+      "strongId": "2abae8f2-b1cc-497c-af76-1c8e88ae3bf6",
+      "strongName": "Standing Calf Raise (Barbell)",
+      "exerciseKey": "standing-calf-raise-barbell"
+    },
+    {
+      "strongId": "4a52954f-4354-4da6-81be-fff191f29f91",
+      "strongName": "Standing Calf Raise (Bodyweight)",
+      "exerciseKey": "standing-calf-raise-bodyweight"
+    },
+    {
+      "strongId": "ae9f2bee-8c45-4257-b7f2-da345cbf950c",
+      "strongName": "Standing Calf Raise (Dumbbell)",
+      "exerciseKey": "standing-calf-raise-dumbbell"
+    },
+    {
+      "strongId": "213bd3ef-1207-4fd8-acdd-cb224a8b42a7",
+      "strongName": "Standing Calf Raise (Machine)",
+      "exerciseKey": "standing-calf-raise"
+    },
+    {
+      "strongId": "14263e88-13d4-4582-9b18-423a36631645",
+      "strongName": "Standing Calf Raise (Smith Machine)",
+      "exerciseKey": "standing-calf-raise-smith-machine"
+    },
+    {
+      "strongId": "b1827979-7d0e-4d6f-8498-c0b3fb1fe187",
+      "strongName": "Step-up",
+      "exerciseKey": "step-up"
+    },
+    {
+      "strongId": "80057986-ebf3-4adb-8674-d48932b693c6",
+      "strongName": "Stiff Leg Deadlift (Barbell)",
+      "exerciseKey": "stiff-leg-deadlift-barbell"
+    },
+    {
+      "strongId": "00980376-619e-4898-b27c-1dde6faa0daa",
+      "strongName": "Stiff Leg Deadlift (Dumbbell)",
+      "exerciseKey": "stiff-leg-deadlift-dumbbell"
+    },
+    {
+      "strongId": "8b2c7487-28e7-48c3-8d07-1ad83cc7133c",
+      "strongName": "Straight Leg Deadlift (Band)",
+      "exerciseKey": "straight-leg-deadlift-band"
+    },
+    {
+      "strongId": "a4689d35-a845-4ad0-aa79-84005b8b9d27",
+      "strongName": "Stretching",
+      "exerciseKey": "stretching"
+    },
+    {
+      "strongId": "5974b925-ff0f-40de-9385-e6ccac763ddd",
+      "strongName": "Strict Military Press (Barbell)",
+      "exerciseKey": "strict-military-press-barbell"
+    },
+    {
+      "strongId": "bed21e75-8a87-4711-847e-7e1b86a74436",
+      "strongName": "Sumo Deadlift (Barbell)",
+      "exerciseKey": "sumo-deadlift-barbell"
+    },
+    {
+      "strongId": "b49268bb-058e-4139-ac4a-555d1d5ae9fb",
+      "strongName": "Sumo Deadlift High Pull (Barbell)",
+      "exerciseKey": "sumo-deadlift-high-pull-barbell"
+    },
+    {
+      "strongId": "39c9395b-da2d-40d6-b18c-2a3ab22e3a50",
+      "strongName": "Superman",
+      "exerciseKey": "superman"
+    },
+    {
+      "strongId": "a8225200-79fb-4131-8ea2-c4df95f56c77",
+      "strongName": "Swimming",
+      "exerciseKey": "swimming"
+    },
+    {
+      "strongId": "f21ec917-6402-4938-8103-128fd49d13aa",
+      "strongName": "T Bar Row",
+      "exerciseKey": "t-bar-row"
+    },
+    {
+      "strongId": "d32f8c6a-e498-4fc0-b18d-5ce16680a63c",
+      "strongName": "Thruster (Barbell)",
+      "exerciseKey": "thruster-barbell"
+    },
+    {
+      "strongId": "55afec19-d074-4083-a554-085f533b62ce",
+      "strongName": "Thruster (Kettlebell)",
+      "exerciseKey": "thruster-kettlebell"
+    },
+    {
+      "strongId": "e0b1aa09-f4c5-4ead-95de-03a2f7530c87",
+      "strongName": "Toes To Bar",
+      "exerciseKey": "toes-to-bar"
+    },
+    {
+      "strongId": "42695e60-4dd7-41a0-8233-c26b1fe24e6e",
+      "strongName": "Torso Rotation (Machine)",
+      "exerciseKey": "torso-rotation-machine"
+    },
+    {
+      "strongId": "57f573f8-f797-4483-bc1f-5911a70463a6",
+      "strongName": "Trap Bar Deadlift",
+      "exerciseKey": "trap-bar-deadlift"
+    },
+    {
+      "strongId": "607432af-4556-41ed-8746-a2e6c60e76a1",
+      "strongName": "Triceps Dip",
+      "exerciseKey": "dip"
+    },
+    {
+      "strongId": "933a3dbf-b9c2-40f9-852f-cd2b26dd9eb1",
+      "strongName": "Triceps Dip (Assisted)",
+      "exerciseKey": "triceps-dip-assisted"
+    },
+    {
+      "strongId": "91efd24a-9acc-40dd-8f7f-16a1ab175f33",
+      "strongName": "Triceps Extension",
+      "exerciseKey": "triceps-extension"
+    },
+    {
+      "strongId": "d3560a25-828f-4f33-8624-6fc4875d3cca",
+      "strongName": "Triceps Extension (Barbell)",
+      "exerciseKey": "triceps-extension-barbell"
+    },
+    {
+      "strongId": "3718fbd6-a0e5-4d56-bb92-10feb3600156",
+      "strongName": "Triceps Extension (Cable)",
+      "exerciseKey": "triceps-extension-cable"
+    },
+    {
+      "strongId": "9df1b947-b05e-4250-84c4-b8dd55348ff6",
+      "strongName": "Triceps Extension (Dumbbell)",
+      "exerciseKey": "overhead-triceps-extension"
+    },
+    {
+      "strongId": "0973c5dd-5b62-4e9e-a15e-114cb94f440d",
+      "strongName": "Triceps Extension (Machine)",
+      "exerciseKey": "triceps-extension-machine"
+    },
+    {
+      "strongId": "79a42fc3-5363-48d7-9fba-8e643d50bbd4",
+      "strongName": "Triceps Pushdown (Cable - Straight Bar)",
+      "exerciseKey": "triceps-pushdown"
+    },
+    {
+      "strongId": "45a0a30b-ffb7-4722-a0cf-2889baa7ff9a",
+      "strongName": "Upright Row (Barbell)",
+      "exerciseKey": "upright-row-barbell"
+    },
+    {
+      "strongId": "b8b33683-ce46-4392-8be5-207fe8e605bd",
+      "strongName": "Upright Row (Cable)",
+      "exerciseKey": "upright-row-cable"
+    },
+    {
+      "strongId": "61f41123-654e-45b9-9c3b-fd4cbea9eaf0",
+      "strongName": "Upright Row (Dumbbell)",
+      "exerciseKey": "upright-row-dumbbell"
+    },
+    {
+      "strongId": "accd839b-4059-451c-b310-1c8aa2739ace",
+      "strongName": "V Up",
+      "exerciseKey": "v-up"
+    },
+    {
+      "strongId": "f7c7a96b-7586-4e2b-b972-3e9e821d8f95",
+      "strongName": "Walking",
+      "exerciseKey": "walking"
+    },
+    {
+      "strongId": "bea508fb-4d1b-4320-8b34-20502785c6ec",
+      "strongName": "Wide Pull Up",
+      "exerciseKey": "wide-pull-up"
+    },
+    {
+      "strongId": "f33643ea-6cc0-4966-8b1a-b87696015072",
+      "strongName": "Wrist Roller",
+      "exerciseKey": "wrist-roller"
+    },
+    {
+      "strongId": "6de1b274-f023-49f2-94ec-add08373b7e4",
+      "strongName": "Yoga",
+      "exerciseKey": "yoga"
+    },
+    {
+      "strongId": "1263f3d4-4ab0-4b59-a65a-626516ca87ab",
+      "strongName": "Zercher Squat (Barbell)",
+      "exerciseKey": "zercher-squat-barbell"
+    }
+  ]
+}

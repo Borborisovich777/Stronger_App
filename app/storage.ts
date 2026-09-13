@@ -1,3 +1,5 @@
+import type { ExerciseTracking, ExerciseWeightMode } from "./exercise-tracking";
+
 export type WeightUnit = "kg" | "lb";
 export type TrainingGoal = "strength" | "muscle" | "fitness";
 
@@ -5,6 +7,8 @@ export type WorkoutSet = {
   id: string;
   weightKg: number;
   reps: number;
+  durationSeconds?: number;
+  distanceMeters?: number;
   completed: boolean;
   completedAt?: number;
 };
@@ -13,17 +17,24 @@ export type WorkoutExercise = {
   id: string;
   exerciseKey: string;
   name: string;
+  tracking?: ExerciseTracking;
+  weightMode?: ExerciseWeightMode;
   restSeconds: number;
   sets: WorkoutSet[];
+  notes?: string;
 };
 
 export type RoutineExercise = {
   id: string;
   exerciseKey: string;
   name: string;
+  tracking?: ExerciseTracking;
+  weightMode?: ExerciseWeightMode;
   targetSets: number;
   targetWeightKg: number;
   targetReps: number;
+  targetDurationSeconds?: number;
+  targetDistanceMeters?: number;
   restSeconds: number;
 };
 
@@ -41,6 +52,7 @@ export type WorkoutSession = {
   finishedAt?: number;
   sourceRoutineId?: string;
   restEndsAt?: number;
+  notes?: string;
   exercises: WorkoutExercise[];
 };
 
@@ -169,20 +181,27 @@ function hasValidStrongerDataShape(value: unknown): boolean {
   const candidate = value as Partial<StrongerData>;
   const settings = candidate.settings as Partial<StrongerSettings> | undefined;
   const validNumber = (number: unknown) => typeof number === "number" && Number.isFinite(number) && number >= 0;
+  const optionalNumber = (number: unknown) => number === undefined || validNumber(number);
+  const optionalTracking = (tracking: unknown) => tracking === undefined || ["weight-reps", "reps", "duration", "distance-duration"].includes(tracking as string);
+  const optionalWeightMode = (mode: unknown) => mode === undefined || ["external", "added", "assistance"].includes(mode as string);
+  const optionalText = (text: unknown) => text === undefined || typeof text === "string";
   const validSet = (set: unknown) => {
     if (!set || typeof set !== "object") return false;
     const item = set as Partial<WorkoutSet>;
-    return typeof item.id === "string" && validNumber(item.weightKg) && validNumber(item.reps) && typeof item.completed === "boolean";
+    return typeof item.id === "string" && validNumber(item.weightKg) && validNumber(item.reps) && typeof item.completed === "boolean"
+      && optionalNumber(item.durationSeconds) && optionalNumber(item.distanceMeters);
   };
   const validWorkoutExercise = (exercise: unknown) => {
     if (!exercise || typeof exercise !== "object") return false;
     const item = exercise as Partial<WorkoutExercise>;
-    return typeof item.id === "string" && typeof item.exerciseKey === "string" && typeof item.name === "string" && validNumber(item.restSeconds) && Array.isArray(item.sets) && item.sets.every(validSet);
+    return typeof item.id === "string" && typeof item.exerciseKey === "string" && typeof item.name === "string" && validNumber(item.restSeconds) && Array.isArray(item.sets) && item.sets.every(validSet)
+      && optionalText(item.notes) && optionalTracking(item.tracking) && optionalWeightMode(item.weightMode);
   };
   const validSession = (session: unknown) => {
     if (!session || typeof session !== "object") return false;
     const item = session as Partial<WorkoutSession>;
-    return typeof item.id === "string" && typeof item.name === "string" && /^\d{4}-\d{2}-\d{2}$/.test(item.workoutDate ?? "") && validNumber(item.startedAt) && Array.isArray(item.exercises) && item.exercises.every(validWorkoutExercise);
+    return typeof item.id === "string" && typeof item.name === "string" && /^\d{4}-\d{2}-\d{2}$/.test(item.workoutDate ?? "") && validNumber(item.startedAt) && Array.isArray(item.exercises) && item.exercises.every(validWorkoutExercise)
+      && optionalText(item.notes);
   };
   const validRoutine = (routine: unknown) => {
     if (!routine || typeof routine !== "object") return false;
@@ -190,7 +209,8 @@ function hasValidStrongerDataShape(value: unknown): boolean {
     return typeof item.id === "string" && typeof item.name === "string" && Array.isArray(item.exercises) && item.exercises.every((exercise) => {
       if (!exercise || typeof exercise !== "object") return false;
       const routineItem = exercise as Partial<RoutineExercise>;
-      return typeof routineItem.id === "string" && typeof routineItem.exerciseKey === "string" && typeof routineItem.name === "string" && validNumber(routineItem.targetSets) && validNumber(routineItem.targetWeightKg) && validNumber(routineItem.targetReps) && validNumber(routineItem.restSeconds);
+      return typeof routineItem.id === "string" && typeof routineItem.exerciseKey === "string" && typeof routineItem.name === "string" && validNumber(routineItem.targetSets) && validNumber(routineItem.targetWeightKg) && validNumber(routineItem.targetReps) && validNumber(routineItem.restSeconds)
+        && optionalNumber(routineItem.targetDurationSeconds) && optionalNumber(routineItem.targetDistanceMeters) && optionalTracking(routineItem.tracking) && optionalWeightMode(routineItem.weightMode);
     });
   };
   return (
@@ -312,7 +332,8 @@ export function completedSets(session: WorkoutSession): WorkoutSet[] {
 }
 
 export function workoutVolumeKg(session: WorkoutSession): number {
-  return completedSets(session).reduce((total, set) => total + set.weightKg * set.reps, 0);
+  return session.exercises.reduce((total, exercise) => total + ((exercise.tracking && exercise.tracking !== "weight-reps") || exercise.weightMode === "assistance" ? 0
+    : exercise.sets.filter((set) => set.completed).reduce((volume, set) => volume + set.weightKg * set.reps, 0)), 0);
 }
 
 export function estimatedOneRepMax(weightKg: number, reps: number): number {

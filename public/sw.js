@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v5-exercise-library";
+const CACHE_VERSION = "v8-strong-catalog";
 const CACHE_PREFIX = "stronger-";
 const SHELL_CACHE = `${CACHE_PREFIX}shell-${CACHE_VERSION}`;
 const ASSET_CACHE = `${CACHE_PREFIX}assets-${CACHE_VERSION}`;
@@ -91,7 +91,9 @@ async function networkFirstNavigation(request) {
 }
 
 async function cacheFirst(request) {
-  const cachedResponse = await caches.match(request);
+  const cachedResponse =
+    await caches.match(request, { cacheName: ASSET_CACHE }) ||
+    await caches.match(request, { cacheName: RUNTIME_CACHE });
   if (cachedResponse) {
     return cachedResponse;
   }
@@ -119,6 +121,7 @@ async function staleWhileRevalidate(event, request) {
 function isImmutableAsset(url, request) {
   return (
     url.pathname.startsWith(`${APP_PATH}assets/`) ||
+    url.pathname.startsWith(`${APP_PATH}exercises/`) ||
     request.destination === "font" ||
     /\.[a-f0-9]{8,}\.(?:css|js|woff2?)$/i.test(url.pathname)
   );
@@ -158,44 +161,60 @@ self.addEventListener("fetch", (event) => {
   }
 });
 
+async function cacheUrls(urls) {
+  const cache = await caches.open(RUNTIME_CACHE);
+  let nextIndex = 0;
+  let cached = 0;
+  let failed = 0;
+
+  // Keep the initial illustration download from overwhelming a mobile connection.
+  await Promise.all(Array.from({ length: Math.min(6, urls.length) }, async () => {
+    while (nextIndex < urls.length) {
+      const request = new Request(urls[nextIndex++], { credentials: "same-origin" });
+      try {
+        const existing = await cache.match(request) ||
+          await caches.match(request, { cacheName: ASSET_CACHE });
+        if (!existing) {
+          const response = await fetch(request);
+          if (!isCacheable(response)) {
+            throw new Error(`Uncacheable response for ${request.url}`);
+          }
+          await cache.put(request, response);
+        }
+        cached += 1;
+      } catch {
+        failed += 1;
+      }
+    }
+  }));
+
+  return { cached, failed };
+}
+
 self.addEventListener("message", (event) => {
   if (event.data?.type !== "CACHE_URLS" || !Array.isArray(event.data.urls)) {
     return;
   }
 
-  const urls = [...new Set(event.data.urls)].flatMap((value) => {
+  const urls = [...new Set(event.data.urls.flatMap((value) => {
     if (typeof value !== "string") {
       return [];
     }
 
     try {
-      const url = new URL(value, self.location.origin);
+      const url = new URL(value, SCOPE_URL);
       return url.origin === self.location.origin && url.pathname.startsWith(APP_PATH) ? [url.href] : [];
     } catch {
       return [];
     }
-  });
+  }))];
 
-  const work = caches
-    .open(RUNTIME_CACHE)
-    .then((cache) =>
-      Promise.allSettled(
-        urls.map(async (url) => {
-          const request = new Request(url, { credentials: "same-origin" });
-          const response = await fetch(request);
-          if (!isCacheable(response)) {
-            throw new Error(`Uncacheable response for ${url}`);
-          }
-
-          await cache.put(request, response);
-        }),
-      ),
-    )
-    .then((results) => {
+  const work = cacheUrls(urls)
+    .catch(() => ({ cached: 0, failed: urls.length }))
+    .then((result) => {
       event.ports[0]?.postMessage({
         type: "CACHE_URLS_RESULT",
-        cached: results.filter((result) => result.status === "fulfilled").length,
-        failed: results.filter((result) => result.status === "rejected").length,
+        ...result,
       });
     });
 

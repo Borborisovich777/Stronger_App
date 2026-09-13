@@ -5,7 +5,6 @@ import {
   completedSets,
   createDefaultData,
   CustomExercise,
-  estimatedOneRepMax,
   formatWeight,
   loadData,
   makeId,
@@ -23,6 +22,12 @@ import {
   workoutVolumeKg,
 } from "./storage";
 import { BUILT_IN_EXERCISES } from "./exercises";
+import { EXERCISE_IMAGE_VERSION, EXERCISE_MEDIA } from "./exercise-media";
+import { ExerciseGuide, ExercisePhoto } from "./ExerciseGuide";
+import { findExistingExercise, matchesExerciseSearch, mergeExerciseCatalog } from "./exercise-search";
+import { defaultSetMeasurements, ExerciseTracking, ExerciseWeightMode, findPreviousSet, formatDistanceKm, formatSetDuration, isTimedTracking, resolveExerciseTracking, resolveExerciseWeightMode, SetMeasurements, SetMeasurementUpdate, setCompletionError, summarizeTrackedSets } from "./exercise-tracking";
+import { ArrowDown, ArrowUp, CaretDown, Check, ClockCounterClockwise, DotsThree, Barbell, GearSix, NotePencil, Plus, Timer, Trash, TrendUp, X } from "@phosphor-icons/react";
+import { createPreviewData } from "./preview-data";
 
 type Tab = "workout" | "history" | "progress" | "settings";
 type ThemeMode = "light" | "dark";
@@ -36,6 +41,10 @@ type ExerciseDraft = {
   sets: number;
   weight: number;
   reps: number;
+  tracking: ExerciseTracking;
+  weightMode: ExerciseWeightMode;
+  durationSeconds?: number;
+  distanceMeters?: number;
   restSeconds: number;
 };
 
@@ -45,15 +54,20 @@ const EMPTY_EXERCISE: ExerciseDraft = {
   sets: 3,
   weight: 0,
   reps: 8,
+  tracking: "weight-reps",
+  weightMode: "external",
   restSeconds: 90,
 };
 
-type ExerciseCatalogCategory = "Custom" | "Saved" | "Chest" | "Back" | "Shoulders" | "Arms" | "Legs" | "Core";
+type ExerciseCatalogCategory = "Custom" | "Saved" | "Chest" | "Back" | "Shoulders" | "Arms" | "Legs" | "Core" | "Cardio" | "Full body" | "Olympic" | "Mobility";
 
 type ExerciseCatalogItem = {
   exerciseKey: string;
   name: string;
   category: ExerciseCatalogCategory;
+  aliases?: string[];
+  tracking?: ExerciseTracking;
+  weightMode?: ExerciseWeightMode;
 };
 
 type CreateCustomExerciseResult = {
@@ -70,14 +84,14 @@ const EXERCISE_CATEGORY_ORDER: ExerciseCatalogCategory[] = [
   "Arms",
   "Legs",
   "Core",
+  "Full body",
+  "Cardio",
+  "Olympic",
+  "Mobility",
 ];
 
 function cleanExerciseName(value: string): string {
   return value.normalize("NFKC").trim().replace(/\s+/gu, " ");
-}
-
-function normalizedExerciseName(value: string): string {
-  return cleanExerciseName(value).toLocaleLowerCase("en-US");
 }
 
 function localDateKey(date = new Date()): string {
@@ -199,6 +213,16 @@ function NumericInput({
         commit(normalized);
       }}
       onBlur={() => setDraft(formatNumericDraft(commit(draft), emptyWhenZero))}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          const inputs = Array.from(event.currentTarget.closest(".set-row")?.querySelectorAll<HTMLInputElement>("input") ?? []);
+          const next = inputs[inputs.indexOf(event.currentTarget) + 1];
+          if (next && enterKeyHint === "next") next.focus();
+          else event.currentTarget.blur();
+        }
+        if (event.key === "Escape") event.currentTarget.blur();
+      }}
     />
   );
 }
@@ -206,10 +230,6 @@ function NumericInput({
 function formatVolume(volumeKg: number, unit: WeightUnit): string {
   const converted = unit === "kg" ? volumeKg : volumeKg * 2.2046226218;
   return `${Math.round(converted).toLocaleString("en-US")} ${unit}`;
-}
-
-function sameExercise(first: string, second: string): boolean {
-  return first.trim().toLocaleLowerCase() === second.trim().toLocaleLowerCase();
 }
 
 function moveItem<T>(items: T[], from: number, to: number): T[] {
@@ -220,21 +240,18 @@ function moveItem<T>(items: T[], from: number, to: number): T[] {
   return next;
 }
 
-function previousSet(
-  history: WorkoutSession[],
-  exerciseKey: string,
-  exerciseName: string,
-  setIndex: number,
-) {
-  for (const session of history) {
-    const exercise = session.exercises.find(
-      (item) => item.exerciseKey === exerciseKey || sameExercise(item.name, exerciseName),
-    );
-    if (!exercise) continue;
-    const comparable = exercise.sets[setIndex] ?? [...exercise.sets].reverse().find((set) => set.completed);
-    if (comparable?.completed) return comparable;
-  }
-  return undefined;
+function exerciseTracking(exercise: WorkoutExercise | RoutineExercise | ExerciseCatalogItem): ExerciseTracking {
+  const catalog = BUILT_IN_EXERCISES.find((item) => item.exerciseKey === exercise.exerciseKey) as ExerciseCatalogItem | undefined;
+  return resolveExerciseTracking(exercise, catalog?.tracking);
+}
+
+function exerciseWeightMode(exercise: WorkoutExercise | RoutineExercise | ExerciseCatalogItem): ExerciseWeightMode {
+  const catalog = BUILT_IN_EXERCISES.find((item) => item.exerciseKey === exercise.exerciseKey) as ExerciseCatalogItem | undefined;
+  return resolveExerciseWeightMode(exercise, catalog?.weightMode);
+}
+
+function weightLabel(mode: ExerciseWeightMode, unit: WeightUnit): string {
+  return `${mode === "assistance" ? "Assistance " : mode === "added" ? "Added " : ""}${unit}`;
 }
 
 function routineToWorkout(
@@ -252,13 +269,17 @@ function routineToWorkout(
       id: makeId("session-exercise"),
       exerciseKey: exercise.exerciseKey,
       name: exercise.name,
+      tracking: exerciseTracking(exercise),
+      weightMode: exerciseWeightMode(exercise),
       restSeconds: exercise.restSeconds,
       sets: Array.from({ length: exercise.targetSets }, (_, index) => {
-        const previous = previousSet(history, exercise.exerciseKey, exercise.name, index);
+        const previous = findPreviousSet(history, exercise.exerciseKey, index, exerciseTracking(exercise), exerciseWeightMode(exercise));
         return {
           id: makeId("set"),
           weightKg: previous?.weightKg ?? exercise.targetWeightKg,
           reps: previous?.reps ?? exercise.targetReps,
+          durationSeconds: previous?.durationSeconds ?? exercise.targetDurationSeconds,
+          distanceMeters: previous?.distanceMeters ?? exercise.targetDistanceMeters,
           completed: false,
         };
       }),
@@ -266,21 +287,118 @@ function routineToWorkout(
   };
 }
 
+function DurationInput({ id, label, value, onChange, compact = false }: {
+  id: string; label: string; value: number; onChange: (seconds: number) => void; compact?: boolean;
+}) {
+  const seconds = Math.max(0, Math.round(value));
+  return <span className="duration-input" role="group" aria-label={label}>
+    <label className="visually-hidden" htmlFor={`${id}-minutes`}>Minutes for {label}</label>
+    <NumericInput id={`${id}-minutes`} className={compact ? "set-input" : undefined} value={Math.floor(seconds / 60)} max={9999} enterKeyHint="next" onValueChange={(minutes) => onChange(Math.round(minutes) * 60 + seconds % 60)} />
+    <span aria-hidden="true">:</span>
+    <label className="visually-hidden" htmlFor={`${id}-seconds`}>Seconds for {label}</label>
+    <NumericInput id={`${id}-seconds`} className={compact ? "set-input" : undefined} value={seconds % 60} max={59} enterKeyHint="done" onValueChange={(remainder) => onChange(Math.floor(seconds / 60) * 60 + Math.round(remainder))} />
+  </span>;
+}
+
+function MeasurementFields({ id, label, tracking, weightMode, unit, values, onUpdate, compact = false }: {
+  id: string; label: string; tracking: ExerciseTracking; weightMode: ExerciseWeightMode; unit: WeightUnit;
+  values: SetMeasurements; onUpdate: (update: SetMeasurementUpdate) => void; compact?: boolean;
+}) {
+  return <>
+    {tracking === "weight-reps" ? <label className="measurement-field" htmlFor={`weight-${id}`}>
+      <span className={compact ? "visually-hidden" : undefined}>{weightLabel(weightMode, unit)}{compact ? ` for ${label}` : ""}</span>
+      <NumericInput id={`weight-${id}`} className={compact ? "set-input" : undefined} decimal enterKeyHint="next" value={toDisplayWeight(values.weightKg, unit)} onValueChange={(weight) => onUpdate({ weightKg: toKilograms(weight, unit) })} />
+    </label> : null}
+    {tracking === "distance-duration" ? <label className="measurement-field" htmlFor={`distance-${id}`}>
+      <span className={compact ? "visually-hidden" : undefined}>Distance (km){compact ? ` for ${label}` : ""}</span>
+      <NumericInput id={`distance-${id}`} className={compact ? "set-input" : undefined} decimal enterKeyHint="next" value={(values.distanceMeters ?? 0) / 1000} onValueChange={(km) => onUpdate({ distanceMeters: Math.round(km * 1000) })} />
+    </label> : null}
+    {isTimedTracking(tracking) ? <div className="measurement-field duration-field">
+      {compact ? null : <span>Time (min:sec)</span>}
+      <DurationInput id={`duration-${id}`} label={label} value={values.durationSeconds ?? 0} compact={compact} onChange={(durationSeconds) => onUpdate({ durationSeconds })} />
+    </div> : <label className="measurement-field" htmlFor={`reps-${id}`}>
+      <span className={compact ? "visually-hidden" : undefined}>{compact ? `Repetitions for ${label}` : "Reps"}</span>
+      <NumericInput id={`reps-${id}`} className={compact ? "set-input" : undefined} emptyWhenZero enterKeyHint="done" max={999} value={values.reps} onValueChange={(reps) => onUpdate({ reps: Math.round(reps) })} />
+    </label>}
+  </>;
+}
+
+function formatMeasurements(set: SetMeasurements, tracking: ExerciseTracking, unit: WeightUnit, weightMode: ExerciseWeightMode): string {
+  if (tracking === "distance-duration") return set.distanceMeters === undefined && set.durationSeconds === undefined ? "—"
+    : `${formatDistanceKm(set.distanceMeters ?? 0)} km · ${formatSetDuration(set.durationSeconds ?? 0)}`;
+  if (tracking === "duration") return set.durationSeconds === undefined ? "—" : formatSetDuration(set.durationSeconds);
+  if (tracking === "reps") return `${set.reps} reps`;
+  return `${weightMode === "assistance" ? "Assistance " : weightMode === "added" ? "Added " : ""}${formatWeight(set.weightKg, unit)} ${unit} × ${set.reps}`;
+}
+
+function sessionMetric(session: WorkoutSession, unit: WeightUnit): { label: string; value: string } {
+  const volume = workoutVolumeKg(session);
+  if (volume > 0) return { label: "VOLUME", value: formatVolume(volume, unit) };
+  const sets = completedSets(session);
+  const distance = sets.reduce((sum, set) => sum + (set.distanceMeters ?? 0), 0);
+  if (distance > 0) return { label: "DISTANCE", value: `${formatDistanceKm(distance)} km` };
+  const duration = sets.reduce((sum, set) => sum + (set.durationSeconds ?? 0), 0);
+  if (duration > 0) return { label: "EXERCISE TIME", value: formatSetDuration(duration) };
+  return { label: "REPS", value: String(sets.reduce((sum, set) => sum + set.reps, 0)) };
+}
+
+type EditableSet = SetMeasurements & { id: string; completed?: boolean };
+
+function SetTable({ sets, exerciseName, tracking, weightMode, unit, onUpdate, onToggle, onRemove, previous, idPrefix = "" }: {
+  sets: EditableSet[];
+  exerciseName: string;
+  tracking: ExerciseTracking;
+  weightMode: ExerciseWeightMode;
+  unit: WeightUnit;
+  onUpdate: (id: string, update: SetMeasurementUpdate) => void;
+  onToggle?: (id: string, timestamp: number) => void;
+  onRemove?: (id: string) => void;
+  previous?: (index: number) => EditableSet | undefined;
+  idPrefix?: string;
+}) {
+  const rowClass = `${previous ? "set-grid" : "set-grid routine-set-grid"} tracking-${tracking}`;
+  return <div className="compact-set-table" aria-label={`${exerciseName} sets`}>
+    <div className={`${rowClass} set-grid-header`} aria-hidden="true">
+      <span>Set</span>{previous ? <span>Previous</span> : null}
+      {tracking === "weight-reps" ? <span>{weightLabel(weightMode, unit)}</span> : null}
+      {tracking === "distance-duration" ? <span>km</span> : null}
+      <span>{isTimedTracking(tracking) ? "min:sec" : "Reps"}</span><span>{onToggle ? <Check size={16} /> : null}</span>
+    </div>
+    <div className="set-list">
+      {sets.map((set, index) => {
+        const prior = previous?.(index);
+        return <div className={`${rowClass} set-row ${set.completed ? "is-done" : ""}`} key={set.id}>
+          <span className="set-number">{index + 1}</span>
+          {previous ? <span className="previous-value">{prior ? formatMeasurements(prior, tracking, unit, weightMode) : "—"}</span> : null}
+          <MeasurementFields id={`${idPrefix}${set.id}`} label={`${exerciseName}, set ${index + 1}`} tracking={tracking} weightMode={weightMode} unit={unit} values={set} compact onUpdate={(update) => onUpdate(set.id, update)} />
+          {onToggle ? <button className="complete-button" type="button" aria-pressed={Boolean(set.completed)} aria-label={`${set.completed ? "Mark" : "Complete"} ${exerciseName} set ${index + 1}${set.completed ? " incomplete" : ""}`} onClick={() => onToggle(set.id, Date.now())}><Check size={19} weight="bold" aria-hidden="true" /></button> : onRemove ? <button className="routine-remove-set" type="button" aria-label={`Remove ${exerciseName} set ${index + 1}`} disabled={sets.length <= 1} onClick={() => onRemove(set.id)}><X size={16} aria-hidden="true" /></button> : <span />}
+        </div>;
+      })}
+    </div>
+  </div>;
+}
+
 function duplicateWorkout(session: WorkoutSession): WorkoutSession {
   return {
     id: makeId("workout"),
     name: session.name,
+    notes: session.notes,
     workoutDate: localDateKey(),
     startedAt: Date.now(),
     exercises: session.exercises.map((exercise) => ({
       id: makeId("session-exercise"),
       exerciseKey: exercise.exerciseKey,
       name: exercise.name,
+      notes: exercise.notes,
+      tracking: exerciseTracking(exercise),
+      weightMode: exerciseWeightMode(exercise),
       restSeconds: exercise.restSeconds,
       sets: exercise.sets.map((set) => ({
         id: makeId("set"),
         weightKg: set.weightKg,
         reps: set.reps,
+        durationSeconds: set.durationSeconds,
+        distanceMeters: set.distanceMeters,
         completed: false,
       })),
     })),
@@ -413,7 +531,7 @@ function ExercisePicker({
   onCreateCustom,
 }: {
   catalog: ExerciseCatalogItem[];
-  onSelect: (exercise: ExerciseCatalogItem) => void;
+  onSelect?: (exercise: ExerciseCatalogItem) => void;
   onCreateCustom: (name: string) => CreateCustomExerciseResult;
 }) {
   const [query, setQuery] = useState("");
@@ -421,14 +539,31 @@ function ExercisePicker({
   const [creatingCustom, setCreatingCustom] = useState(false);
   const [customName, setCustomName] = useState("");
   const [customStatus, setCustomStatus] = useState("");
+  const [preview, setPreview] = useState<ExerciseCatalogItem | null>(null);
+  const previewHeading = useRef<HTMLHeadingElement>(null);
+  const previewTrigger = useRef<HTMLButtonElement | null>(null);
+  const customToggle = useRef<HTMLButtonElement>(null);
+  const pickerScroll = useRef(0);
+
+  useEffect(() => {
+    if (preview) previewHeading.current?.focus();
+  }, [preview]);
+
+  function closePreview() {
+    setPreview(null);
+    window.requestAnimationFrame(() => {
+      previewTrigger.current?.focus({ preventScroll: true });
+      const sheet = previewTrigger.current?.closest(".modal-sheet");
+      if (sheet) sheet.scrollTop = pickerScroll.current;
+    });
+  }
 
   const availableCategories = EXERCISE_CATEGORY_ORDER.filter((candidate) =>
     catalog.some((exercise) => exercise.category === candidate),
   );
-  const normalizedQuery = normalizedExerciseName(query);
   const filtered = catalog.filter((exercise) =>
     (category === "All" || exercise.category === category) &&
-    (!normalizedQuery || normalizedExerciseName(exercise.name).includes(normalizedQuery)),
+    matchesExerciseSearch(exercise, query, EXERCISE_MEDIA[exercise.exerciseKey]),
   );
 
   function saveCustomExercise() {
@@ -440,11 +575,26 @@ function ExercisePicker({
     const result = onCreateCustom(name);
     setCustomStatus(result.created ? `${result.exercise.name} was saved to your library.` : `${result.exercise.name} is already in your library.`);
     setCustomName("");
-    onSelect(result.exercise);
+    if (onSelect) onSelect(result.exercise);
+    else {
+      setCreatingCustom(false);
+      setQuery("");
+      setCategory(result.exercise.category);
+      window.requestAnimationFrame(() => customToggle.current?.focus());
+    }
   }
 
   return (
-    <div className="exercise-picker">
+    <>
+      {preview ? (
+        <div className="exercise-picker-preview">
+          <button className="small-button" type="button" onClick={closePreview}>Back to exercises</button>
+          <h3 className="exercise-preview-title" ref={previewHeading} tabIndex={-1}>{preview.name}</h3>
+          <ExerciseGuide exerciseKey={preview.exerciseKey} name={preview.name} category={preview.category} />
+          {onSelect ? <button className="primary-button full-width" type="button" onClick={() => onSelect(preview)}>Select exercise</button> : null}
+        </div>
+      ) : null}
+    <div className="exercise-picker" hidden={preview !== null}>
       <div className="exercise-picker-controls">
         <label className="exercise-picker-search">
           <span>Search exercises</span>
@@ -478,6 +628,7 @@ function ExercisePicker({
 
       <div className="custom-exercise-panel">
         <button
+          ref={customToggle}
           className="secondary-button full-width"
           type="button"
           aria-expanded={creatingCustom}
@@ -509,7 +660,7 @@ function ExercisePicker({
                 autoComplete="off"
               />
             </label>
-            <button className="primary-button" type="button" onClick={saveCustomExercise}>Save and select</button>
+            <button className="primary-button" type="button" onClick={saveCustomExercise}>{onSelect ? "Save and select" : "Save exercise"}</button>
           </div>
         ) : null}
         {customStatus ? <p className="field-status" role="status">{customStatus}</p> : null}
@@ -519,19 +670,26 @@ function ExercisePicker({
         {filtered.length} {filtered.length === 1 ? "exercise" : "exercises"}
       </p>
       {filtered.length ? (
-        <div className="exercise-option-list">
+        <ul className="exercise-option-list">
           {filtered.map((exercise) => (
+            <li className="exercise-option-row" key={exercise.exerciseKey}>
             <button
               className="exercise-option"
-              key={exercise.exerciseKey}
               type="button"
-              onClick={() => onSelect(exercise)}
+              aria-label={`View ${exercise.name} demonstration`}
+              onClick={(event) => {
+                previewTrigger.current = event.currentTarget;
+                pickerScroll.current = event.currentTarget.closest(".modal-sheet")?.scrollTop ?? 0;
+                setPreview(exercise);
+              }}
             >
-              <span><strong>{exercise.name}</strong><small>{exercise.category}</small></span>
-              <span aria-hidden="true">›</span>
+              <ExercisePhoto exerciseKey={exercise.exerciseKey} name={exercise.name} thumbnail />
+              <span className="exercise-option-copy"><strong>{exercise.name}</strong><small>{exercise.category} · {EXERCISE_MEDIA[exercise.exerciseKey]?.equipment ?? "Personal"}</small><span className="exercise-view-label">View movement</span></span>
             </button>
+            {onSelect ? <button className="exercise-quick-add" type="button" aria-label={`Select ${exercise.name}`} onClick={() => onSelect(exercise)}>Add</button> : null}
+            </li>
           ))}
-        </div>
+        </ul>
       ) : (
         <div className="exercise-picker-empty" role="status">
           <strong>No matching exercise</strong>
@@ -539,6 +697,7 @@ function ExercisePicker({
         </div>
       )}
     </div>
+    </>
   );
 }
 
@@ -561,6 +720,11 @@ function ExerciseModal({
     ...EMPTY_EXERCISE,
     restSeconds: defaultRestSeconds,
   });
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (draft.exerciseKey) formRef.current?.querySelector<HTMLInputElement>("#custom-exercise-sets")?.focus();
+  }, [draft.exerciseKey]);
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -576,20 +740,27 @@ function ExerciseModal({
 
   return (
     <Modal eyebrow="EXERCISE LIBRARY" title={draft.exerciseKey ? "Set exercise targets" : "Choose an exercise"} onClose={onClose} initialFocus="close">
-      <form className="form-stack" onSubmit={submit}>
+      <form className="form-stack" onSubmit={submit} ref={formRef}>
         {!draft.exerciseKey ? (
           <ExercisePicker
             catalog={catalog}
             onCreateCustom={onCreateCustom}
-            onSelect={(exercise) => setDraft((current) => ({
-              ...current,
-              exerciseKey: exercise.exerciseKey,
-              name: exercise.name,
-            }))}
+            onSelect={(exercise) => {
+              const tracking = exerciseTracking(exercise);
+              const values = defaultSetMeasurements(tracking);
+              setDraft((current) => ({
+                ...current, exerciseKey: exercise.exerciseKey, name: exercise.name,
+                tracking, weightMode: exerciseWeightMode(exercise),
+                sets: tracking === "distance-duration" ? 1 : 3,
+                weight: 0, reps: values.reps,
+                durationSeconds: values.durationSeconds, distanceMeters: values.distanceMeters,
+              }));
+            }}
           />
         ) : (
           <>
             <div className="selected-exercise-summary">
+              <ExercisePhoto key={draft.exerciseKey} exerciseKey={draft.exerciseKey} name={draft.name} thumbnail />
               <span><small>SELECTED EXERCISE</small><strong>{draft.name}</strong></span>
               <button className="small-button" type="button" onClick={() => setDraft((current) => ({ ...current, exerciseKey: "", name: "" }))}>Change</button>
             </div>
@@ -598,14 +769,14 @@ function ExerciseModal({
                 Sets
                 <NumericInput id="custom-exercise-sets" value={draft.sets} min={1} max={20} onValueChange={(sets) => setDraft((current) => ({ ...current, sets }))} />
               </label>
-              <label htmlFor="custom-exercise-weight">
-                {unit.toUpperCase()}
-                <NumericInput id="custom-exercise-weight" decimal value={draft.weight} onValueChange={(weight) => setDraft((current) => ({ ...current, weight }))} />
-              </label>
-              <label htmlFor="custom-exercise-reps">
-                Reps
-                <NumericInput id="custom-exercise-reps" emptyWhenZero value={draft.reps} max={999} onValueChange={(reps) => setDraft((current) => ({ ...current, reps }))} />
-              </label>
+              <MeasurementFields id="custom-exercise" label={draft.name} tracking={draft.tracking} weightMode={draft.weightMode} unit={unit}
+                values={{ weightKg: toKilograms(draft.weight, unit), reps: draft.reps, durationSeconds: draft.durationSeconds, distanceMeters: draft.distanceMeters }}
+                onUpdate={(update) => setDraft((current) => ({ ...current,
+                  ...(update.weightKg !== undefined ? { weight: toDisplayWeight(update.weightKg, unit) } : {}),
+                  ...(update.reps !== undefined ? { reps: update.reps } : {}),
+                  ...(update.durationSeconds !== undefined ? { durationSeconds: update.durationSeconds } : {}),
+                  ...(update.distanceMeters !== undefined ? { distanceMeters: update.distanceMeters } : {}),
+                }))} />
               <label>
                 Rest
                 <select value={draft.restSeconds} onChange={(event) => setDraft({ ...draft, restSeconds: Number(event.target.value) })}>
@@ -640,6 +811,7 @@ function RoutineEditor({
 }) {
   const [draft, setDraft] = useState<Routine>(() => structuredClone(initialRoutine));
   const [addingExercise, setAddingExercise] = useState(false);
+  const [menuId, setMenuId] = useState<string | null>(null);
 
   function updateExercise(index: number, update: Partial<RoutineExercise>) {
     setDraft((current) => ({
@@ -663,15 +835,21 @@ function RoutineEditor({
   }
 
   function addCatalogExercise(exercise: ExerciseCatalogItem) {
+    const tracking = exerciseTracking(exercise);
+    const values = defaultSetMeasurements(tracking);
     setDraft((current) => ({
       ...current,
       exercises: [...current.exercises, {
         id: makeId("routine-exercise"),
         exerciseKey: exercise.exerciseKey,
         name: exercise.name,
-        targetSets: 3,
+        tracking,
+        weightMode: exerciseWeightMode(exercise),
+        targetSets: tracking === "distance-duration" ? 1 : 3,
         targetWeightKg: 0,
-        targetReps: 8,
+        targetReps: values.reps,
+        targetDurationSeconds: values.durationSeconds,
+        targetDistanceMeters: values.distanceMeters,
         restSeconds: defaultRestSeconds,
       }],
     }));
@@ -679,30 +857,37 @@ function RoutineEditor({
   }
 
   return (
-    <Modal eyebrow="ROUTINE BUILDER" title={initialRoutine.exercises.length ? "Edit routine" : "New routine"} onClose={onClose} wide>
+    <Modal title={initialRoutine.exercises.length ? "Edit template" : "New template"} onClose={onClose} wide>
       <form className="form-stack" onSubmit={submit}>
         <label>
-          Routine name
+          Template name
           <input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="e.g. Upper body" />
         </label>
 
         <div className="routine-editor-list">
           {draft.exercises.map((exercise, index) => (
             <article className="routine-editor-row" key={exercise.id}>
-              <div className="routine-editor-title">
-                <span className="set-number">{index + 1}</span>
-                <input aria-label={`Exercise ${index + 1} name`} value={exercise.name} onChange={(event) => updateExercise(index, { name: event.target.value })} />
+              <div className="compact-routine-header">
+                <h3>{exercise.name}</h3>
+                <button className="exercise-menu-button" type="button" aria-label={`Template actions for ${exercise.name}`} aria-expanded={menuId === exercise.id} onClick={() => setMenuId(menuId === exercise.id ? null : exercise.id)}><DotsThree size={23} weight="bold" aria-hidden="true" /></button>
               </div>
-              <div className="form-grid four-columns compact-fields">
+              {menuId === exercise.id ? <div className="routine-exercise-menu">
+                <label>Exercise name<input aria-label={`Exercise ${index + 1} name`} value={exercise.name} onChange={(event) => updateExercise(index, { name: event.target.value })} /></label>
+                <div className="row-actions"><button type="button" className="small-button" disabled={index === 0} onClick={() => setDraft({ ...draft, exercises: moveItem(draft.exercises, index, index - 1) })}><ArrowUp size={15} aria-hidden="true" /> Move up</button>
+                <button type="button" className="small-button" disabled={index === draft.exercises.length - 1} onClick={() => setDraft({ ...draft, exercises: moveItem(draft.exercises, index, index + 1) })}><ArrowDown size={15} aria-hidden="true" /> Move down</button>
+                <button type="button" className="small-button danger-text" onClick={() => setDraft({ ...draft, exercises: draft.exercises.filter((_, exerciseIndex) => exerciseIndex !== index) })}>Remove</button></div>
+              </div> : null}
+              <div className={`form-grid four-columns compact-fields tracking-${exerciseTracking(exercise)}`}>
                 <label htmlFor={`routine-${exercise.id}-sets`}>Sets<NumericInput id={`routine-${exercise.id}-sets`} value={exercise.targetSets} min={1} max={20} onValueChange={(targetSets) => updateExercise(index, { targetSets })} /></label>
-                <label htmlFor={`routine-${exercise.id}-weight`}>{unit.toUpperCase()}<NumericInput id={`routine-${exercise.id}-weight`} decimal value={toDisplayWeight(exercise.targetWeightKg, unit)} onValueChange={(weight) => updateExercise(index, { targetWeightKg: toKilograms(weight, unit) })} /></label>
-                <label htmlFor={`routine-${exercise.id}-reps`}>Reps<NumericInput id={`routine-${exercise.id}-reps`} emptyWhenZero value={exercise.targetReps} max={999} onValueChange={(targetReps) => updateExercise(index, { targetReps })} /></label>
+                <MeasurementFields id={`routine-${exercise.id}`} label={exercise.name} tracking={exerciseTracking(exercise)} weightMode={exerciseWeightMode(exercise)} unit={unit}
+                  values={{ weightKg: exercise.targetWeightKg, reps: exercise.targetReps, durationSeconds: exercise.targetDurationSeconds, distanceMeters: exercise.targetDistanceMeters }}
+                  onUpdate={(update) => updateExercise(index, {
+                    ...(update.weightKg !== undefined ? { targetWeightKg: update.weightKg } : {}),
+                    ...(update.reps !== undefined ? { targetReps: update.reps } : {}),
+                    ...(update.durationSeconds !== undefined ? { targetDurationSeconds: update.durationSeconds } : {}),
+                    ...(update.distanceMeters !== undefined ? { targetDistanceMeters: update.distanceMeters } : {}),
+                  })} />
                 <label>Rest<select value={exercise.restSeconds} onChange={(event) => updateExercise(index, { restSeconds: Number(event.target.value) })}>{REST_DURATION_OPTIONS.map((seconds) => <option key={seconds} value={seconds}>{formatRestOption(seconds)}</option>)}</select></label>
-              </div>
-              <div className="row-actions">
-                <button type="button" className="small-button" disabled={index === 0} onClick={() => setDraft({ ...draft, exercises: moveItem(draft.exercises, index, index - 1) })}>Move up</button>
-                <button type="button" className="small-button" disabled={index === draft.exercises.length - 1} onClick={() => setDraft({ ...draft, exercises: moveItem(draft.exercises, index, index + 1) })}>Move down</button>
-                <button type="button" className="small-button danger-text" onClick={() => setDraft({ ...draft, exercises: draft.exercises.filter((_, exerciseIndex) => exerciseIndex !== index) })}>Remove</button>
               </div>
             </article>
           ))}
@@ -721,7 +906,7 @@ function RoutineEditor({
             + Add exercise
           </button>
         )}
-        <button className="primary-button" type="submit">Save routine</button>
+        <button className="primary-button" type="submit">Save template</button>
       </form>
     </Modal>
   );
@@ -751,7 +936,7 @@ function AppHeader({
       </button>
       <div className="topbar-actions">
         {activeWorkout ? <span className="timer-pill" aria-label={`Workout time ${formatDuration(elapsed)}`}>{formatDuration(elapsed)}</span> : null}
-        <button className="round-button" type="button" onClick={onOpenSettings} aria-label="Open settings">⚙</button>
+        <button className="round-button" type="button" onClick={onOpenSettings} aria-label="Open settings"><GearSix size={19} aria-hidden="true" /></button>
       </div>
     </header>
   );
@@ -768,15 +953,22 @@ function EmptyState({ title, copy }: { title: string; copy: string }) {
 }
 
 export default function StrongerApp() {
-  const [data, setData] = useState<StrongerData>(() => createDefaultData());
-  const [hydrated, setHydrated] = useState(false);
+  const [previewMode] = useState(() => import.meta.env.DEV && new URLSearchParams(window.location.search).get("preview") === "compact");
+  const [data, setData] = useState<StrongerData>(() => previewMode ? createPreviewData() : createDefaultData());
+  const [hydrated, setHydrated] = useState(previewMode);
   const [tab, setTab] = useState<Tab>("workout");
   const [now, setNow] = useState(() => Date.now());
   const [message, setMessage] = useState("");
   const [editingWorkout, setEditingWorkout] = useState(false);
+  const [workoutMinimized, setWorkoutMinimized] = useState(false);
+  const [showWorkoutMenu, setShowWorkoutMenu] = useState(false);
+  const [exerciseAction, setExerciseAction] = useState<{ id: string; view: "menu" | "edit" | "reorder" | "notes" | "rest" } | null>(null);
+  const [showHistoryMenu, setShowHistoryMenu] = useState(false);
   const [showBlankWorkout, setShowBlankWorkout] = useState(false);
   const [blankName, setBlankName] = useState("Workout");
   const [showExerciseModal, setShowExerciseModal] = useState(false);
+  const [showExerciseLibrary, setShowExerciseLibrary] = useState(false);
+  const [movementGuide, setMovementGuide] = useState<ExerciseCatalogItem | null>(null);
   const [routineDraft, setRoutineDraft] = useState<Routine | null>(null);
   const [historyDetail, setHistoryDetail] = useState<WorkoutSession | null>(null);
   const [summary, setSummary] = useState<WorkoutSession | null>(null);
@@ -793,36 +985,22 @@ export default function StrongerApp() {
   const unit = data.settings.unit;
 
   const exerciseCatalog = useMemo(() => {
-    const exercises: ExerciseCatalogItem[] = [];
-    const names = new Set<string>();
-    const keys = new Set<string>();
-    const add = (exercise: ExerciseCatalogItem) => {
-      const normalizedName = normalizedExerciseName(exercise.name);
-      if (!normalizedName || names.has(normalizedName) || keys.has(exercise.exerciseKey)) return;
-      names.add(normalizedName);
-      keys.add(exercise.exerciseKey);
-      exercises.push(exercise);
-    };
-
-    BUILT_IN_EXERCISES.forEach(add);
-    data.customExercises.forEach((exercise) => add({ ...exercise, category: "Custom" }));
-    data.routines.forEach((routine) => routine.exercises.forEach((exercise) => add({
+    const savedExercises: ExerciseCatalogItem[] = [
+      ...data.routines.flatMap((routine) => routine.exercises),
+      ...(data.activeWorkout?.exercises ?? []),
+      ...data.history.flatMap((session) => session.exercises),
+    ].map((exercise) => ({
       exerciseKey: exercise.exerciseKey,
       name: exercise.name,
       category: "Saved",
-    })));
-    if (data.activeWorkout) {
-      data.activeWorkout.exercises.forEach((exercise) => add({
-        exerciseKey: exercise.exerciseKey,
-        name: exercise.name,
-        category: "Saved",
-      }));
-    }
-    data.history.forEach((session) => session.exercises.forEach((exercise) => add({
-      exerciseKey: exercise.exerciseKey,
-      name: exercise.name,
-      category: "Saved",
-    })));
+      tracking: exerciseTracking(exercise),
+      weightMode: exerciseWeightMode(exercise),
+    }));
+    const exercises = mergeExerciseCatalog<ExerciseCatalogItem>(
+      BUILT_IN_EXERCISES,
+      data.customExercises.map((exercise) => ({ ...exercise, category: "Custom" })),
+      savedExercises,
+    );
 
     return exercises.sort((first, second) => {
       const categoryDifference = EXERCISE_CATEGORY_ORDER.indexOf(first.category) - EXERCISE_CATEGORY_ORDER.indexOf(second.category);
@@ -834,7 +1012,7 @@ export default function StrongerApp() {
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme = theme;
     try {
-      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+      if (!previewMode) window.localStorage.setItem(THEME_STORAGE_KEY, theme);
     } catch {
       // Theme still applies for this session if localStorage is unavailable.
     }
@@ -842,13 +1020,14 @@ export default function StrongerApp() {
       "content",
       theme === "dark" ? "#171a18" : "#f3f1e9",
     );
-  }, [theme]);
+  }, [theme, previewMode]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-  }, [tab, activeWorkout?.id]);
+  }, [tab, activeWorkout?.id, workoutMinimized]);
 
   useEffect(() => {
+    if (previewMode) return;
     let cancelled = false;
     loadData()
       .then((saved) => {
@@ -866,12 +1045,12 @@ export default function StrongerApp() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [previewMode]);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || previewMode) return;
     void saveData(data).catch(() => setMessage("This change could not be saved. Check your available iPhone storage."));
-  }, [data, hydrated]);
+  }, [data, hydrated, previewMode]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -923,7 +1102,10 @@ export default function StrongerApp() {
             return false;
           }
         });
-      registration.active?.postMessage({ type: "CACHE_URLS", urls });
+      const exerciseImageUrls = Object.values(EXERCISE_MEDIA).flatMap((media) =>
+        media.images.map((path) => new URL(`${appBase}${path}?v=${EXERCISE_IMAGE_VERSION}`, window.location.origin).href),
+      );
+      registration.active?.postMessage({ type: "CACHE_URLS", urls: [...urls, ...exerciseImageUrls] });
     }).catch(() => {
       // Logging remains available even if the offline shell cannot register.
     });
@@ -960,21 +1142,23 @@ export default function StrongerApp() {
     );
   }, [data.history, historySearch]);
 
+  const selectedProgressExercise = data.history.flatMap((session) => session.exercises)
+    .find((exercise) => exercise.exerciseKey === effectiveSelectedExerciseKey);
+  const selectedProgressTracking = selectedProgressExercise ? exerciseTracking(selectedProgressExercise) : "weight-reps";
+  const selectedProgressWeightMode = selectedProgressExercise ? exerciseWeightMode(selectedProgressExercise) : "external";
   const progressRecords = useMemo(() => {
     if (!effectiveSelectedExerciseKey) return [];
     return [...data.history].reverse().flatMap((session) => {
       const exercise = session.exercises.find((item) => item.exerciseKey === effectiveSelectedExerciseKey);
-      if (!exercise) return [];
-      const sets = exercise.sets.filter((set) => set.completed && set.reps > 0);
-      if (!sets.length) return [];
-      return [{
-        session,
-        bestWeightKg: Math.max(...sets.map((set) => set.weightKg)),
-        bestEstimatedKg: Math.max(...sets.map((set) => estimatedOneRepMax(set.weightKg, set.reps))),
-        volumeKg: sets.reduce((total, set) => total + set.weightKg * set.reps, 0),
-      }];
+      if (!exercise || exerciseTracking(exercise) !== selectedProgressTracking || exerciseWeightMode(exercise) !== selectedProgressWeightMode) return [];
+      const metrics = summarizeTrackedSets(exercise.sets, selectedProgressTracking, selectedProgressWeightMode);
+      if (!metrics.setCount) return [];
+      const trendValue = selectedProgressTracking === "distance-duration" ? metrics.totalDistanceMeters
+        : selectedProgressTracking === "duration" ? metrics.bestDurationSeconds
+          : selectedProgressTracking === "reps" ? metrics.bestReps : metrics.bestWeightKg;
+      return [{ session, ...metrics, trendValue }];
     });
-  }, [data.history, effectiveSelectedExerciseKey]);
+  }, [data.history, effectiveSelectedExerciseKey, selectedProgressTracking, selectedProgressWeightMode]);
 
   function updateActive(update: (workout: WorkoutSession) => WorkoutSession) {
     setData((current) => current.activeWorkout
@@ -987,12 +1171,13 @@ export default function StrongerApp() {
     setData((current) => ({ ...current, activeWorkout: workout }));
     setTab("workout");
     setEditingWorkout(false);
+    setWorkoutMinimized(false);
     setMessage(`${workout.name} is ready.`);
   }
 
   function createCustomExercise(rawName: string): CreateCustomExerciseResult {
     const name = cleanExerciseName(rawName).slice(0, 80);
-    const existing = exerciseCatalog.find((exercise) => normalizedExerciseName(exercise.name) === normalizedExerciseName(name));
+    const existing = findExistingExercise(exerciseCatalog, name);
     if (existing) {
       setMessage(`${existing.name} already exists, so it was selected.`);
       return { exercise: existing, created: false };
@@ -1036,11 +1221,15 @@ export default function StrongerApp() {
         id: makeId("session-exercise"),
         exerciseKey: draft.exerciseKey,
         name: draft.name,
+        tracking: draft.tracking,
+        weightMode: draft.weightMode,
         restSeconds: draft.restSeconds,
         sets: Array.from({ length: draft.sets }, () => ({
           id: makeId("set"),
           weightKg: toKilograms(draft.weight, unit),
           reps: draft.reps,
+          durationSeconds: draft.durationSeconds,
+          distanceMeters: draft.distanceMeters,
           completed: false,
         })),
       }],
@@ -1065,7 +1254,7 @@ export default function StrongerApp() {
     updateActive((workout) => ({ ...workout, exercises: workout.exercises.filter((item) => item.id !== exercise.id) }));
   }
 
-  function updateSet(exerciseId: string, setId: string, update: { weightKg?: number; reps?: number }) {
+  function updateSet(exerciseId: string, setId: string, update: SetMeasurementUpdate) {
     updateActive((workout) => ({
       ...workout,
       exercises: workout.exercises.map((exercise) => exercise.id === exerciseId
@@ -1074,15 +1263,19 @@ export default function StrongerApp() {
     }));
   }
 
-  function toggleSet(exercise: WorkoutExercise, setId: string) {
+  function toggleSet(exercise: WorkoutExercise, setId: string, timestamp: number) {
     const target = exercise.sets.find((set) => set.id === setId);
     if (!target) return;
-    if (!target.completed && target.reps <= 0) {
-      setMessage("Enter at least 1 rep before completing this set.");
-      document.getElementById(`reps-${setId}`)?.focus();
+    const tracking = exerciseTracking(exercise);
+    const error = setCompletionError(target, tracking);
+    if (!target.completed && error) {
+      setMessage(error);
+      const field = isTimedTracking(tracking)
+        ? (target.durationSeconds ?? 0) <= 0 ? `duration-${setId}-minutes` : `distance-${setId}`
+        : `reps-${setId}`;
+      document.getElementById(field)?.focus();
       return;
     }
-    const timestamp = Date.now();
     updateActive((workout) => ({
       ...workout,
       restEndsAt: target.completed
@@ -1103,11 +1296,14 @@ export default function StrongerApp() {
 
   function addSet(exercise: WorkoutExercise) {
     const last = exercise.sets.at(-1);
+    const defaults = defaultSetMeasurements(exerciseTracking(exercise));
     updateExercise(exercise.id, {
       sets: [...exercise.sets, {
         id: makeId("set"),
         weightKg: last?.weightKg ?? 0,
-        reps: last?.reps ?? 8,
+        reps: last?.reps ?? defaults.reps,
+        durationSeconds: last?.durationSeconds ?? defaults.durationSeconds,
+        distanceMeters: last?.distanceMeters ?? defaults.distanceMeters,
         completed: false,
       }],
     });
@@ -1137,8 +1333,9 @@ export default function StrongerApp() {
       return { ...current, activeWorkout: null, history: [finished, ...current.history] };
     });
     setEditingWorkout(false);
+    setWorkoutMinimized(false);
     setSummary(finished);
-    void requestPersistentStorage();
+    if (!previewMode) void requestPersistentStorage();
     window.setTimeout(() => {
       finishingRef.current = false;
     }, 500);
@@ -1166,7 +1363,7 @@ export default function StrongerApp() {
       };
     });
     setRoutineDraft(null);
-    setMessage("Routine saved.");
+    setMessage(`${routine.name} template saved.`);
   }
 
   function deleteRoutine(routine: Routine) {
@@ -1216,7 +1413,7 @@ export default function StrongerApp() {
       const replacement = normalizeStrongerData(wrapped);
       if (!replacement) throw new Error("Invalid Stronger backup");
       if (!window.confirm("Replace the exercise library, routines, workouts, history, and settings on this installation with this backup? This cannot be merged or undone.")) return;
-      await saveData(replacement);
+      if (!previewMode) await saveData(replacement);
       setData(replacement);
       setTab("workout");
       setMessage("Backup restored.");
@@ -1245,21 +1442,39 @@ export default function StrongerApp() {
   const restRemaining = activeWorkout?.restEndsAt
     ? Math.max(0, Math.ceil((activeWorkout.restEndsAt - now) / 1000))
     : null;
-  const exerciseDoneCount = activeWorkout?.exercises.filter(
-    (exercise) => exercise.sets.length > 0 && exercise.sets.every((set) => set.completed),
-  ).length ?? 0;
   const completedSetCount = activeWorkout ? completedSets(activeWorkout).length : 0;
   const totalSetCount = activeWorkout?.exercises.reduce((total, exercise) => total + exercise.sets.length, 0) ?? 0;
-  const progressPercent = totalSetCount ? Math.round((completedSetCount / totalSetCount) * 100) : 0;
+  const isLogging = tab === "workout" && Boolean(activeWorkout) && !workoutMinimized;
+  const actionExercise = activeWorkout?.exercises.find((exercise) => exercise.id === exerciseAction?.id);
+  const actionExerciseIndex = activeWorkout?.exercises.findIndex((exercise) => exercise.id === exerciseAction?.id) ?? -1;
   const latestProgress = progressRecords.at(-1);
   const previousProgress = progressRecords.at(-2);
   const newBest = latestProgress && previousProgress
-    ? latestProgress.bestWeightKg > Math.max(...progressRecords.slice(0, -1).map((record) => record.bestWeightKg))
+    ? selectedProgressWeightMode === "assistance" && selectedProgressTracking === "weight-reps"
+      ? latestProgress.trendValue < Math.min(...progressRecords.slice(0, -1).map((record) => record.trendValue))
+      : latestProgress.trendValue > Math.max(...progressRecords.slice(0, -1).map((record) => record.trendValue))
     : false;
+  const trendLabel = selectedProgressTracking === "distance-duration" ? "Distance"
+    : selectedProgressTracking === "duration" ? "Longest set"
+      : selectedProgressTracking === "reps" ? "Best reps"
+        : selectedProgressWeightMode === "assistance" ? "Lowest assistance"
+          : selectedProgressWeightMode === "added" ? "Best added weight" : "Best weight";
+  const formatTrend = (value: number) => selectedProgressTracking === "distance-duration" ? `${formatDistanceKm(value)} km`
+    : selectedProgressTracking === "duration" ? formatSetDuration(value)
+      : selectedProgressTracking === "reps" ? String(value) : `${formatWeight(value, unit)} ${unit}`;
+  const bestTrend = progressRecords.length ? selectedProgressWeightMode === "assistance" && selectedProgressTracking === "weight-reps"
+    ? Math.min(...progressRecords.map((record) => record.trendValue))
+    : Math.max(...progressRecords.map((record) => record.trendValue)) : 0;
+  const totalTrackedSets = progressRecords.reduce((total, record) => total + record.setCount, 0);
+  const totalTrackedReps = progressRecords.reduce((total, record) => total + record.totalReps, 0);
+  const totalTrackedTime = progressRecords.reduce((total, record) => total + record.totalDurationSeconds, 0);
 
   return (
-    <div className="app-shell">
-      <AppHeader activeWorkout={activeWorkout} now={now} onOpenSettings={() => setTab("settings")} />
+    <div className={`app-shell ${isLogging ? "is-logging" : ""}`}>
+      {isLogging ? <header className="topbar compact-workout-toolbar">
+        <div className="topbar-actions"><button className="workout-minimize-button" type="button" aria-label="Minimize workout" onClick={() => setWorkoutMinimized(true)}><CaretDown size={21} aria-hidden="true" /></button><span className="timer-pill" aria-label="Workout timer"><Timer size={18} aria-hidden="true" /><span>Workout</span></span></div>
+        <button className="finish-button" type="button" onClick={finishWorkout}>Finish</button>
+      </header> : <AppHeader activeWorkout={activeWorkout} now={now} onOpenSettings={() => setTab("settings")} />}
 
       {updateReady ? (
         <div className="notice-banner" role="status">
@@ -1270,128 +1485,29 @@ export default function StrongerApp() {
 
       {tab === "workout" ? (
         <main>
-          {activeWorkout ? (
+          {activeWorkout && !workoutMinimized ? (
             <>
               <section className="page-heading workout-heading">
                 <div>
-                  <p className="section-kicker">CURRENT WORKOUT · {formatDate(activeWorkout.workoutDate).toUpperCase()}</p>
-                  {editingWorkout ? (
-                    <input
-                      className="workout-name-input"
-                      aria-label="Workout name"
-                      value={activeWorkout.name}
-                      onChange={(event) => updateActive((workout) => ({ ...workout, name: event.target.value }))}
-                    />
-                  ) : <h1>{activeWorkout.name}</h1>}
+                  {editingWorkout ? <input className="workout-name-input" aria-label="Workout name" value={activeWorkout.name} onChange={(event) => updateActive((workout) => ({ ...workout, name: event.target.value }))} /> : <h1>{activeWorkout.name}</h1>}
+                  <p className="workout-context-line">{formatDuration(Math.max(0, Math.floor((now - activeWorkout.startedAt) / 1000)))} · {completedSetCount}/{totalSetCount} sets</p>
                 </div>
-                <button className="text-button" type="button" onClick={() => setEditingWorkout((value) => !value)}>
-                  {editingWorkout ? "Done" : "Edit"}
-                </button>
+                {editingWorkout ? <button className="text-button" type="button" onClick={() => setEditingWorkout(false)}>Done</button> : <button className="exercise-menu-button" type="button" aria-label="Workout actions" onClick={() => setShowWorkoutMenu(true)}><DotsThree size={24} weight="bold" aria-hidden="true" /></button>}
               </section>
-
-              <section className="progress-card" aria-label="Workout progress">
-                <div className="progress-copy">
-                  <strong>{exerciseDoneCount} of {activeWorkout.exercises.length} exercises complete</strong>
-                  <span>{completedSetCount}/{totalSetCount} sets</span>
-                </div>
-                <div className="progress-track" aria-hidden="true"><span style={{ width: `${progressPercent}%` }} /></div>
-              </section>
-
-              {activeWorkout.exercises.length ? activeWorkout.exercises.map((exercise, exerciseIndex) => {
+              <input className="workout-notes-input" aria-label="Workout notes" placeholder="Notes" value={activeWorkout.notes ?? ""} onChange={(event) => updateActive((workout) => ({ ...workout, notes: event.target.value }))} />
+              {activeWorkout.exercises.length ? activeWorkout.exercises.map((exercise) => {
                 const exerciseComplete = exercise.sets.length > 0 && exercise.sets.every((set) => set.completed);
-                return (
-                  <article className={`exercise-card ${exerciseComplete ? "exercise-complete" : ""}`} key={exercise.id}>
-                    <header className="exercise-header">
-                      <div className="exercise-title-wrap">
-                        <span className="set-number">{exerciseComplete ? "✓" : exerciseIndex + 1}</span>
-                        <div>
-                          <p className="exercise-order">EXERCISE {exerciseIndex + 1}</p>
-                          {editingWorkout ? (
-                            <input
-                              className="exercise-name-input"
-                              aria-label={`Exercise ${exerciseIndex + 1} name`}
-                              value={exercise.name}
-                              onChange={(event) => updateExercise(exercise.id, { name: event.target.value })}
-                            />
-                          ) : <h2>{exercise.name}</h2>}
-                          <p className="exercise-note">{exercise.restSeconds === 0 ? "Rest timer off" : `${exercise.restSeconds}s rest`} · previous results shown below</p>
-                        </div>
-                      </div>
-                      {editingWorkout ? (
-                        <div className="stacked-actions" aria-label={`Reorder ${exercise.name}`}>
-                          <button type="button" className="mini-icon-button" disabled={exerciseIndex === 0} onClick={() => moveExercise(exerciseIndex, -1)} aria-label={`Move ${exercise.name} up`}>↑</button>
-                          <button type="button" className="mini-icon-button" disabled={exerciseIndex === activeWorkout.exercises.length - 1} onClick={() => moveExercise(exerciseIndex, 1)} aria-label={`Move ${exercise.name} down`}>↓</button>
-                        </div>
-                      ) : null}
-                    </header>
-
-                    <div className="set-grid set-grid-header" aria-hidden="true">
-                      <span>SET</span><span>PREVIOUS</span><span>{unit.toUpperCase()}</span><span>REPS</span><span>DONE</span>
-                    </div>
-                    <div className="set-list">
-                      {exercise.sets.map((set, setIndex) => {
-                        const prior = previousSet(data.history, exercise.exerciseKey, exercise.name, setIndex);
-                        return (
-                          <div className={`set-grid set-row ${set.completed ? "is-done" : ""}`} key={set.id}>
-                            <span className="set-number" aria-label={`Set ${setIndex + 1}`}>{setIndex + 1}</span>
-                            <span className="previous-value">{prior ? `${formatWeight(prior.weightKg, unit)} × ${prior.reps}` : "—"}</span>
-                            <label className="visually-hidden" htmlFor={`weight-${set.id}`}>Weight in {unit} for {exercise.name}, set {setIndex + 1}</label>
-                            <NumericInput
-                              id={`weight-${set.id}`}
-                              className="set-input"
-                              decimal
-                              enterKeyHint="next"
-                              value={toDisplayWeight(set.weightKg, unit)}
-                              onValueChange={(weight) => updateSet(exercise.id, set.id, { weightKg: toKilograms(weight, unit) })}
-                            />
-                            <label className="visually-hidden" htmlFor={`reps-${set.id}`}>Repetitions for {exercise.name}, set {setIndex + 1}</label>
-                            <NumericInput
-                              id={`reps-${set.id}`}
-                              className="set-input"
-                              emptyWhenZero
-                              enterKeyHint="done"
-                              max={999}
-                              value={set.reps}
-                              onValueChange={(reps) => updateSet(exercise.id, set.id, { reps })}
-                            />
-                            <button
-                              className="complete-button"
-                              type="button"
-                              aria-pressed={set.completed}
-                              aria-label={`${set.completed ? "Mark" : "Complete"} ${exercise.name} set ${setIndex + 1}${set.completed ? " incomplete" : ""}`}
-                              onClick={() => toggleSet(exercise, set.id)}
-                            >✓</button>
-                            {editingWorkout ? (
-                              <button className="remove-set-button" type="button" onClick={() => removeSet(exercise, set.id)} aria-label={`Remove ${exercise.name} set ${setIndex + 1}`}>Remove</button>
-                            ) : null}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <button className="add-set-button" type="button" onClick={() => addSet(exercise)}>+ Add set</button>
-                    {editingWorkout ? (
-                      <div className="exercise-edit-footer">
-                        <label>Rest after set
-                          <select value={exercise.restSeconds} onChange={(event) => {
-                            const restSeconds = Number(event.target.value);
-                            updateActive((workout) => ({
-                              ...workout,
-                              restEndsAt: restSeconds === 0 ? undefined : workout.restEndsAt,
-                              exercises: workout.exercises.map((item) => item.id === exercise.id ? { ...item, restSeconds } : item),
-                            }));
-                          }}>
-                            {REST_DURATION_OPTIONS.map((seconds) => <option key={seconds} value={seconds}>{formatRestOption(seconds)}</option>)}
-                          </select>
-                        </label>
-                        <button type="button" className="small-button danger-text" onClick={() => removeExercise(exercise)}>Remove exercise</button>
-                      </div>
-                    ) : null}
-                  </article>
-                );
-              }) : <EmptyState title="Add your first exercise" copy="This workout is empty. Add an exercise, then enter weight and reps as you train." />}
-
-              <button className="secondary-button full-width" type="button" onClick={() => setShowExerciseModal(true)}>+ Add exercise</button>
-              <button className="finish-button" type="button" onClick={finishWorkout}>Finish workout</button>
+                return <article className={`exercise-card ${exerciseComplete ? "exercise-complete" : ""}`} key={exercise.id}>
+                  <header className="exercise-header">
+                    <div className="exercise-title-wrap"><h2>{exercise.name}</h2></div>
+                    <button className="exercise-menu-button" type="button" aria-label={`Actions for ${exercise.name}`} onClick={() => setExerciseAction({ id: exercise.id, view: "menu" })}><DotsThree size={23} weight="bold" aria-hidden="true" /></button>
+                  </header>
+                  {exercise.notes ? <p className="exercise-note pinned-exercise-note">{exercise.notes}</p> : null}
+                  <SetTable sets={exercise.sets} exerciseName={exercise.name} tracking={exerciseTracking(exercise)} weightMode={exerciseWeightMode(exercise)} unit={unit} previous={(index) => findPreviousSet(data.history, exercise.exerciseKey, index, exerciseTracking(exercise), exerciseWeightMode(exercise))} onUpdate={(setId, update) => updateSet(exercise.id, setId, update)} onToggle={(id, timestamp) => toggleSet(exercise, id, timestamp)} />
+                  <button className="add-set-button" type="button" onClick={() => addSet(exercise)}><Plus size={15} aria-hidden="true" /> Add set</button>
+                </article>;
+              }) : <EmptyState title="Add your first exercise" copy="Choose an exercise, then enter its sets and targets." />}
+              <button className="secondary-button full-width" type="button" onClick={() => setShowExerciseModal(true)}><Plus size={17} aria-hidden="true" /> Add exercise</button>
               <button
                 className="danger-link"
                 type="button"
@@ -1402,10 +1518,10 @@ export default function StrongerApp() {
             </>
           ) : (
             <>
+              {activeWorkout ? <button className="primary-button full-width resume-workout-button" type="button" onClick={() => setWorkoutMinimized(false)}>Resume {activeWorkout.name}</button> : null}
               <section className="hero-section">
-                <p className="eyebrow">TRAINING NOTEBOOK</p>
-                <h1>Your training.<br /><span>Kept simple.</span></h1>
-                <p>Start a familiar routine or build today as you go. No account, no feed, no subscription.</p>
+                <h1>Workout</h1>
+                <p>Start a template or build today as you go.</p>
               </section>
 
               {!isStandalone ? (
@@ -1424,7 +1540,7 @@ export default function StrongerApp() {
 
               <section className="section-block">
                 <div className="section-heading">
-                  <div><p className="section-kicker">CHOOSE A ROUTINE</p><h2>Ready when you are</h2></div>
+                  <div><h2>Templates</h2></div>
                   <button className="text-button" type="button" onClick={() => setRoutineDraft({ id: makeId("routine"), name: "", exercises: [] })}>New</button>
                 </div>
                 <div className="routine-list">
@@ -1435,7 +1551,7 @@ export default function StrongerApp() {
                         <span><strong>{routine.name}</strong><small>{routine.exercises.length} exercises · {routine.exercises.reduce((total, exercise) => total + exercise.targetSets, 0)} sets</small></span>
                         <span className="routine-arrow" aria-hidden="true">→</span>
                       </button>
-                      <button className="routine-edit" type="button" onClick={() => setRoutineDraft(routine)} aria-label={`Edit ${routine.name} routine`}>Edit</button>
+                      <button className="routine-edit" type="button" onClick={() => setRoutineDraft(routine)} aria-label={`Edit ${routine.name} template`}><DotsThree size={22} aria-hidden="true" /></button>
                     </article>
                   ))}
                 </div>
@@ -1443,6 +1559,11 @@ export default function StrongerApp() {
               </section>
             </>
           )}
+          {!isLogging ? <button className="exercise-library-entry" type="button" onClick={() => setShowExerciseLibrary(true)}>
+            <ExercisePhoto exerciseKey="bench-press" name="Bench press" thumbnail />
+            <span><strong>Exercise library</strong><small>Explore {BUILT_IN_EXERCISES.length} movements with 3D illustrations & instructions</small></span>
+            <span className="exercise-library-entry-action">Browse</span>
+          </button> : null}
         </main>
       ) : null}
 
@@ -1462,10 +1583,10 @@ export default function StrongerApp() {
             <div className="history-list">
               {filteredHistory.map((session) => (
                 <article className="history-card" key={session.id}>
-                  <button type="button" onClick={() => setHistoryDetail(session)}>
+                  <button type="button" onClick={() => { setHistoryDetail(session); setShowHistoryMenu(false); }}>
                     <span className="history-date"><strong>{session.workoutDate.slice(8)}</strong><small>{new Intl.DateTimeFormat("en", { month: "short" }).format(new Date(`${session.workoutDate}T12:00:00`))}</small></span>
                     <span className="history-main"><strong>{session.name}</strong><small>{session.exercises.length} exercises · {completedSets(session).length} sets</small></span>
-                    <span className="history-metric"><strong>{formatVolume(workoutVolumeKg(session), unit)}</strong><small>{formatDuration(Math.max(0, ((session.finishedAt ?? session.startedAt) - session.startedAt) / 1000))}</small></span>
+                    <span className="history-metric"><strong>{sessionMetric(session, unit).value}</strong><small>{formatDuration(Math.max(0, ((session.finishedAt ?? session.startedAt) - session.startedAt) / 1000))}</small></span>
                   </button>
                 </article>
               ))}
@@ -1490,34 +1611,45 @@ export default function StrongerApp() {
                   {exerciseOptions.map((exercise) => <option key={exercise.key} value={exercise.key}>{exercise.name}</option>)}
                 </select>
               </label>
-              {newBest ? <div className="milestone-card"><span aria-hidden="true">★</span><div><strong>New best weight</strong><small>Your latest workout set a new high for this exercise.</small></div></div> : null}
+              {newBest ? <div className="milestone-card"><span aria-hidden="true">★</span><div><strong>New exercise record</strong><small>Your latest workout improved your {trendLabel.toLocaleLowerCase()}.</small></div></div> : null}
               <section className="stat-grid" aria-label="Exercise records">
-                <article><small>BEST WEIGHT</small><strong>{progressRecords.length ? formatWeight(Math.max(...progressRecords.map((record) => record.bestWeightKg)), unit) : "—"}<em>{unit}</em></strong></article>
-                <article><small>EST. 1RM</small><strong>{progressRecords.length ? formatWeight(Math.max(...progressRecords.map((record) => record.bestEstimatedKg)), unit) : "—"}<em>{unit}</em></strong></article>
-                <article><small>TOTAL VOLUME</small><strong>{formatVolume(progressRecords.reduce((total, record) => total + record.volumeKg, 0), unit)}</strong></article>
+                <article><small>{trendLabel.toUpperCase()}</small><strong>{progressRecords.length ? formatTrend(bestTrend) : "—"}</strong></article>
+                {selectedProgressTracking === "weight-reps" && selectedProgressWeightMode === "external" ? <>
+                  <article><small>EST. 1RM</small><strong>{progressRecords.length ? formatWeight(Math.max(...progressRecords.map((record) => record.bestEstimatedKg)), unit) : "—"}<em>{unit}</em></strong></article>
+                  <article><small>TOTAL VOLUME</small><strong>{formatVolume(progressRecords.reduce((total, record) => total + record.volumeKg, 0), unit)}</strong></article>
+                </> : selectedProgressTracking === "distance-duration" ? <>
+                  <article><small>TOTAL TIME</small><strong>{formatSetDuration(totalTrackedTime)}</strong></article>
+                  <article><small>TOTAL DISTANCE</small><strong>{formatDistanceKm(progressRecords.reduce((total, record) => total + record.totalDistanceMeters, 0))}<em>km</em></strong></article>
+                </> : <>
+                  <article><small>{selectedProgressTracking === "duration" ? "TOTAL TIME" : "TOTAL REPS"}</small><strong>{selectedProgressTracking === "duration" ? formatSetDuration(totalTrackedTime) : totalTrackedReps}</strong></article>
+                  <article><small>COMPLETED SETS</small><strong>{totalTrackedSets}</strong></article>
+                </>}
               </section>
               <section className="trend-card">
                 <div className="section-heading compact">
-                  <div><p className="section-kicker">BEST WEIGHT BY WORKOUT</p><h2>Recent trend</h2></div>
+                  <div><p className="section-kicker">{trendLabel.toUpperCase()} BY WORKOUT</p><h2>Recent trend</h2></div>
                   <span>{progressRecords.length} {progressRecords.length === 1 ? "workout" : "workouts"}</span>
                 </div>
-                <div className="bar-chart" aria-label="Best weight trend">
+                <div className="bar-chart" aria-label={`${trendLabel} trend`}>
                   {progressRecords.slice(-8).map((record) => {
-                    const maximum = Math.max(...progressRecords.slice(-8).map((item) => item.bestWeightKg), 1);
-                    const height = Math.max(10, (record.bestWeightKg / maximum) * 100);
+                    const maximum = Math.max(...progressRecords.slice(-8).map((item) => item.trendValue), 1);
+                    const height = Math.max(10, (record.trendValue / maximum) * 100);
                     return (
-                      <div className="bar-column" key={record.session.id} title={`${formatDate(record.session.workoutDate)}: ${formatWeight(record.bestWeightKg, unit)} ${unit}`}>
-                        <span className="bar-value">{formatWeight(record.bestWeightKg, unit)}</span>
+                      <div className="bar-column" key={record.session.id} title={`${formatDate(record.session.workoutDate)}: ${formatTrend(record.trendValue)}`}>
+                        <span className="bar-value">{formatTrend(record.trendValue)}</span>
                         <span className="bar" style={{ height: `${height}%` }} />
                         <small>{record.session.workoutDate.slice(5).replace("-", "/")}</small>
                       </div>
                     );
                   })}
                 </div>
-                <p className="chart-note">Estimated 1RM uses completed sets of 1–12 reps. It is a training estimate, not a tested maximum.</p>
+                <p className="chart-note">{selectedProgressTracking === "weight-reps" && selectedProgressWeightMode === "external"
+                  ? "Estimated 1RM uses completed sets of 1–12 reps. It is a training estimate, not a tested maximum."
+                  : selectedProgressWeightMode === "assistance" ? "Lower assistance means more of the movement is performed with your own strength."
+                    : "Trends use completed sets with the same measurement type. Older entries keep their original measurements in History."}</p>
               </section>
             </>
-          ) : <EmptyState title="No progress data yet" copy="Complete and finish a workout to create your first strength trend." />}
+          ) : <EmptyState title="No progress data yet" copy="Complete and finish a workout to create your first exercise trend." />}
         </main>
       ) : null}
 
@@ -1526,7 +1658,7 @@ export default function StrongerApp() {
           <section className="page-heading">
             <p className="eyebrow">MAKE IT YOURS</p>
             <h1>Settings</h1>
-            <p>Practical defaults, routine management, and local data controls.</p>
+            <p>Practical defaults, templates, and local data controls.</p>
           </section>
 
           <section className="settings-card">
@@ -1571,7 +1703,7 @@ export default function StrongerApp() {
           </section>
 
           <section className="section-block settings-section">
-            <div className="section-heading"><div><p className="section-kicker">WORKOUT TEMPLATES</p><h2>Routines</h2></div><button className="text-button" type="button" onClick={() => setRoutineDraft({ id: makeId("routine"), name: "", exercises: [] })}>New</button></div>
+            <div className="section-heading"><div><h2>Templates</h2></div><button className="text-button" type="button" onClick={() => setRoutineDraft({ id: makeId("routine"), name: "", exercises: [] })}>New</button></div>
             <div className="manage-list">
               {data.routines.map((routine) => (
                 <div className="manage-row" key={routine.id}>
@@ -1617,18 +1749,50 @@ export default function StrongerApp() {
 
       <nav className="bottom-nav" aria-label="Main navigation">
         {([
-          ["workout", "▰", "Workout"],
-          ["history", "◷", "History"],
-          ["progress", "↗", "Progress"],
-          ["settings", "••", "Settings"],
-        ] as const).map(([itemTab, icon, label]) => (
+          ["workout", Barbell, "Workout"],
+          ["history", ClockCounterClockwise, "History"],
+          ["progress", TrendUp, "Progress"],
+          ["settings", GearSix, "Settings"],
+        ] as const).map(([itemTab, NavIcon, label]) => (
           <button key={itemTab} type="button" className={tab === itemTab ? "active" : ""} aria-current={tab === itemTab ? "page" : undefined} onClick={() => setTab(itemTab)}>
-            <span aria-hidden="true">{icon}</span><small>{label}</small>
+            <NavIcon size={20} aria-hidden="true" /><small>{label}</small>
           </button>
         ))}
       </nav>
 
       {message ? <div className={`toast ${restRemaining !== null ? "with-rest" : ""}`} role="status">{message}</div> : null}
+
+      {showWorkoutMenu && activeWorkout ? <Modal title={activeWorkout.name} onClose={() => setShowWorkoutMenu(false)} initialFocus="close">
+        <div className="exercise-actions-sheet">
+          <button type="button" onClick={() => { setEditingWorkout(true); setShowWorkoutMenu(false); }}><NotePencil size={19} aria-hidden="true" /> Rename workout</button>
+          <button type="button" onClick={() => { setWorkoutMinimized(true); setShowWorkoutMenu(false); }}><CaretDown size={19} aria-hidden="true" /> Minimize workout</button>
+          <button type="button" onClick={() => { setShowWorkoutMenu(false); setShowExerciseModal(true); }}><Plus size={19} aria-hidden="true" /> Add exercise</button>
+        </div>
+      </Modal> : null}
+
+      {exerciseAction && actionExercise && activeWorkout ? <Modal key={exerciseAction.view} title={actionExercise.name} onClose={() => setExerciseAction(null)} initialFocus="close">
+        {exerciseAction.view === "menu" ? <div className="exercise-actions-sheet">
+          <button type="button" onClick={() => setExerciseAction({ ...exerciseAction, view: "edit" })}><NotePencil size={19} aria-hidden="true" /> Edit sets</button>
+          <button type="button" onClick={() => setExerciseAction({ ...exerciseAction, view: "reorder" })}><ArrowUp size={19} aria-hidden="true" /> Reorder</button>
+          <button type="button" onClick={() => setExerciseAction({ ...exerciseAction, view: "notes" })}><NotePencil size={19} aria-hidden="true" /> Notes</button>
+          <button type="button" onClick={() => setExerciseAction({ ...exerciseAction, view: "rest" })}><Timer size={19} aria-hidden="true" /> Rest timer <small>{formatRestOption(actionExercise.restSeconds)}</small></button>
+          {EXERCISE_MEDIA[actionExercise.exerciseKey] ? <button type="button" onClick={() => { setMovementGuide(exerciseCatalog.find((item) => item.exerciseKey === actionExercise.exerciseKey) ?? null); setExerciseAction(null); }}><Barbell size={19} aria-hidden="true" /> View movement</button> : null}
+          <button className="danger-text" type="button" onClick={() => { removeExercise(actionExercise); setExerciseAction(null); }}><Trash size={19} aria-hidden="true" /> Remove exercise</button>
+        </div> : null}
+        {exerciseAction.view === "edit" ? <>
+          <SetTable idPrefix="edit-" sets={actionExercise.sets} exerciseName={actionExercise.name} tracking={exerciseTracking(actionExercise)} weightMode={exerciseWeightMode(actionExercise)} unit={unit} onUpdate={(id, update) => updateSet(actionExercise.id, id, update)} onRemove={(id) => removeSet(actionExercise, id)} />
+          <button className="add-set-button" type="button" onClick={() => addSet(actionExercise)}><Plus size={15} aria-hidden="true" /> Add set</button>
+          <button className="primary-button" type="button" onClick={() => setExerciseAction(null)}>Done</button>
+        </> : null}
+        {exerciseAction.view === "reorder" ? <div className="exercise-actions-sheet">
+          <p className="exercise-action-summary">Position {actionExerciseIndex + 1} of {activeWorkout.exercises.length}</p>
+          <button type="button" disabled={actionExerciseIndex === 0} onClick={() => moveExercise(actionExerciseIndex, -1)}><ArrowUp size={19} aria-hidden="true" /> Move up</button>
+          <button type="button" disabled={actionExerciseIndex === activeWorkout.exercises.length - 1} onClick={() => moveExercise(actionExerciseIndex, 1)}><ArrowDown size={19} aria-hidden="true" /> Move down</button>
+          <button type="button" onClick={() => setExerciseAction(null)}>Done</button>
+        </div> : null}
+        {exerciseAction.view === "notes" ? <div className="form-stack"><label>Exercise notes<textarea value={actionExercise.notes ?? ""} onChange={(event) => updateExercise(actionExercise.id, { notes: event.target.value })} rows={3} placeholder="Technique cue or machine setting" /></label><button className="primary-button" type="button" onClick={() => setExerciseAction(null)}>Done</button></div> : null}
+        {exerciseAction.view === "rest" ? <div className="form-stack"><label>Rest after each set<select value={actionExercise.restSeconds} onChange={(event) => { const restSeconds = Number(event.target.value); updateActive((workout) => ({ ...workout, restEndsAt: undefined, exercises: workout.exercises.map((exercise) => exercise.id === actionExercise.id ? { ...exercise, restSeconds } : exercise) })); }}>{REST_DURATION_OPTIONS.map((seconds) => <option key={seconds} value={seconds}>{formatRestOption(seconds)}</option>)}</select></label><button className="primary-button" type="button" onClick={() => setExerciseAction(null)}>Done</button></div> : null}
+      </Modal> : null}
 
       {showBlankWorkout ? (
         <Modal eyebrow="START FROM SCRATCH" title="Blank workout" onClose={() => setShowBlankWorkout(false)}>
@@ -1648,6 +1812,19 @@ export default function StrongerApp() {
           onAdd={addExerciseToActive}
           onCreateCustom={createCustomExercise}
         />
+      ) : null}
+
+      {showExerciseLibrary ? (
+        <Modal eyebrow="LEARN THE MOVEMENT" title="Exercise library" onClose={() => setShowExerciseLibrary(false)} initialFocus="close">
+          <p className="exercise-library-intro">Find your exercise. See how it moves.</p>
+          <ExercisePicker catalog={exerciseCatalog} onCreateCustom={createCustomExercise} />
+        </Modal>
+      ) : null}
+
+      {movementGuide ? (
+        <Modal eyebrow="MOVEMENT GUIDE" title={movementGuide.name} onClose={() => setMovementGuide(null)} initialFocus="close">
+          <ExerciseGuide exerciseKey={movementGuide.exerciseKey} name={movementGuide.name} category={movementGuide.category} />
+        </Modal>
       ) : null}
 
       {routineDraft ? (
@@ -1676,23 +1853,26 @@ export default function StrongerApp() {
       ) : null}
 
       {historyDetail ? (
-        <Modal eyebrow={formatDate(historyDetail.workoutDate).toUpperCase()} title={historyDetail.name} onClose={() => setHistoryDetail(null)} wide>
+        <Modal eyebrow={formatDate(historyDetail.workoutDate)} title={historyDetail.name} onClose={() => { setHistoryDetail(null); setShowHistoryMenu(false); }} wide>
+          <div className="compact-history-actions"><button className="exercise-menu-button" type="button" aria-label="History workout actions" aria-expanded={showHistoryMenu} onClick={() => setShowHistoryMenu(!showHistoryMenu)}><DotsThree size={23} weight="bold" aria-hidden="true" /></button></div>
+          {showHistoryMenu ? <div className="exercise-actions-sheet">
+            <button type="button" onClick={() => duplicateForToday(historyDetail)}>Repeat workout</button>
+            <button className="danger-text" type="button" onClick={() => deleteHistory(historyDetail)}>Delete workout</button>
+          </div> : null}
           <div className="detail-summary">
             <div><small>DURATION</small><strong>{formatDuration(Math.max(0, ((historyDetail.finishedAt ?? historyDetail.startedAt) - historyDetail.startedAt) / 1000))}</strong></div>
             <div><small>SETS</small><strong>{completedSets(historyDetail).length}</strong></div>
-            <div><small>VOLUME</small><strong>{formatVolume(workoutVolumeKg(historyDetail), unit)}</strong></div>
+            <div><small>{sessionMetric(historyDetail, unit).label}</small><strong>{sessionMetric(historyDetail, unit).value}</strong></div>
           </div>
+          {historyDetail.notes ? <p className="exercise-note">{historyDetail.notes}</p> : null}
           <div className="history-detail-list">
             {historyDetail.exercises.map((exercise) => (
               <article key={exercise.id}>
                 <h3>{exercise.name}</h3>
-                <div>{exercise.sets.filter((set) => set.completed).length ? exercise.sets.filter((set) => set.completed).map((set, index) => <span key={set.id}>{index + 1}. {formatWeight(set.weightKg, unit)} {unit} × {set.reps}</span>) : <span>No completed sets</span>}</div>
+                {exercise.notes ? <p className="exercise-note">{exercise.notes}</p> : null}
+                {exercise.sets.some((set) => set.completed) ? <table className="compact-history-table"><thead><tr><th>Set</th><th>Result</th><th><span className="visually-hidden">Completed</span></th></tr></thead><tbody>{exercise.sets.filter((set) => set.completed).map((set, index) => <tr key={set.id}><td>{index + 1}</td><td>{formatMeasurements(set, exerciseTracking(exercise), unit, exerciseWeightMode(exercise))}</td><td><Check size={16} aria-label="Completed" /></td></tr>)}</tbody></table> : <p className="exercise-note">No completed sets</p>}
               </article>
             ))}
-          </div>
-          <div className="button-pair">
-            <button className="primary-button" type="button" onClick={() => duplicateForToday(historyDetail)}>Duplicate for today</button>
-            <button className="secondary-button danger-text" type="button" onClick={() => deleteHistory(historyDetail)}>Delete</button>
           </div>
         </Modal>
       ) : null}
@@ -1704,7 +1884,7 @@ export default function StrongerApp() {
           <div className="detail-summary">
             <div><small>TIME</small><strong>{formatDuration(Math.max(0, ((summary.finishedAt ?? summary.startedAt) - summary.startedAt) / 1000))}</strong></div>
             <div><small>SETS</small><strong>{completedSets(summary).length}</strong></div>
-            <div><small>VOLUME</small><strong>{formatVolume(workoutVolumeKg(summary), unit)}</strong></div>
+            <div><small>{sessionMetric(summary, unit).label}</small><strong>{sessionMetric(summary, unit).value}</strong></div>
           </div>
           <button className="primary-button" type="button" onClick={() => { setSummary(null); setTab("history"); }}>View in history</button>
         </Modal>
