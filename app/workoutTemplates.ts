@@ -1,5 +1,5 @@
 import { BUILT_IN_EXERCISES } from "./exercises";
-import type { Routine, RoutineExercise, StrongerData } from "./storage";
+import type { Routine, RoutineExercise } from "./storage";
 
 export const TEMPLATE_CATEGORIES = ["Chest", "Back", "Arms", "Shoulders", "Legs", "Calisthenics", "Full body"] as const;
 export type TemplateCategory = typeof TEMPLATE_CATEGORIES[number];
@@ -255,30 +255,4 @@ export function createRoutineFromTemplate(template: WorkoutTemplate, choices: Te
       notes: `${templateTargetLabel(slot)}. Rest ${slot.restSeconds}s.${slot.perSide ? " Complete both sides before marking a set done." : ""}${slot.cue ? ` ${slot.cue}` : ""}`,
     })),
   };
-}
-
-/** Fresh-install defaults: independent copies with stable IDs for storage comparisons. */
-export function createDefaultRoutines(): Routine[] {
-  return WORKOUT_TEMPLATES.map((template) => {
-    let exerciseIndex = 0;
-    return createRoutineFromTemplate(template, {}, (prefix) => prefix === "routine"
-      ? `routine-${template.id}`
-      : `routine-${template.id}-exercise-${++exerciseIndex}`);
-  });
-}
-
-export function missingPreparedTemplates(routines: Routine[]): Routine[] {
-  const ids = new Set(routines.map((routine) => routine.id));
-  const names = new Set(routines.map((routine) => routine.name.trim().toLowerCase()));
-  return createDefaultRoutines().filter((routine) => !ids.has(routine.id) && !names.has(routine.name.toLowerCase()));
-}
-
-/** An explicit addition for existing users; preserves every existing record. */
-export function addPreparedTemplates(data: StrongerData, maxRoutines: number): StrongerData {
-  const additions = missingPreparedTemplates(data.routines);
-  if (!additions.length) return data;
-  if (data.routines.length + additions.length > maxRoutines) {
-    throw new Error("There is not enough room to add all prepared templates. Use Browse to choose individual sessions.");
-  }
-  return { ...data, routines: [...data.routines, ...additions] };
 }

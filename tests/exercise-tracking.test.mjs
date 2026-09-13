@@ -89,6 +89,7 @@ test("previous set lookup cannot borrow data from another same-name exercise or 
 
 test("round-trips old and new backup data without migration or dropped measurements", () => {
   const oldData = storage.createDefaultData();
+  oldData.routines = [{ id: "legacy-routine", name: "Strength", exercises: [{ id: "legacy-bench", exerciseKey: "bench-press", name: "Bench press", targetSets: 3, targetWeightKg: 80, targetReps: 8, restSeconds: 90 }] }];
   oldData.history = [session([exercise({ exerciseKey: "plank", name: "Plank", sets: [set({ weightKg: 10, reps: 30 })] })])];
   assert.deepEqual(storage.normalizeStrongerData(oldData), oldData);
   const original = structuredClone(oldData);

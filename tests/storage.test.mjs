@@ -171,16 +171,15 @@ test("default data is valid at the current schema version", () => {
   assert.deepEqual(storage.migrateStrongerData(data), data);
 });
 
-test("a fresh installation loads fourteen ready-to-start templates with no history or preset loads", async () => {
+test("a fresh installation leaves saved templates empty for the user to choose from the library", async () => {
   const isolatedStorage = await importStorageModule();
   const fake = createFakeIndexedDb({ storedValue: undefined });
   const restore = installBrowserStorage(fake.indexedDb, createMemoryLocalStorage());
   try {
     const loaded = await isolatedStorage.loadData();
-    assert.equal(loaded.routines.length, 14);
+    assert.deepEqual(loaded.routines, []);
     assert.deepEqual(loaded.history, []);
     assert.equal(loaded.activeWorkout, null);
-    assert.ok(loaded.routines.every((routine) => routine.exercises.length > 0 && routine.exercises.every((exercise) => exercise.targetWeightKg === 0)));
     await isolatedStorage.saveData(loaded);
     assert.deepEqual(await isolatedStorage.loadData(), loaded);
   } finally {
@@ -952,6 +951,7 @@ test("invalid in-memory data rejects asynchronously instead of escaping an autos
   const isolatedStorage = await importStorageModule();
   const restoreGlobals = installBrowserStorage(undefined, createMemoryLocalStorage());
   const invalid = isolatedStorage.createDefaultData();
+  invalid.routines = structuredClone(activeHistoryBackup.data.routines);
   invalid.routines[0].exercises[0].targetSets = 0;
 
   try {

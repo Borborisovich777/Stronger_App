@@ -123,7 +123,7 @@ import { buildExerciseProgress, defaultSetMeasurements, ExerciseTracking, Exerci
 import { ArrowDown, ArrowUp, CaretDown, Check, ClockCounterClockwise, DotsThree, Barbell, GearSix, NotePencil, Plus, Timer, Trash, TrendUp, X } from "@phosphor-icons/react";
 import { createExistingUserPreviewData, createPreviewData } from "./preview-data";
 import { TemplateLibrary } from "./TemplateLibrary";
-import { addPreparedTemplates, missingPreparedTemplates } from "./workoutTemplates";
+import { WORKOUT_TEMPLATES } from "./workoutTemplates";
 
 type Tab = "workout" | "history" | "progress" | "settings";
 type ThemeMode = "light" | "dark";
@@ -1612,7 +1612,6 @@ export default function StrongerApp() {
     () => nextRoutineInRotation(data.history, data.routines),
     [data.history, data.routines],
   );
-  const preparedTemplateCount = useMemo(() => missingPreparedTemplates(data.routines).length, [data.routines]);
   const summaryWorkoutCount = currentReport.totals.sessions;
   const progressHeadline = summaryWorkoutCount === 0
     ? currentReport.emptyReason === "active-workout-excluded"
@@ -2342,17 +2341,6 @@ export default function StrongerApp() {
     setHistoryDetail(null);
   }
 
-  function loadPreparedTemplates() {
-    try {
-      const updated = addPreparedTemplates(data, MAX_ROUTINES);
-      const added = updated.routines.length - data.routines.length;
-      setData(updated);
-      setMessage(`${added} prepared ${added === 1 ? "template" : "templates"} added. Your saved templates and history are unchanged.`);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Prepared templates could not be added.");
-    }
-  }
-
   function saveRoutine(routine: Routine) {
     const exists = data.routines.some((item) => item.id === routine.id);
     if (!exists && data.routines.length >= MAX_ROUTINES) {
@@ -2908,20 +2896,13 @@ export default function StrongerApp() {
 
               <section className="section-block">
                 <div className="section-heading">
-                  <div><h2>Templates</h2></div>
+                  <div><h2>Your templates</h2></div>
                   <div className="template-heading-actions">
                     <button className="text-button" type="button" onClick={() => setShowTemplateLibrary(true)}>Browse</button>
                     <button className="text-button" type="button" onClick={() => setRoutineDraft({ id: makeId("routine"), name: "", exercises: [] })}>New</button>
                   </div>
                 </div>
-                {preparedTemplateCount > 0 ? (
-                  <div className="template-starters">
-                    <strong>{preparedTemplateCount} prepared {preparedTemplateCount === 1 ? "template" : "templates"} available</strong>
-                    <p>Chest, back, arms, shoulders, legs, calisthenics and full body. Add the missing sessions while keeping your saved templates and history.</p>
-                    <button className="primary-button full-width" type="button" onClick={loadPreparedTemplates}>Add {preparedTemplateCount} {preparedTemplateCount === 1 ? "template" : "templates"}</button>
-                    <button className="text-button" type="button" onClick={() => setShowTemplateLibrary(true)}>Preview prepared templates</button>
-                  </div>
-                ) : null}
+                {!data.routines.length ? <p className="section-copy">No saved templates yet. Browse the template library to choose a workout, or create your own.</p> : null}
                 <div className="routine-list">
                   {data.routines.map((routine, index) => (
                     <article className="routine-card" key={routine.id}>
@@ -2966,11 +2947,18 @@ export default function StrongerApp() {
               </section>
             </>
           )}
-          {!isLogging ? <button className="exercise-library-entry" type="button" onClick={() => setShowExerciseLibrary(true)}>
-            <ExercisePhoto exerciseKey="bench-press" name="Bench press" thumbnail />
-            <span><strong>Exercise library</strong><small>Explore {BUILT_IN_EXERCISES.length} movements with 3D illustrations & instructions</small></span>
-            <span className="exercise-library-entry-action">Browse</span>
-          </button> : null}
+          {!isLogging ? <div className="workout-libraries">
+            <button className="exercise-library-entry" type="button" onClick={() => setShowExerciseLibrary(true)}>
+              <ExercisePhoto exerciseKey="bench-press" name="Bench press" thumbnail />
+              <span><strong>Exercise library</strong><small>Explore {BUILT_IN_EXERCISES.length} movements with 3D illustrations & instructions</small></span>
+              <span className="exercise-library-entry-action">Browse</span>
+            </button>
+            <button className="exercise-library-entry" type="button" onClick={() => setShowTemplateLibrary(true)}>
+              <span className="template-library-icon" aria-hidden="true"><NotePencil size={26} /></span>
+              <span><strong>Template library</strong><small>Browse {WORKOUT_TEMPLATES.length} workouts. Choose one, customize it, and save.</small></span>
+              <span className="exercise-library-entry-action">Browse</span>
+            </button>
+          </div> : null}
         </main>
       ) : null}
 
