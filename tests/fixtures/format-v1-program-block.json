@@ -1,0 +1,61 @@
+{
+  "kind": "stronger-backup",
+  "backupVersion": 1,
+  "formatVersion": 1,
+  "exportedAt": "2026-08-29T18:00:00.000Z",
+  "appVersion": "0.1.0",
+  "data": {
+    "formatVersion": 1,
+    "routines": [
+      {
+        "id": "routine-fixture-block",
+        "name": "Current routine",
+        "exercises": [
+          {
+            "id": "routine-exercise-current",
+            "exerciseKey": "fixture-squat",
+            "name": "Fixture squat",
+            "targetSets": 3,
+            "targetWeightKg": 85,
+            "targetReps": 6,
+            "restSeconds": 120
+          }
+        ]
+      }
+    ],
+    "programBlocks": [
+      {
+        "id": "program-block-fixture",
+        "name": "Fixture block",
+        "createdAt": 1788026400000,
+        "sourceRoutineId": "routine-fixture-block",
+        "sourceRoutineName": "Original routine",
+        "exercises": [
+          {
+            "id": "routine-exercise-snapshot",
+            "exerciseKey": "fixture-squat",
+            "name": "Fixture squat",
+            "targetSets": 3,
+            "targetWeightKg": 80,
+            "targetReps": 6,
+            "restSeconds": 120
+          }
+        ],
+        "weeks": [
+          { "id": "program-week-one", "loadPercent": 100 },
+          { "id": "program-week-two", "loadPercent": 90 }
+        ]
+      }
+    ],
+    "activeWorkout": null,
+    "history": [],
+    "customExercises": [],
+    "settings": {
+      "unit": "kg",
+      "defaultRestSeconds": 90,
+      "goal": "strength",
+      "weeklyDays": 4,
+      "effortScale": "off"
+    }
+  }
+}

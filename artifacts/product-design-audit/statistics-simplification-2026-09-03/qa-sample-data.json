@@ -1,0 +1,147 @@
+{
+  "formatVersion": 1,
+  "activeWorkout": null,
+  "settings": {
+    "unit": "kg",
+    "defaultRestSeconds": 90,
+    "goal": "strength",
+    "weeklyDays": 4,
+    "effortScale": "off",
+    "nextSetPreview": false
+  },
+  "history": [
+    {
+      "id": "qa-current-push",
+      "name": "Push",
+      "workoutDate": "2026-09-03",
+      "startedAt": 1788433200000,
+      "finishedAt": 1788436800000,
+      "sourceRoutineId": "routine-push",
+      "exercises": [
+        {
+          "id": "qa-current-bench",
+          "exerciseKey": "bench-press",
+          "name": "Bench press",
+          "restSeconds": 120,
+          "sets": [
+            { "id": "qa-current-bench-1", "weightKg": 82.5, "reps": 8, "completed": true },
+            { "id": "qa-current-bench-2", "weightKg": 82.5, "reps": 8, "completed": true },
+            { "id": "qa-current-bench-3", "weightKg": 80, "reps": 8, "completed": true }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "qa-current-legs",
+      "name": "Legs",
+      "workoutDate": "2026-09-02",
+      "startedAt": 1788346800000,
+      "finishedAt": 1788350400000,
+      "sourceRoutineId": "routine-legs",
+      "exercises": [
+        {
+          "id": "qa-current-squat",
+          "exerciseKey": "back-squat",
+          "name": "Back squat",
+          "restSeconds": 150,
+          "sets": [
+            { "id": "qa-current-squat-1", "weightKg": 90, "reps": 5, "completed": true },
+            { "id": "qa-current-squat-2", "weightKg": 90, "reps": 5, "completed": true },
+            { "id": "qa-current-squat-3", "weightKg": 90, "reps": 5, "completed": true }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "qa-current-pull",
+      "name": "Pull",
+      "workoutDate": "2026-09-01",
+      "startedAt": 1788260400000,
+      "finishedAt": 1788264000000,
+      "sourceRoutineId": "routine-pull",
+      "exercises": [
+        {
+          "id": "qa-current-deadlift",
+          "exerciseKey": "deadlift",
+          "name": "Deadlift",
+          "restSeconds": 150,
+          "sets": [
+            { "id": "qa-current-deadlift-1", "weightKg": 105, "reps": 3, "completed": true },
+            { "id": "qa-current-deadlift-2", "weightKg": 100, "reps": 3, "completed": true },
+            { "id": "qa-current-deadlift-3", "weightKg": 100, "reps": 3, "completed": true }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "qa-previous-push",
+      "name": "Push",
+      "workoutDate": "2026-08-27",
+      "startedAt": 1787828400000,
+      "finishedAt": 1787832000000,
+      "sourceRoutineId": "routine-push",
+      "exercises": [
+        {
+          "id": "qa-previous-bench",
+          "exerciseKey": "bench-press",
+          "name": "Bench press",
+          "restSeconds": 120,
+          "sets": [
+            { "id": "qa-previous-bench-1", "weightKg": 80, "reps": 8, "completed": true },
+            { "id": "qa-previous-bench-2", "weightKg": 80, "reps": 8, "completed": true },
+            { "id": "qa-previous-bench-3", "weightKg": 80, "reps": 8, "completed": true }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "qa-previous-legs",
+      "name": "Legs",
+      "workoutDate": "2026-08-26",
+      "startedAt": 1787742000000,
+      "finishedAt": 1787745600000,
+      "sourceRoutineId": "routine-legs",
+      "exercises": [
+        {
+          "id": "qa-previous-squat",
+          "exerciseKey": "back-squat",
+          "name": "Back squat",
+          "restSeconds": 150,
+          "sets": [
+            { "id": "qa-previous-squat-1", "weightKg": 90, "reps": 5, "completed": true },
+            { "id": "qa-previous-squat-2", "weightKg": 90, "reps": 5, "completed": true },
+            { "id": "qa-previous-squat-3", "weightKg": 90, "reps": 5, "completed": true }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "qa-previous-pull",
+      "name": "Pull",
+      "workoutDate": "2026-08-25",
+      "startedAt": 1787655600000,
+      "finishedAt": 1787659200000,
+      "sourceRoutineId": "routine-pull",
+      "exercises": [
+        {
+          "id": "qa-previous-deadlift",
+          "exerciseKey": "deadlift",
+          "name": "Deadlift",
+          "restSeconds": 150,
+          "sets": [
+            { "id": "qa-previous-deadlift-1", "weightKg": 100, "reps": 3, "completed": true },
+            { "id": "qa-previous-deadlift-2", "weightKg": 100, "reps": 3, "completed": true },
+            { "id": "qa-previous-deadlift-3", "weightKg": 100, "reps": 3, "completed": true }
+          ]
+        }
+      ]
+    }
+  ],
+  "customExercises": [],
+  "programBlocks": [],
+  "routines": [
+    { "id": "routine-push", "name": "Push", "exercises": [] },
+    { "id": "routine-pull", "name": "Pull", "exercises": [] },
+    { "id": "routine-legs", "name": "Legs", "exercises": [] }
+  ]
+}
