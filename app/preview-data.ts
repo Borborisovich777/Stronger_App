@@ -1,16 +1,21 @@
 import { createDefaultData, makeId } from "./storage";
-import type { WorkoutSession } from "./storage";
+import type { Routine, WorkoutSession } from "./storage";
 
 /** Ephemeral data for the explicitly selected local design preview. */
 export function createPreviewData() {
   const data = createDefaultData();
-  const pull = data.routines.find((routine) => routine.id === "routine-pull")!;
-  pull.exercises[0] = {
-    ...pull.exercises[0],
-    targetSets: 4,
-    targetWeightKg: 60,
-    targetReps: 5,
+  const pull: Routine = {
+    id: "routine-preview-pull",
+    name: "Pull",
+    exercises: [
+      { id: "preview-deadlift", exerciseKey: "deadlift", name: "Deadlift", targetSets: 4, targetWeightKg: 60, targetReps: 5, restSeconds: 150 },
+      { id: "preview-row", exerciseKey: "barbell-row", name: "Barbell row", targetSets: 3, targetWeightKg: 45, targetReps: 8, restSeconds: 90 },
+      { id: "preview-lat", exerciseKey: "lat-pulldown", name: "Lat pulldown", targetSets: 3, targetWeightKg: 40, targetReps: 10, restSeconds: 90 },
+      { id: "preview-rear", exerciseKey: "rear-delt-fly", name: "Rear delt fly", targetSets: 3, targetWeightKg: 8, targetReps: 12, restSeconds: 60 },
+      { id: "preview-curl", exerciseKey: "biceps-curl", name: "Biceps curl", targetSets: 3, targetWeightKg: 10, targetReps: 10, restSeconds: 60 },
+    ],
   };
+  data.routines.unshift(pull);
   const now = Date.now();
   const sampleSetValues = [
     { weightKg: 60, reps: 5 },

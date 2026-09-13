@@ -122,6 +122,7 @@ import { findExistingExercise, matchesExerciseSearch, mergeExerciseCatalog } fro
 import { buildExerciseProgress, defaultSetMeasurements, ExerciseTracking, ExerciseWeightMode, findPreviousSet, findPreviousDropSet, formatDistanceKm, formatSetDuration, isTimedTracking, resolveExerciseTracking, resolveExerciseWeightMode, SetMeasurements, SetMeasurementUpdate, setCompletionError } from "./exercise-tracking";
 import { ArrowDown, ArrowUp, CaretDown, Check, ClockCounterClockwise, DotsThree, Barbell, GearSix, NotePencil, Plus, Timer, Trash, TrendUp, X } from "@phosphor-icons/react";
 import { createPreviewData } from "./preview-data";
+import { TemplateLibrary } from "./TemplateLibrary";
 
 type Tab = "workout" | "history" | "progress" | "settings";
 type ThemeMode = "light" | "dark";
@@ -406,6 +407,7 @@ function routineToWorkout(
     workoutDate,
     startedAt: Date.now(),
     sourceRoutineId: routine.id,
+    notes: routine.notes,
     exercises: routine.exercises.map((exercise) => ({
       id: makeId("session-exercise"),
       exerciseKey: exercise.exerciseKey,
@@ -413,6 +415,7 @@ function routineToWorkout(
       tracking: exerciseTracking(exercise),
       weightMode: exerciseWeightMode(exercise),
       restSeconds: exercise.restSeconds,
+      notes: exercise.notes,
       sets: Array.from({ length: exercise.targetSets }, (_, index) => {
         const previous = findPreviousSet(history, exercise.exerciseKey, index, exerciseTracking(exercise), exerciseWeightMode(exercise));
         return {
@@ -1080,6 +1083,10 @@ function RoutineEditor({
           Template name
           <input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="e.g. Upper body" />
         </label>
+        <details className="template-method">
+          <summary>Training notes & progression</summary>
+          <label>Template notes<textarea value={draft.notes ?? ""} rows={5} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} /></label>
+        </details>
 
         <div className="routine-editor-list">
           {draft.exercises.map((exercise, index) => (
@@ -1090,6 +1097,7 @@ function RoutineEditor({
               </div>
               {menuId === exercise.id ? <div className="routine-exercise-menu">
                 <label>Exercise name<input aria-label={`Exercise ${index + 1} name`} value={exercise.name} onChange={(event) => updateExercise(index, { name: event.target.value })} /></label>
+                <label>Exercise notes<textarea value={exercise.notes ?? ""} rows={3} onChange={(event) => updateExercise(index, { notes: event.target.value })} /></label>
                 <div className="row-actions"><button type="button" className="small-button" disabled={index === 0} onClick={() => setDraft({ ...draft, exercises: moveItem(draft.exercises, index, index - 1) })}><ArrowUp size={15} aria-hidden="true" /> Move up</button>
                 <button type="button" className="small-button" disabled={index === draft.exercises.length - 1} onClick={() => setDraft({ ...draft, exercises: moveItem(draft.exercises, index, index + 1) })}><ArrowDown size={15} aria-hidden="true" /> Move down</button>
                 <button type="button" className="small-button danger-text" onClick={() => setDraft({ ...draft, exercises: draft.exercises.filter((_, exerciseIndex) => exerciseIndex !== index) })}>Remove</button></div>
@@ -1106,6 +1114,7 @@ function RoutineEditor({
                   })} />
                 <label>Rest<select value={exercise.restSeconds} onChange={(event) => updateExercise(index, { restSeconds: Number(event.target.value) })}>{REST_DURATION_OPTIONS.map((seconds) => <option key={seconds} value={seconds}>{formatRestOption(seconds)}</option>)}</select></label>
               </div>
+              {exercise.notes ? <p className="template-slot-cue">{exercise.notes}</p> : null}
             </article>
           ))}
         </div>
@@ -1169,8 +1178,9 @@ function EmptyState({ title, copy }: { title: string; copy: string }) {
 }
 
 export default function StrongerApp() {
-  const [previewMode] = useState(() => import.meta.env.DEV && new URLSearchParams(window.location.search).get("preview") === "compact");
-  const [data, setData] = useState<StrongerData>(() => previewMode ? createPreviewData() : createDefaultData());
+  const [previewKind] = useState(() => import.meta.env.DEV ? new URLSearchParams(window.location.search).get("preview") : null);
+  const previewMode = previewKind === "compact" || previewKind === "templates" || previewKind === "fresh";
+  const [data, setData] = useState<StrongerData>(() => previewKind === "compact" ? createPreviewData() : createDefaultData());
   const [hydrated, setHydrated] = useState(previewMode);
   const [storageRecoveryRequired, setStorageRecoveryRequired] = useState(false);
   const [canOverwriteUnreadableStorage, setCanOverwriteUnreadableStorage] = useState(false);
@@ -1191,6 +1201,7 @@ export default function StrongerApp() {
   const [blankName, setBlankName] = useState("Workout");
   const [showExerciseModal, setShowExerciseModal] = useState(false);
   const [showExerciseLibrary, setShowExerciseLibrary] = useState(false);
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(previewKind === "templates");
   const [movementGuide, setMovementGuide] = useState<ExerciseCatalogItem | null>(null);
   const [routineDraft, setRoutineDraft] = useState<Routine | null>(null);
   const [showProgramBlockSetup, setShowProgramBlockSetup] = useState(false);
@@ -1235,7 +1246,7 @@ export default function StrongerApp() {
   const programBlockDetail = programBlocks.find((block) => block.id === programBlockDetailId) ?? null;
   const otherModalOpen = Boolean(
     showBlankWorkout || showExerciseModal || routineDraft || showProgramBlockSetup || programBlockDetail ||
-      historyDetail || summary || installGuide || plateCalculatorDraft || showExerciseLibrary || movementGuide || showWorkoutMenu || exerciseAction,
+      historyDetail || summary || installGuide || plateCalculatorDraft || showExerciseLibrary || showTemplateLibrary || movementGuide || showWorkoutMenu || exerciseAction,
   );
 
   const exerciseCatalog = useMemo(() => {
@@ -2628,7 +2639,12 @@ export default function StrongerApp() {
                 {editingWorkout ? <button className="text-button" type="button" onClick={() => setEditingWorkout(false)}>Done</button> : <button className="exercise-menu-button" type="button" aria-label="Workout actions" onClick={() => setShowWorkoutMenu(true)}><DotsThree size={24} weight="bold" aria-hidden="true" /></button>}
               </section>
 
-              <input className="workout-notes-input" aria-label="Workout notes" placeholder="Notes" value={activeWorkout.notes ?? ""} onChange={(event) => updateActive((workout) => ({ ...workout, notes: event.target.value }))} />
+              {activeWorkout.notes?.includes("\n") ? (
+                <details className="template-method">
+                  <summary>Workout notes & guidance</summary>
+                  <textarea aria-label="Workout notes" rows={6} value={activeWorkout.notes} onChange={(event) => updateActive((workout) => ({ ...workout, notes: event.target.value }))} />
+                </details>
+              ) : <input className="workout-notes-input" aria-label="Workout notes" placeholder="Notes" value={activeWorkout.notes ?? ""} onChange={(event) => updateActive((workout) => ({ ...workout, notes: event.target.value }))} />}
               {activeWorkout.exercises.length > 1 ? (
                 <p className="exercise-reorder-hint" id="exercise-reorder-hint">
                   <span aria-hidden="true">↕</span> Hold the left-hand move grip, then drag to change the order.
@@ -2880,13 +2896,16 @@ export default function StrongerApp() {
               <section className="section-block">
                 <div className="section-heading">
                   <div><h2>Templates</h2></div>
-                  <button className="text-button" type="button" onClick={() => setRoutineDraft({ id: makeId("routine"), name: "", exercises: [] })}>New</button>
+                  <div className="template-heading-actions">
+                    <button className="text-button" type="button" onClick={() => setShowTemplateLibrary(true)}>Browse</button>
+                    <button className="text-button" type="button" onClick={() => setRoutineDraft({ id: makeId("routine"), name: "", exercises: [] })}>New</button>
+                  </div>
                 </div>
                 <div className="routine-list">
                   {data.routines.map((routine, index) => (
                     <article className="routine-card" key={routine.id}>
                       <button className="routine-main" type="button" onClick={() => startRoutine(routine)}>
-                        <span className="routine-index">0{index + 1}</span>
+                        <span className="routine-index">{String(index + 1).padStart(2, "0")}</span>
                         <span><strong>{routine.name}</strong><small>{routine.exercises.length} exercises · {routine.exercises.reduce((total, exercise) => total + exercise.targetSets, 0)} sets</small></span>
                         <span className="routine-arrow" aria-hidden="true">→</span>
                       </button>
@@ -3503,6 +3522,15 @@ export default function StrongerApp() {
           onAdd={addExerciseToActive}
           onCreateCustom={createCustomExercise}
         />
+      ) : null}
+
+      {showTemplateLibrary ? (
+        <Modal eyebrow="CHOOSE YOUR SESSION" title="Workout templates" onClose={() => setShowTemplateLibrary(false)} initialFocus="close" wide>
+          <TemplateLibrary onChoose={(routine) => {
+            setShowTemplateLibrary(false);
+            setRoutineDraft(routine);
+          }} />
+        </Modal>
       ) : null}
 
       {showExerciseLibrary ? (

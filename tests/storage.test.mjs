@@ -171,6 +171,38 @@ test("default data is valid at the current schema version", () => {
   assert.deepEqual(storage.migrateStrongerData(data), data);
 });
 
+test("a fresh installation loads fourteen ready-to-start templates with no history or preset loads", async () => {
+  const isolatedStorage = await importStorageModule();
+  const fake = createFakeIndexedDb({ storedValue: undefined });
+  const restore = installBrowserStorage(fake.indexedDb, createMemoryLocalStorage());
+  try {
+    const loaded = await isolatedStorage.loadData();
+    assert.equal(loaded.routines.length, 14);
+    assert.deepEqual(loaded.history, []);
+    assert.equal(loaded.activeWorkout, null);
+    assert.ok(loaded.routines.every((routine) => routine.exercises.length > 0 && routine.exercises.every((exercise) => exercise.targetWeightKg === 0)));
+    await isolatedStorage.saveData(loaded);
+    assert.deepEqual(await isolatedStorage.loadData(), loaded);
+  } finally {
+    restore();
+  }
+});
+
+test("existing workout data and intentionally empty template lists are never replaced by starter templates", async () => {
+  for (const routines of [activeHistoryBackup.data.routines, []]) {
+    const isolatedStorage = await importStorageModule();
+    const saved = isolatedStorage.normalizeStrongerData({ ...structuredClone(activeHistoryBackup.data), routines: structuredClone(routines) });
+    assert.ok(saved);
+    const fake = createFakeIndexedDb({ storedValue: saved });
+    const restore = installBrowserStorage(fake.indexedDb, createMemoryLocalStorage());
+    try {
+      assert.deepEqual(await isolatedStorage.loadData(), saved);
+    } finally {
+      restore();
+    }
+  }
+});
+
 test("legacy version-1 backups without customExercises remain importable", () => {
   const before = JSON.stringify(currentProgressBackup);
   const data = storage.normalizeStrongerBackup(currentProgressBackup);

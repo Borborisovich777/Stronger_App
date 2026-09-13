@@ -1,4 +1,5 @@
 import { isCompletedTrackedSet, resolveExerciseTracking, resolveExerciseWeightMode, type ExerciseTracking, type ExerciseWeightMode } from "./exercise-tracking";
+import { createDefaultRoutines } from "./workoutTemplates";
 
 export const CURRENT_FORMAT_VERSION = 1 as const;
 export const BACKUP_KIND = "stronger-backup" as const;
@@ -49,11 +50,13 @@ export type RoutineExercise = {
   targetDurationSeconds?: number;
   targetDistanceMeters?: number;
   restSeconds: number;
+  notes?: string;
 };
 
 export type Routine = {
   id: string;
   name: string;
+  notes?: string;
   exercises: RoutineExercise[];
 };
 
@@ -325,18 +328,6 @@ export function makeId(prefix = "item"): string {
   return `${prefix}-${value}`;
 }
 
-function routineExercise(
-  id: string,
-  exerciseKey: string,
-  name: string,
-  sets: number,
-  weightKg: number,
-  reps: number,
-  restSeconds: number,
-): RoutineExercise {
-  return { id, exerciseKey, name, targetSets: sets, targetWeightKg: weightKg, targetReps: reps, restSeconds };
-}
-
 export function createDefaultData(): StrongerData {
   return {
     formatVersion: CURRENT_FORMAT_VERSION,
@@ -352,41 +343,7 @@ export function createDefaultData(): StrongerData {
     history: [],
     customExercises: [],
     programBlocks: [],
-    routines: [
-      {
-        id: "routine-push",
-        name: "Push",
-        exercises: [
-          routineExercise("push-bench", "bench-press", "Bench press", 3, 60, 8, 120),
-          routineExercise("push-incline", "incline-dumbbell-press", "Incline dumbbell press", 3, 18, 10, 90),
-          routineExercise("push-shoulder", "shoulder-press", "Shoulder press", 3, 25, 8, 90),
-          routineExercise("push-lateral", "lateral-raise", "Lateral raise", 3, 7.5, 12, 60),
-          routineExercise("push-triceps", "triceps-pushdown", "Triceps pushdown", 3, 20, 12, 60),
-        ],
-      },
-      {
-        id: "routine-pull",
-        name: "Pull",
-        exercises: [
-          routineExercise("pull-deadlift", "deadlift", "Deadlift", 3, 80, 5, 150),
-          routineExercise("pull-row", "barbell-row", "Barbell row", 3, 45, 8, 90),
-          routineExercise("pull-lat", "lat-pulldown", "Lat pulldown", 3, 40, 10, 90),
-          routineExercise("pull-rear", "rear-delt-fly", "Rear delt fly", 3, 8, 12, 60),
-          routineExercise("pull-curl", "biceps-curl", "Biceps curl", 3, 10, 10, 60),
-        ],
-      },
-      {
-        id: "routine-legs",
-        name: "Legs",
-        exercises: [
-          routineExercise("legs-squat", "back-squat", "Back squat", 3, 70, 8, 150),
-          routineExercise("legs-rdl", "romanian-deadlift", "Romanian deadlift", 3, 55, 8, 120),
-          routineExercise("legs-press", "leg-press", "Leg press", 3, 100, 10, 90),
-          routineExercise("legs-curl", "leg-curl", "Leg curl", 3, 30, 12, 60),
-          routineExercise("legs-calf", "standing-calf-raise", "Standing calf raise", 3, 40, 12, 60),
-        ],
-      },
-    ],
+    routines: createDefaultRoutines(),
   };
 }
 
@@ -523,7 +480,7 @@ function validSession(session: unknown, enforceResourceLimits = true): session i
 function validRoutine(routine: unknown, enforceResourceLimits = true): routine is Routine {
   if (!routine || typeof routine !== "object") return false;
   const item = routine as Partial<Routine>;
-  if (!nonEmptyString(item.id) || typeof item.name !== "string" || !Array.isArray(item.exercises) ||
+  if (!nonEmptyString(item.id) || typeof item.name !== "string" || !optionalText(item.notes) || !Array.isArray(item.exercises) ||
     (enforceResourceLimits && item.exercises.length > MAX_EXERCISES_PER_ITEM)) return false;
   const exercisesValid = item.exercises.every((exercise) => {
     if (!exercise || typeof exercise !== "object") return false;
@@ -531,6 +488,7 @@ function validRoutine(routine: unknown, enforceResourceLimits = true): routine i
     return nonEmptyString(routineItem.id) &&
       nonEmptyString(routineItem.exerciseKey) &&
       typeof routineItem.name === "string" &&
+      optionalText(routineItem.notes) &&
       integerInRange(routineItem.targetSets, MAX_TARGET_SETS) &&
       routineItem.targetSets >= MIN_TARGET_SETS &&
       numberInRange(routineItem.targetWeightKg, enforceResourceLimits ? MAX_WEIGHT_KG : Number.MAX_VALUE) &&

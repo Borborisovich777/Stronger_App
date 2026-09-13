@@ -789,10 +789,9 @@ small {
 }
 
 .routine-main strong {
-  overflow: hidden;
   font-size: 0.9375rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .routine-main small {
@@ -4870,4 +4869,48 @@ body.is-reordering-exercises {
 .tracking-distance-duration .previous-value {
   white-space: normal;
   font-size: 0.72rem;
+}
+
+/* Prepared workouts reuse the compact template editor and existing theme. */
+.template-heading-actions { display: flex; gap: 16px; }
+.template-intro { margin: 0 0 14px; color: var(--muted); line-height: 1.6; }
+.template-method { padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.template-method summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
+.template-method summary::before { content: "+"; width: 24px; flex: 0 0 24px; }
+.template-method[open] summary::before { content: "−"; }
+.template-method p { color: var(--muted); line-height: 1.65; }
+.template-method textarea { width: 100%; resize: vertical; }
+.template-filters { display: flex; flex-wrap: wrap; gap: 8px; padding: 20px 0; }
+.template-filters button[aria-pressed="true"], :root .template-filters button[aria-pressed="true"]:hover { background: var(--accent); color: var(--on-accent); border-color: var(--accent-strong); }
+.template-catalog-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.template-catalog-card { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; gap: 12px; padding: 20px; text-align: left; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.template-catalog-card:hover { border-color: var(--accent-strong); background: var(--surface-soft); }
+.template-catalog-card strong { font-size: 1.12rem; line-height: 1.35; }
+.template-catalog-card > span:not(.section-kicker):not(.template-card-link) { color: var(--muted); line-height: 1.5; }
+.template-catalog-card small { margin-top: auto; color: var(--muted); }
+.template-card-link { color: var(--accent-ink); font-weight: 700; font-size: .88rem; }
+.template-detail-heading h3 { font-size: 1.5rem; margin: 8px 0; line-height: 1.25; }
+.template-detail-heading h3:focus { outline: none; }
+.template-detail-heading > p { line-height: 1.55; }
+.template-meta { color: var(--muted); font-size: .88rem; }
+.template-guidance { color: var(--muted); line-height: 1.6; padding: 14px; background: var(--surface-soft); border-left: 3px solid var(--accent-strong); }
+.template-slot-list { list-style: none; padding: 0; margin: 22px 0; counter-reset: template-slot; }
+.template-slot-list > li { counter-increment: template-slot; padding: 18px 0; border-top: 1px solid var(--line); }
+.template-slot-top { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; }
+.template-slot-top > div { min-width: 0; }
+.template-slot-top strong { font-size: 1rem; line-height: 1.4; }
+.template-slot-top strong::before { content: counter(template-slot) ". "; color: var(--subtle); }
+.template-slot-top p { margin: 6px 0; font-variant-numeric: tabular-nums; color: var(--muted); }
+.template-slot-optional { background: var(--surface-soft); }
+.template-include { display: flex; align-items: center; gap: 8px; min-height: 44px; flex-shrink: 0; font-size: .82rem; }
+.template-include input { width: 20px; min-height: 20px; height: 20px; accent-color: var(--accent-strong); }
+.template-alternative { display: grid; gap: 6px; margin-top: 10px; font-size: .8rem; color: var(--muted); }
+.template-alternative select { width: 100%; min-width: 0; color: var(--ink); font-size: 16px; }
+.template-slot-cue { color: var(--muted); font-size: .85rem; line-height: 1.55; margin: 10px 0 0; white-space: pre-line; }
+.template-save { display: grid; gap: 12px; padding-top: 20px; }
+.template-save > span, .template-save small { font-size: .85rem; color: var(--muted); }
+@media (max-width: 560px) {
+  .template-catalog-grid { grid-template-columns: minmax(0, 1fr); }
+  .template-slot-top { flex-direction: column; gap: 2px; }
+  .template-catalog-card { padding: 16px; }
 }
