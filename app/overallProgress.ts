@@ -1,4 +1,5 @@
 import type { WorkoutSession } from "./storage";
+import { buildExerciseProgress, type ExerciseTracking, type ExerciseWeightMode } from "./exercise-tracking";
 import {
   deriveReportMetrics,
   liveReportRanges,
@@ -38,7 +39,10 @@ export type ExerciseVolumeProgress = {
   name: string;
   completedSets: number;
   volumeKg: number;
+  tracking: ExerciseTracking;
+  weightMode: ExerciseWeightMode;
   bestWeightKg: number;
+  isNewWeightBest: boolean;
   previousCompletedSets: number;
   previousVolumeKg: number;
   previousBestWeightKg: number | null;
@@ -157,6 +161,8 @@ export function buildPeriodProgress(
   const previousExercises = new Map(
     (report.comparison?.exercises ?? []).map((exercise) => [exercise.exerciseKey, exercise]),
   );
+  const currentSessionIds = new Set(report.current.sessions.map((session) => session.sessionId));
+  const previousSessionIds = new Set(report.comparison?.sessions.map((session) => session.sessionId) ?? []);
 
   return {
     period,
@@ -168,15 +174,29 @@ export function buildPeriodProgress(
     exercises: report.current.exercises
       .map((exercise) => {
       const previous = previousExercises.get(exercise.exerciseKey);
+      const series = buildExerciseProgress(history, exercise.exerciseKey, currentSessionIds);
+      const loadTracked = series.tracking === "weight-reps" && series.weightMode !== "assistance";
+      const bestWeightKg = loadTracked ? Math.max(0, ...series.records.map((record) => record.bestWeightKg)) : 0;
+      const previousRecords = series.allHistoryRecords.filter((record) => previousSessionIds.has(record.sessionId));
+      const priorRecords = currentRange
+        ? series.allHistoryRecords.filter((record) => record.workoutDate < currentRange.startDate)
+        : [];
+      const priorBestWeightKg = Math.max(0, ...priorRecords.map((record) => record.bestWeightKg));
+      const recordTolerance = Number.EPSILON * Math.max(1, Math.abs(bestWeightKg), Math.abs(priorBestWeightKg)) * 4;
       return {
         exerciseKey: exercise.exerciseKey,
         name: exercise.name,
         completedSets: exercise.workingSets,
         volumeKg: exercise.externalLoadVolumeKg,
-        bestWeightKg: exercise.bestWeightKg ?? 0,
+        tracking: series.tracking,
+        weightMode: series.weightMode,
+        bestWeightKg,
+        isNewWeightBest: loadTracked && priorRecords.length > 0 && bestWeightKg - priorBestWeightKg > recordTolerance,
         previousCompletedSets: previous?.workingSets ?? 0,
         previousVolumeKg: previous?.externalLoadVolumeKg ?? 0,
-        previousBestWeightKg: previous?.bestWeightKg ?? null,
+        previousBestWeightKg: loadTracked && previousRecords.length
+          ? Math.max(...previousRecords.map((record) => record.bestWeightKg))
+          : null,
       };
     })
       .sort((first, second) =>

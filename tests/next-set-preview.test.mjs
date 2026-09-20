@@ -182,3 +182,32 @@ test("load suggestions exclude assistance and non-load tracking and require the 
   const matchingHistory = [{ ...history[0], exercises: [{ ...history[0].exercises[0], tracking: "weight-reps", weightMode: "added" }] }];
   assert.equal(nextSetPreview.buildNextSetPreview({ ...current, tracking: "weight-reps", weightMode: "added" }, matchingHistory, 2.5, 1000).suggestedWeightKg, 22.5);
 });
+
+test("a later completed duplicate row keeps the latest miss from being bypassed", () => {
+  const active = exercise([set("today-1", 60, 8, true), set("today-2", 60, 8, false)]);
+  const latest = session("latest-miss", 30, [set("unperformed", 60, 8, false)]);
+  latest.exercises.push({ ...exercise([set("actual-latest", 60, 5, true)]), id: "second-bench" });
+  const history = [session("older-success", 10, [set("older", 60, 8, true)]), latest];
+  const before = structuredClone(history);
+  assert.equal(nextSetPreview.buildNextSetPreview(active, history, 2.5, 1000), null);
+  assert.deepEqual(history, before);
+});
+
+test("preview can use a repeated row while excluding other modes, invalid sets, and drops", () => {
+  const active = exercise([set("today-1", 60, 8, true), set("today-2", 60, 8, false)]);
+  const latest = session("latest", 30, [set("unperformed", 60, 8, false)]);
+  latest.exercises.push(
+    { ...exercise([set("different-mode", 100, 8, true)]), id: "assistance", weightMode: "assistance" },
+    { ...exercise([set("invalid", 100, 0, true)]), id: "invalid-row" },
+    { ...exercise([set("working-miss", 80, 5, true), { ...set("drop-success", 60, 10, true), dropSetOf: "working-miss" }]), id: "drops" },
+  );
+  const history = [latest];
+  assert.equal(nextSetPreview.buildNextSetPreview(active, history, 2.5, 1000), null);
+  latest.exercises.push({ ...exercise([set("actual-success", 60, 9, true)]), id: "success-row" });
+  const before = structuredClone(history);
+  const result = nextSetPreview.buildNextSetPreview(active, history, 2.5, 1000);
+  assert.equal(result?.historyEvidence.sessionId, "latest");
+  assert.equal(result?.historyEvidence.weightKg, 60);
+  assert.equal(result?.historyEvidence.reps, 9);
+  assert.deepEqual(history, before);
+});

@@ -432,6 +432,17 @@ function routineToWorkout(
   };
 }
 
+function WorkoutNotes({ notes, onChange }: { notes: string; onChange: (notes: string) => void }) {
+  // Keep the focused editor mounted when guidance is replaced with a short or empty note.
+  const [guidanceLayout] = useState(() => notes.includes("\n"));
+  return guidanceLayout ? (
+    <details className="template-method">
+      <summary>Workout notes & guidance</summary>
+      <textarea aria-label="Workout notes" rows={6} value={notes} onChange={(event) => onChange(event.target.value)} />
+    </details>
+  ) : <input className="workout-notes-input" aria-label="Workout notes" placeholder="Notes" value={notes} onChange={(event) => onChange(event.target.value)} />;
+}
+
 function DurationInput({ id, label, value, onChange, compact = false }: {
   id: string; label: string; value: number; onChange: (seconds: number) => void; compact?: boolean;
 }) {
@@ -476,6 +487,27 @@ function formatMeasurements(set: SetMeasurements, tracking: ExerciseTracking, un
   return `${weightMode === "assistance" ? "Assistance " : weightMode === "added" ? "Added " : ""}${formatWeight(set.weightKg, unit)} ${unit} × ${set.reps}`;
 }
 
+function PreviousValue({ set, tracking, unit, weightMode }: {
+  set: SetMeasurements | undefined;
+  tracking: ExerciseTracking;
+  unit: WeightUnit;
+  weightMode: ExerciseWeightMode;
+}) {
+  const description = set ? formatMeasurements(set, tracking, unit, weightMode) : "No previous set";
+  const compact = !set ? "—"
+    : tracking === "weight-reps" ? `${formatWeight(set.weightKg, unit)} × ${set.reps}`
+      : tracking === "reps" ? String(set.reps)
+        : tracking === "duration" ? formatSetDuration(set.durationSeconds ?? 0)
+          : null;
+  return <span className="previous-value" title={description}>
+    <span className="visually-hidden">Previous: {description}</span>
+    {compact !== null ? <span aria-hidden="true">{compact}</span> : <span className="previous-value-lines" aria-hidden="true">
+      <span>{formatDistanceKm(set?.distanceMeters ?? 0)} km</span>
+      <span>{formatSetDuration(set?.durationSeconds ?? 0)}</span>
+    </span>}
+  </span>;
+}
+
 function sessionMetric(session: WorkoutSession, unit: WeightUnit): { label: string; value: string } {
   const volume = workoutVolumeKg(session);
   if (volume > 0) return { label: "VOLUME", value: formatVolume(volume, unit) };
@@ -518,7 +550,7 @@ function SetTable({ sets, exerciseName, tracking, weightMode, unit, onUpdate, on
         const prior = previous?.(index);
         return <div className={`${rowClass} set-row ${set.completed ? "is-done" : ""}`} key={set.id}>
           <span className="set-number" aria-label={setLabel}>{drop ? `D${drop}` : number}</span>
-          {previous ? <span className="previous-value">{prior ? formatMeasurements(prior, tracking, unit, weightMode) : "—"}</span> : null}
+          {previous ? <PreviousValue set={prior} tracking={tracking} unit={unit} weightMode={weightMode} /> : null}
           <MeasurementFields id={`${idPrefix}${set.id}`} label={`${exerciseName}, ${setLabel}`} tracking={tracking} weightMode={weightMode} unit={unit} values={set} compact onUpdate={(update) => onUpdate(set.id, update)} />
           {onToggle ? <button className="complete-button" type="button" aria-pressed={Boolean(set.completed)} aria-label={`${set.completed ? "Mark" : "Complete"} ${exerciseName} ${setLabel}${set.completed ? " incomplete" : ""}`} onClick={() => onToggle(set.id, Date.now())}><Check size={19} weight="bold" aria-hidden="true" /></button> : onRemove ? <button className="routine-remove-set" type="button" aria-label={`Remove ${exerciseName} ${setLabel}`} disabled={sets.length <= 1} onClick={() => onRemove(set.id)}><X size={16} aria-hidden="true" /></button> : <span />}
         </div>;
@@ -1035,7 +1067,7 @@ function RoutineEditor({
     if (!draft.name.trim()) return;
     const targetSetCount = draft.exercises.reduce((total, exercise) => total + exercise.targetSets, 0);
     if (draft.exercises.length > MAX_EXERCISES_PER_ITEM || targetSetCount > MAX_TOTAL_SETS_PER_ITEM) {
-      setLimitStatus("Reduce this routine to the safe limit of 100 exercises and 500 total sets.");
+      setLimitStatus("Reduce this template to the safe limit of 100 exercises and 500 total sets.");
       return;
     }
     onSave({
@@ -1052,7 +1084,7 @@ function RoutineEditor({
     const targetSets = tracking === "distance-duration" ? 1 : 3;
     if (draft.exercises.length >= MAX_EXERCISES_PER_ITEM ||
       draft.exercises.reduce((total, item) => total + item.targetSets, 0) + targetSets > MAX_TOTAL_SETS_PER_ITEM) {
-      setLimitStatus("This routine has reached its safe exercise or set limit.");
+      setLimitStatus("This template has reached its safe exercise or set limit.");
       setAddingExercise(false);
       return;
     }
@@ -1121,7 +1153,7 @@ function RoutineEditor({
         </div>
 
         {addingExercise ? (
-          <section className="routine-picker-panel" aria-label="Add an exercise to this routine">
+          <section className="routine-picker-panel" aria-label="Add an exercise to this template">
             <div className="routine-picker-heading">
               <div><p className="section-kicker">EXERCISE LIBRARY</p><h3>Choose an exercise</h3></div>
               <button className="small-button" type="button" onClick={() => setAddingExercise(false)}>Cancel</button>
@@ -1645,16 +1677,13 @@ export default function StrongerApp() {
       : summaryWorkoutCount > 0
         ? `Across ${periodProgress.current.exerciseCount} ${periodProgress.current.exerciseCount === 1 ? "exercise" : "exercises"} in your saved history`
         : "Finish a workout to start seeing progress";
-  const periodRecordKeys = new Set(periodProgress.report.highlights
-    .filter((highlight) => highlight.kind === "weight-pr")
-    .map((highlight) => highlight.exerciseKey));
   const strengthHighlights = periodProgress.exercises
     .filter((exercise) => exercise.bestWeightKg > 0)
     .map((exercise, index) => {
       const deltaKg = exercise.previousBestWeightKg === null
         ? null
         : Math.round((exercise.bestWeightKg - exercise.previousBestWeightKg) * 1000) / 1000;
-      const isNewBest = progressPeriod !== "all" && periodRecordKeys.has(exercise.exerciseKey);
+      const isNewBest = progressPeriod !== "all" && exercise.isNewWeightBest;
       const priority = isNewBest ? 4 : deltaKg !== null && deltaKg > 0 ? 3
         : deltaKg === 0 ? 2 : deltaKg === null ? 1 : 0;
       return { ...exercise, deltaKg, isNewBest, priority, index };
@@ -2344,7 +2373,7 @@ export default function StrongerApp() {
   function saveRoutine(routine: Routine) {
     const exists = data.routines.some((item) => item.id === routine.id);
     if (!exists && data.routines.length >= MAX_ROUTINES) {
-      setMessage("The routine safety limit has been reached. Remove an unused routine before adding another.");
+      setMessage("The template safety limit has been reached. Remove an unused template before adding another.");
       return;
     }
     setData((current) => {
@@ -2360,7 +2389,7 @@ export default function StrongerApp() {
   }
 
   function deleteRoutine(routine: Routine) {
-    if (!window.confirm(`Delete the ${routine.name} routine? Completed workout history will stay intact.`)) return;
+    if (!window.confirm(`Delete the ${routine.name} template? Completed workout history will stay intact.`)) return;
     setData((current) => ({ ...current, routines: current.routines.filter((item) => item.id !== routine.id) }));
   }
 
@@ -2374,7 +2403,7 @@ export default function StrongerApp() {
     event.preventDefault();
     const sourceRoutine = data.routines.find((routine) => routine.id === programBlockSourceId);
     if (!sourceRoutine) {
-      setMessage("Choose a routine to copy first.");
+      setMessage("Choose a template to copy first.");
       return;
     }
     if (programBlocks.length >= MAX_PROGRAM_BLOCKS) {
@@ -2388,7 +2417,7 @@ export default function StrongerApp() {
     }));
     setShowProgramBlockSetup(false);
     setProgramBlockDetailId(block.id);
-    setMessage("Program copy created. Your routine and workouts are unchanged.");
+    setMessage("Program copy created. Your template and workouts are unchanged.");
   }
 
   function setProgramWeekLoad(blockId: string, weekId: string, loadPercent: number) {
@@ -2401,7 +2430,7 @@ export default function StrongerApp() {
   }
 
   function deleteProgramBlock(block: ProgramBlock) {
-    if (!window.confirm(`Delete the ${block.name} sandbox copy? Its source routine and all workouts will stay unchanged.`)) return;
+    if (!window.confirm(`Delete the ${block.name} sandbox copy? Its source template and all workouts will stay unchanged.`)) return;
     setData((current) => ({
       ...current,
       programBlocks: (current.programBlocks ?? []).filter((item) => item.id !== block.id),
@@ -2484,7 +2513,7 @@ export default function StrongerApp() {
       setMessage("This file is not a valid Stronger backup. Your current data was not changed.");
       return;
     }
-    if (!window.confirm("Replace the exercise library, routines, program copies, workouts, history, and settings on this installation with this backup? This cannot be merged or undone.")) return;
+    if (!window.confirm("Replace the exercise library, templates, program copies, workouts, history, and settings on this installation with this backup? This cannot be merged or undone.")) return;
     setIsReplacingData(true);
     try {
       if (!previewMode) await replaceData(replacement, { allowRecoveryOverwrite: canOverwriteUnreadableStorage });
@@ -2506,13 +2535,13 @@ export default function StrongerApp() {
   }
 
   function resetAllData() {
-    if (!window.confirm("Reset Stronger and permanently remove every custom exercise, workout, routine, and setting? Export first if you may need this data.")) return;
+    if (!window.confirm("Reset Stronger and permanently remove every custom exercise, workout, template, program copy, and setting? Export first if you may need this data.")) return;
     rescueEligibleWorkoutIdRef.current = null;
     dismissedRescuePromptRef.current = null;
     setSessionRescuePrompt(null);
     setData(createDefaultData());
     setTab("workout");
-    setMessage("Stronger was reset to its starter routines.");
+    setMessage("Stronger was reset. Your saved templates and workout history are empty.");
   }
 
   if (!hydrated) {
@@ -2640,12 +2669,7 @@ export default function StrongerApp() {
                 {editingWorkout ? <button className="text-button" type="button" onClick={() => setEditingWorkout(false)}>Done</button> : <button className="exercise-menu-button" type="button" aria-label="Workout actions" onClick={() => setShowWorkoutMenu(true)}><DotsThree size={24} weight="bold" aria-hidden="true" /></button>}
               </section>
 
-              {activeWorkout.notes?.includes("\n") ? (
-                <details className="template-method">
-                  <summary>Workout notes & guidance</summary>
-                  <textarea aria-label="Workout notes" rows={6} value={activeWorkout.notes} onChange={(event) => updateActive((workout) => ({ ...workout, notes: event.target.value }))} />
-                </details>
-              ) : <input className="workout-notes-input" aria-label="Workout notes" placeholder="Notes" value={activeWorkout.notes ?? ""} onChange={(event) => updateActive((workout) => ({ ...workout, notes: event.target.value }))} />}
+              <WorkoutNotes key={activeWorkout.id} notes={activeWorkout.notes ?? ""} onChange={(notes) => updateActive((workout) => ({ ...workout, notes }))} />
               {activeWorkout.exercises.length > 1 ? (
                 <p className="exercise-reorder-hint" id="exercise-reorder-hint">
                   <span aria-hidden="true">↕</span> Hold the left-hand move grip, then drag to change the order.
@@ -2772,7 +2796,7 @@ export default function StrongerApp() {
                           <div className={`set-entry ${currentDropNumber ? "is-drop-segment" : ""}`} key={set.id}>
                             <div className={`set-grid set-row tracking-${exerciseTracking(exercise)} ${set.completed ? "is-done" : ""}`}>
                               <span className="set-number" aria-label={setLabel}>{currentDropNumber ? `D${currentDropNumber}` : setNumber}</span>
-                              <span className="previous-value">{prior ? formatMeasurements(prior, exerciseTracking(exercise), unit, exerciseWeightMode(exercise)) : "—"}</span>
+                              <PreviousValue set={prior} tracking={exerciseTracking(exercise)} unit={unit} weightMode={exerciseWeightMode(exercise)} />
                               <MeasurementFields id={set.id} label={`${exercise.name}, ${setLabel}`} tracking={exerciseTracking(exercise)} weightMode={exerciseWeightMode(exercise)} unit={unit} values={set} compact onUpdate={(update) => updateSet(exercise.id, set.id, update)} />
                               <button
                                 className="complete-button"
@@ -2923,7 +2947,7 @@ export default function StrongerApp() {
                   <div><p className="section-kicker">EXPERIMENTAL · COPIED DATA</p><h2>Program lab</h2></div>
                   <button className="text-button" type="button" onClick={openProgramBlockSetup} disabled={!data.routines.length}>New copy</button>
                 </div>
-                <p className="section-copy">Preview a multi-week block without changing a routine or starting a workout. Every week begins at the copied targets.</p>
+                <p className="section-copy">Preview a multi-week block without changing a template or starting a workout. Every week begins at the copied targets.</p>
                 {programBlocks.length ? (
                   <div className="program-block-list">
                     {programBlocks.map((block) => (
@@ -2942,7 +2966,7 @@ export default function StrongerApp() {
                   </div>
                 )}
                 <button className="secondary-button full-width" type="button" onClick={openProgramBlockSetup} disabled={!data.routines.length}>
-                  {data.routines.length ? "Create a program copy" : "Create a routine first"}
+                  {data.routines.length ? "Create a program copy" : "Create a template first"}
                 </button>
               </section>
             </>
@@ -3129,11 +3153,11 @@ export default function StrongerApp() {
                         <button
                           type="button"
                           onClick={() => openProgressDetails(exercise.exerciseKey)}
-                          aria-label={`${exercise.name}, ${formatWeight(exercise.bestWeightKg, unit)} ${unit} best, ${status}. Open ${progressDetailPeriodLabel.toLocaleLowerCase()} details.`}
+                          aria-label={`${exercise.name}, ${exercise.weightMode === "added" ? "Added " : ""}${formatWeight(exercise.bestWeightKg, unit)} ${unit} best, ${status}. Open ${progressDetailPeriodLabel.toLocaleLowerCase()} details.`}
                         >
                           <span className="progress-strength-main">
                             <strong>{exercise.name}</strong>
-                            <small>{formatWeight(exercise.bestWeightKg, unit)} {unit} best</small>
+                            <small>{exercise.weightMode === "added" ? "Added " : ""}{formatWeight(exercise.bestWeightKg, unit)} {unit} best</small>
                           </span>
                           <span className={`progress-change${positive ? " is-positive" : ""}`}>{status}</span>
                         </button>
@@ -3173,11 +3197,11 @@ export default function StrongerApp() {
               ? `Continue ${activeWorkout.name} in Workout`
               : nextRoutine
                 ? `Go to ${nextRoutine.name} in Workout`
-                : "Go to Workout to choose or create a routine"}
+                : "Go to Workout to choose or create a template"}
           >
             <span>
-              <small>{activeWorkout ? "WORKOUT IN PROGRESS" : "NEXT IN YOUR ROUTINE"}</small>
-              <strong>{activeWorkout?.name ?? nextRoutine?.name ?? "Choose or create a routine"}</strong>
+              <small>{activeWorkout ? "WORKOUT IN PROGRESS" : "NEXT TEMPLATE"}</small>
+              <strong>{activeWorkout?.name ?? nextRoutine?.name ?? "Choose or create a template"}</strong>
             </span>
             <span className="progress-next-action">Open Workout</span>
           </button>
@@ -3568,9 +3592,9 @@ export default function StrongerApp() {
       ) : null}
 
       {showProgramBlockSetup ? (
-        <Modal eyebrow="PROGRAM LAB · SANDBOX" title="Copy a routine into a block" onClose={() => setShowProgramBlockSetup(false)}>
+        <Modal eyebrow="PROGRAM LAB · SANDBOX" title="Copy a template into a block" onClose={() => setShowProgramBlockSetup(false)}>
           <form className="form-stack" onSubmit={createProgramBlock}>
-            <label htmlFor="program-source-routine">Routine to copy
+            <label htmlFor="program-source-routine">Template to copy
               <select id="program-source-routine" value={programBlockSourceId} onChange={(event) => setProgramBlockSourceId(event.target.value)} required>
                 {data.routines.map((routine) => <option key={routine.id} value={routine.id}>{routine.name}</option>)}
               </select>
@@ -3585,7 +3609,7 @@ export default function StrongerApp() {
             </label>
             <div className="program-safety-note">
               <strong>A snapshot is made now.</strong>
-              <p>Later edits to either copy stay separate. This experiment cannot start workouts or overwrite the source routine.</p>
+              <p>Later edits to either copy stay separate. This experiment cannot start workouts or overwrite the source template.</p>
             </div>
             <button className="primary-button" type="submit" disabled={!programBlockSourceId}>Create sandbox copy</button>
           </form>

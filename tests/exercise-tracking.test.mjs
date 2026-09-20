@@ -237,3 +237,27 @@ test("previous lookup can find a matching mode after another row with the same k
   assert.equal(tracking.findPreviousDropSet(history, "chin-up", 0, 0, "weight-reps", "added"), addedDrop);
   assert.equal(tracking.findPreviousDropSet(history, "chin-up", 0, 0, "weight-reps", "assistance"), undefined);
 });
+
+test("previous results use completed repeated rows in saved order with last-result fallback", () => {
+  const first = set({ id: "first-result", weightKg: 60, reps: 5 });
+  const drop = set({ id: "first-drop", weightKg: 40, reps: 12, dropSetOf: first.id });
+  const second = set({ id: "second-result", weightKg: 55, reps: 6 });
+  const row = (id, sets, values = {}) => exercise({ id, exerciseKey: "bench-press", tracking: "weight-reps", weightMode: "external", sets, ...values });
+  const history = [
+    session([
+      row("unfinished", [set({ id: "not-performed", weightKg: 60, reps: 8, completed: false })]),
+      row("first", [first, drop]),
+      row("other-mode", [set({ id: "assistance", weightKg: 25, reps: 8 })], { weightMode: "assistance" }),
+      row("second", [second]),
+      row("invalid", [set({ id: "zero-reps", weightKg: 100, reps: 0 })]),
+    ]),
+    { ...session([row("old", [set({ id: "older-success", weightKg: 60, reps: 8 })])]), id: "older", workoutDate: "2026-09-12" },
+  ];
+  const before = structuredClone(history);
+  assert.equal(tracking.findPreviousSet(history, "bench-press", 0, "weight-reps", "external"), first);
+  assert.equal(tracking.findPreviousSet(history, "bench-press", 1, "weight-reps", "external"), second);
+  assert.equal(tracking.findPreviousSet(history, "bench-press", 5, "weight-reps", "external"), second);
+  assert.equal(tracking.findPreviousDropSet(history, "bench-press", 0, 0, "weight-reps", "external"), drop);
+  assert.equal(tracking.findPreviousDropSet(history, "bench-press", 1, 0, "weight-reps", "external"), undefined);
+  assert.deepEqual(history, before);
+});

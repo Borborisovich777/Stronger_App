@@ -1,4 +1,4 @@
-import { resolveExerciseTracking, resolveExerciseWeightMode, tracksLoad } from "./exercise-tracking";
+import { isCompletedTrackedSet, resolveExerciseTracking, resolveExerciseWeightMode, tracksLoad } from "./exercise-tracking";
 import type { SetEffort, WorkoutExercise, WorkoutSession, WorkoutSet } from "./storage";
 
 export type NextSetEvidence = {
@@ -42,17 +42,19 @@ function evidenceFromSet(set: WorkoutSet): NextSetEvidence {
 function latestComparableSession(
   history: readonly WorkoutSession[],
   currentExercise: WorkoutExercise,
-): { session: WorkoutSession; exercise: WorkoutExercise } | null {
-  let latest: { session: WorkoutSession; exercise: WorkoutExercise; timestamp: number } | null = null;
+): { session: WorkoutSession; sets: WorkoutSet[] } | null {
+  let latest: { session: WorkoutSession; sets: WorkoutSet[]; timestamp: number } | null = null;
   for (const session of history) {
-    const exercise = session.exercises.find((candidate) => candidate.exerciseKey === currentExercise.exerciseKey &&
+    const exercises = session.exercises.filter((candidate) => candidate.exerciseKey === currentExercise.exerciseKey &&
       resolveExerciseTracking(candidate) === resolveExerciseTracking(currentExercise) &&
       resolveExerciseWeightMode(candidate) === resolveExerciseWeightMode(currentExercise));
-    if (!exercise?.sets.some((set) => set.completed && !set.dropSetOf)) continue;
+    const sets = exercises.flatMap((exercise) => exercise.sets
+      .filter((set) => !set.dropSetOf && isCompletedTrackedSet(set, exercise)));
+    if (!sets.length) continue;
     const timestamp = session.finishedAt ?? session.startedAt;
-    if (!latest || timestamp > latest.timestamp) latest = { session, exercise, timestamp };
+    if (!latest || timestamp > latest.timestamp) latest = { session, sets, timestamp };
   }
-  return latest ? { session: latest.session, exercise: latest.exercise } : null;
+  return latest ? { session: latest.session, sets: latest.sets } : null;
 }
 
 export function buildNextSetPreview(
@@ -80,8 +82,7 @@ export function buildNextSetPreview(
 
   const comparable = latestComparableSession(history, exercise);
   if (!comparable) return null;
-  const qualifyingHistorySet = comparable.exercise.sets
-    .filter((set) => !set.dropSetOf)
+  const qualifyingHistorySet = comparable.sets
     .filter((set) => meetsPlan(set, nextSet.weightKg, nextSet.reps))
     .sort((first, second) => first.weightKg - second.weightKg || second.reps - first.reps)[0];
   if (!qualifyingHistorySet) return null;

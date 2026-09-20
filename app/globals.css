@@ -1624,6 +1624,13 @@ body.is-reordering-exercises {
   white-space: nowrap;
 }
 
+.previous-value-lines > span {
+  display: block;
+  overflow: hidden;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+}
+
 .set-input,
 .compact-set-table .set-input {
   width: 100%;

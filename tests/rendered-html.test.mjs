@@ -128,7 +128,7 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(app, /set\.effort/);
   assert.match(app, /Program lab/);
   assert.match(app, /Preview only/);
-  assert.match(app, /cannot start workouts or overwrite the source routine/);
+  assert.match(app, /cannot start workouts or overwrite the source template/);
   assert.match(app, /programBlocks: \[\.\.\.\(current\.programBlocks \?\? \[\]\), block\]/);
   assert.match(app, /You trained/);
   assert.match(app, /No workouts logged/);
@@ -139,7 +139,7 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(app, /GETTING STRONGER/);
   assert.match(app, /See all exercises/);
   assert.match(app, /aria-expanded=\{showProgressDetails\}/);
-  assert.match(app, /NEXT IN YOUR ROUTINE/);
+  assert.match(app, /NEXT TEMPLATE/);
   assert.match(app, /Open Workout/);
   assert.match(app, /progressDetailPeriodLabel/);
   assert.match(app, /TRAINING DOSE/);
