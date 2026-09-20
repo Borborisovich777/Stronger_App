@@ -1242,6 +1242,7 @@ export default function StrongerApp() {
   const [programBlockWeekCount, setProgramBlockWeekCount] = useState(4);
   const [programBlockDetailId, setProgramBlockDetailId] = useState<string | null>(null);
   const [historyDetail, setHistoryDetail] = useState<WorkoutSession | null>(null);
+  const [historyToDelete, setHistoryToDelete] = useState<WorkoutSession | null>(null);
   const [summary, setSummary] = useState<WorkoutSession | null>(null);
   const [historySearch, setHistorySearch] = useState("");
   const [historySearchFocused, setHistorySearchFocused] = useState(false);
@@ -1261,6 +1262,7 @@ export default function StrongerApp() {
   const dismissedRescuePromptRef = useRef<DismissedRescuePrompt | null>(null);
   const deferredRescueCheckRef = useRef(false);
   const progressDetailsRef = useRef<HTMLDivElement>(null);
+  const historyHeadingRef = useRef<HTMLHeadingElement>(null);
   const exerciseReorderGestureRef = useRef<ExerciseReorderGesture | null>(null);
   const exerciseReorderPreviewRef = useRef<HTMLDivElement>(null);
   const exerciseReorderAutoScrollRef = useRef<number | null>(null);
@@ -1279,7 +1281,7 @@ export default function StrongerApp() {
   const programBlockDetail = programBlocks.find((block) => block.id === programBlockDetailId) ?? null;
   const otherModalOpen = Boolean(
     showBlankWorkout || showExerciseModal || routineDraft || showProgramBlockSetup || programBlockDetail ||
-      historyDetail || summary || installGuide || plateCalculatorDraft || showExerciseLibrary || showTemplateLibrary || movementGuide || showWorkoutMenu || exerciseAction,
+      historyDetail || historyToDelete || summary || installGuide || plateCalculatorDraft || showExerciseLibrary || showTemplateLibrary || movementGuide || showWorkoutMenu || exerciseAction,
   );
 
   const exerciseCatalog = useMemo(() => {
@@ -2365,9 +2367,12 @@ export default function StrongerApp() {
   }
 
   function deleteHistory(session: WorkoutSession) {
-    if (!window.confirm(`Delete ${session.name} from ${formatDate(session.workoutDate)}? This cannot be undone.`)) return;
     setData((current) => ({ ...current, history: current.history.filter((item) => item.id !== session.id) }));
     setHistoryDetail(null);
+    setHistoryToDelete(null);
+    setShowHistoryMenu(false);
+    setMessage(`${session.name} deleted from History.`);
+    window.requestAnimationFrame(() => historyHeadingRef.current?.focus({ preventScroll: true }));
   }
 
   function saveRoutine(routine: Routine) {
@@ -2990,7 +2995,7 @@ export default function StrongerApp() {
         <main>
           <section className="page-heading">
             <p className="eyebrow">YOUR TRAINING LOG</p>
-            <h1>History</h1>
+            <h1 ref={historyHeadingRef} tabIndex={-1}>History</h1>
             <p>Every finished workout, kept as it happened.</p>
           </section>
           <label className="search-field">
@@ -3012,12 +3017,15 @@ export default function StrongerApp() {
             <div className="history-list">
               {filteredHistory.map((session) => (
                 <article className="history-card" key={session.id}>
-                  <button type="button" onClick={() => { setHistoryDetail(session); setShowHistoryMenu(false); }}>
+                  <button className="history-open-button" type="button" onClick={() => { setHistoryDetail(session); setShowHistoryMenu(false); }}>
                     <span className="history-date"><strong>{session.workoutDate.slice(8)}</strong><small>{new Intl.DateTimeFormat("en", { month: "short" }).format(new Date(`${session.workoutDate}T12:00:00`))}</small></span>
                     <span className="history-main"><strong>{session.name}</strong><small>{session.exercises.length} exercises · {completedSets(session).length} sets{completedDropSegments(session).length
                       ? ` · ${completedDropSegments(session).length} drops`
                       : ""}</small></span>
                     <span className="history-metric"><strong>{sessionMetric(session, unit).value}</strong><small>{formatDuration(workoutElapsedSeconds(session, now))}</small></span>
+                  </button>
+                  <button className="history-delete-button" type="button" aria-label={`Delete ${session.name} from ${formatDate(session.workoutDate)}`} title="Delete workout" onClick={() => setHistoryToDelete(session)}>
+                    <Trash size={20} aria-hidden="true" />
                   </button>
                 </article>
               ))}
@@ -3770,12 +3778,12 @@ export default function StrongerApp() {
         </Modal>
       ) : null}
 
-      {historyDetail ? (
+      {historyDetail && !historyToDelete ? (
         <Modal eyebrow={formatDate(historyDetail.workoutDate)} title={historyDetail.name} onClose={() => { setHistoryDetail(null); setShowHistoryMenu(false); }} wide>
           <div className="compact-history-actions"><button className="exercise-menu-button" type="button" aria-label="History workout actions" aria-expanded={showHistoryMenu} onClick={() => setShowHistoryMenu(!showHistoryMenu)}><DotsThree size={23} weight="bold" aria-hidden="true" /></button></div>
           {showHistoryMenu ? <div className="exercise-actions-sheet">
             <button type="button" onClick={() => duplicateForToday(historyDetail)}>Repeat workout</button>
-            <button className="danger-text" type="button" onClick={() => deleteHistory(historyDetail)}>Delete workout</button>
+            <button className="danger-text" type="button" onClick={() => setHistoryToDelete(historyDetail)}>Delete workout</button>
           </div> : null}
           <div className="detail-summary">
             <div><small>DURATION</small><strong>{formatDuration(workoutElapsedSeconds(historyDetail, now))}</strong></div>
@@ -3799,6 +3807,21 @@ export default function StrongerApp() {
                 })}</tbody></table> : <p className="exercise-note">No set entries</p>}
               </article>
             ))}
+          </div>
+        </Modal>
+      ) : null}
+
+      {historyToDelete ? (
+        <Modal title="Delete workout?" eyebrow="HISTORY" initialFocus="primary" descriptionId="history-delete-summary history-delete-description" onClose={() => setHistoryToDelete(null)}>
+          <div className="history-delete-summary" id="history-delete-summary">
+            <strong>{historyToDelete.name}</strong>
+            <span>{formatDate(historyToDelete.workoutDate)}</span>
+            <small>{completedSets(historyToDelete).length} {completedSets(historyToDelete).length === 1 ? "set" : "sets"} · {formatDuration(workoutElapsedSeconds(historyToDelete, now))}</small>
+          </div>
+          <p id="history-delete-description" className="history-delete-description">This workout will be removed from History and Progress. Templates and your current workout will stay unchanged. This cannot be undone.</p>
+          <div className="history-delete-actions">
+            <button className="secondary-button" type="button" data-modal-primary onClick={() => setHistoryToDelete(null)}>Cancel</button>
+            <button className="history-confirm-delete" type="button" onClick={() => deleteHistory(historyToDelete)}>Delete workout</button>
           </div>
         </Modal>
       ) : null}

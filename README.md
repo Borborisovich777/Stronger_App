@@ -357,7 +357,11 @@ The original history entry remains unchanged.
 
 ### Delete a history entry
 
-Deleting a completed workout is permanent on that device. It can also change previous-set comparisons and progress calculations.
+1. Open **History** and tap the trash icon beside the workout. You can also open the workout, open its actions menu, and choose **Delete workout**.
+2. Check the workout's name, date, set count and duration in the confirmation.
+3. Choose **Delete workout** to remove it, or **Cancel** to keep it.
+
+Deleting a completed workout is permanent on that device. History, Progress and future previous-set comparisons update automatically. Saved templates and any active workout stay unchanged.
 
 Export a backup first if the workout may be needed later.
 
