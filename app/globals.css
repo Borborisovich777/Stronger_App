@@ -1624,6 +1624,13 @@ body.is-reordering-exercises {
   white-space: nowrap;
 }
 
+.previous-value-lines > span {
+  display: block;
+  overflow: hidden;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+}
+
 .set-input,
 .compact-set-table .set-input {
   width: 100%;
@@ -1967,6 +1974,8 @@ body.is-reordering-exercises {
 }
 
 .history-card {
+  display: flex;
+  align-items: center;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -1974,9 +1983,10 @@ body.is-reordering-exercises {
   box-shadow: none;
 }
 
-.history-card > button {
+.history-open-button {
   display: grid;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   min-height: 64px;
   grid-template-columns: 48px minmax(0, 1fr) auto;
   padding: 8px 10px;
@@ -1984,6 +1994,59 @@ body.is-reordering-exercises {
   gap: 10px;
   background: transparent;
   text-align: left;
+}
+
+.history-delete-button {
+  display: grid;
+  flex: 0 0 44px;
+  min-height: 44px;
+  margin-right: 4px;
+  padding: 0;
+  place-items: center;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--danger);
+}
+
+.history-delete-button:hover {
+  background: var(--danger-soft);
+}
+
+.history-delete-summary {
+  display: grid;
+  gap: 4px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+
+.history-delete-summary span,
+.history-delete-summary small,
+.history-delete-description {
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.history-delete-description {
+  margin: 12px 0 0;
+}
+
+.history-delete-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.history-confirm-delete {
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-weight: 700;
 }
 
 .history-date,
@@ -4542,7 +4605,7 @@ body.is-reordering-exercises {
     grid-column: 1 / -1;
   }
 
-  .history-card > button {
+  .history-open-button {
     grid-template-columns: 48px minmax(0, 1fr);
   }
 

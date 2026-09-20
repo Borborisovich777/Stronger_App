@@ -97,13 +97,13 @@ Stronger includes 14 prepared sessions in **Workout → Template library**, next
 To create a template:
 
 1. Open **Workout**.
-2. Tap **New** beside **Templates**.
+2. Tap **New** beside **Your templates**.
 3. Enter a **Template name**.
 4. Tap **Add exercise**, then search or browse the exercise library.
 5. Set each exercise's defaults: sets and weight/reps, or time/distance where appropriate.
 6. Tap **Save template**.
 
-To edit an existing template, tap its **⋯** control under **Workout → Templates**, or use **Settings → Templates → Edit**. While editing, you can:
+To edit an existing template, tap its **⋯** control under **Workout → Your templates**, or use **Settings → Templates → Edit**. While editing, you can:
 
 - Rename the template
 - Add an exercise from the built-in or custom library
@@ -159,7 +159,7 @@ Existing exercise IDs and saved measurements are preserved. Old records keep the
 
 Some built-in exercise rows include **Alternatives**. Open it when the planned equipment is unavailable. Stronger shows up to three curated exercises with the same broad movement pattern and different equipment.
 
-Loads and difficulty are not equivalent between machines, free weights, cables, and bodyweight movements. Choosing an alternative only selects it in the current add-exercise flow. It never replaces an existing exercise or changes saved routines, workouts, or History. Unsupported and custom exercises do not receive automatic suggestions.
+Loads and difficulty are not equivalent between machines, free weights, cables, and bodyweight movements. Choosing an alternative only selects it in the current add-exercise flow. It never replaces an existing exercise or changes saved templates, workouts, or History. Unsupported and custom exercises do not receive automatic suggestions.
 
 ## Start a workout
 
@@ -227,16 +227,16 @@ Each exercise starts open. Use its disclosure arrow to fold the sets or expand t
 
 ## Experimental program blocks
 
-**Program lab** appears below the template list. It is available when no workout is active and works only on copied data:
+**Program lab** appears below **Your templates** when no workout is active or after you minimize a workout. Save a template first to enable creating a program copy. The lab works only on copied data:
 
 1. Choose **Create a program copy**.
-2. Select a source routine and a block length from 2–12 weeks.
+2. Select a source template and a block length from 2–12 weeks.
 3. Review the copied targets for each week.
 4. Optionally change a week’s load percentage from 50–120% in five-point steps.
 
-Every week begins at a neutral 100% of the copied routine. Percentages are user-entered arithmetic previews, not coaching recommendations. Sets, reps, exercise order, and rest settings remain exactly as copied.
+Every week begins at a neutral 100% of the copied template. Percentages are user-entered arithmetic previews, not coaching recommendations. Sets, reps, exercise order, and rest settings remain exactly as copied.
 
-A program copy cannot start a workout, update its source routine, or change history and Progress. Editing or deleting the copy affects only the sandbox. Later changes to the live routine also do not rewrite the snapshot. Program copies remain local and are included in Stronger backups.
+A program copy cannot start a workout, update its source template, or change history and Progress. Editing or deleting the copy affects only the sandbox. Later changes to the live template also do not rewrite the snapshot. Program copies remain local and are included in Stronger backups.
 
 ## Log a set
 
@@ -305,7 +305,7 @@ A preview appears only when all of these conditions are true:
 - The latest saved History session containing completed sets for the same exercise, tracking type, and load convention also has a set that met or exceeded the plan. A newer miss cannot be skipped in favor of an older success.
 - If effort tracking is enabled, today's effort must be entered before a preview can appear. If either evidence set has effort recorded, it is no higher than RPE 8.5 or no lower than RIR 2. Missing historical effort is treated as unknown, not as proof that the set was easy.
 
-The preview shows both evidence sets and one small possible increment: 2.5 kg when displaying kilograms or 5 lb when displaying pounds. It has no apply button and does not change the next set, routine, History, or Progress. If the prompt is useful, edit the next set manually; otherwise ignore it or turn the setting off.
+The preview shows both evidence sets and one small possible increment: 2.5 kg when displaying kilograms or 5 lb when displaying pounds. It has no apply button and does not change the next set, template, History, or Progress. If the prompt is useful, edit the next set manually; otherwise ignore it or turn the setting off.
 
 This arithmetic rule cannot assess fatigue, pain, technique, equipment, sleep, or readiness. It is not a requirement to add load and is not medical or coaching advice.
 
@@ -357,7 +357,11 @@ The original history entry remains unchanged.
 
 ### Delete a history entry
 
-Deleting a completed workout is permanent on that device. It can also change previous-set comparisons and progress calculations.
+1. Open **History** and tap the trash icon beside the workout. You can also open the workout, open its actions menu, and choose **Delete workout**.
+2. Check the workout's name, date, set count and duration in the confirmation.
+3. Choose **Delete workout** to remove it, or **Cancel** to keep it.
+
+Deleting a completed workout is permanent on that device. History, Progress and future previous-set comparisons update automatically. Saved templates and any active workout stay unchanged.
 
 Export a backup first if the workout may be needed later.
 
@@ -370,9 +374,9 @@ Open **Progress** for a plain-language summary instead of a dense statistics das
 3. Read the lead sentence for the number of completed workouts in that period.
 4. On **Week**, use the single progress bar to compare completed workouts with **Settings → Weekly days**.
 5. Read **Training dose** as one compact summary: working sets, total reps, drop continuations, external-load volume, tracked workout time, and working sets by primary exercise category. The previous matched period and its dates appear directly below the current values.
-6. Review up to three **Getting stronger** rows. Each row shows the exercise's heaviest completed working set in the selected period and a short comparison such as **New best**, **+2.5 kg**, **Same as last week**, or **No comparison yet**.
+6. Review up to three **Getting stronger** rows. Each row uses the exercise's latest tracking and load convention in the selected period, shows its heaviest comparable completed working set, and gives a short comparison such as **New best**, **+2.5 kg**, **Same as last week**, or **No comparison yet**. Added weight is labeled explicitly; assistance and timed exercise results remain in exercise details. Previous-period comparisons and records never mix load conventions.
 7. Tap an exercise row or **See all exercises** only when you want the exercise records for the selected period.
-8. Tap **Next in your routine** to return to Workout. This opens the Workout tab; it never starts or replaces a workout automatically.
+8. Tap **Next template** to return to Workout. This opens the Workout tab; it never starts or replaces a workout automatically.
 
 Only finished History entries and valid completed sets contribute to the summary. If a current workout already contains completed work, Progress says **Active workout not included yet** until that workout is finished and saved.
 
@@ -418,7 +422,7 @@ Open **Settings → Plate calculator** to check how a target total can be loaded
 
 The calculator chooses the closest load it can make without exceeding the target and never invents more pairs than you entered. When two combinations make the same load, it uses the one with fewer plates. If the target is below the entered bar, it stops at the bar and shows a warning.
 
-The tool is temporary: closing it clears its inputs. It has no apply button and cannot change a set, workout, routine, History, Progress, setting, or backup. Collars are excluded unless you include their weight in the bar field. Always verify the bar label, plate markings, collars, and both sides before lifting.
+The tool is temporary: closing it clears its inputs. It has no apply button and cannot change a set, workout, template, History, Progress, setting, or backup. Collars are excluded unless you include their weight in the bar field. Always verify the bar label, plate markings, collars, and both sides before lifting.
 
 # Backup and restore
 
@@ -447,7 +451,7 @@ A backup may contain built-in selections, custom exercise names, workout dates, 
 
 Choose **Export workout CSV** when you want a readable copy of saved History for a spreadsheet. The CSV keeps history order and includes one row per saved set, including whether the set was completed, its canonical kilogram value, reps, time and distance measurements, tracking and load conventions, optional RPE or RIR, timestamps, and stable exercise keys. A saved workout with no sets receives one workout-only row so it is not silently omitted.
 
-CSV is not a backup and cannot be imported into Stronger. It excludes the active unfinished workout, routines, program copies, custom-exercise definitions, and settings. Keep exporting JSON separately for complete recovery.
+CSV is not a backup and cannot be imported into Stronger. It excludes the active unfinished workout, templates, program copies, custom-exercise definitions, and settings. Keep exporting JSON separately for complete recovery.
 
 Good times to export include:
 
@@ -670,11 +674,13 @@ Available scripts:
 - `npm run typecheck` — run TypeScript’s full type checker
 - `npm run test:data` — run executable schema, migration, backup, unit, and recovery tests
 - `npm run test:shell` — verify the built static shell and deployment contracts
-- `npm test` — run data tests, build the app, and verify the static shell
+- `npm test` — type-check and build the app, then run all automated tests, including data and static-shell checks
 - `npm run build` — create a production build
 - `npm run preview` — preview the production build locally
 
-The staged R&D safety gate is documented in [`docs/WAVE_0_PROTECTION.md`](docs/WAVE_0_PROTECTION.md). Complete its production-backup check before beginning Wave 1.
+Pull requests run the **PR checks** workflow with the same dependency installation, lint and test commands used before deployment. Confirm these checks pass before merging. The PR workflow validates the change without publishing; pushes to `main` use the separate deployment workflow.
+
+The staged R&D safety gate is documented in [`docs/WAVE_0_PROTECTION.md`](docs/WAVE_0_PROTECTION.md). Its backup and data-preservation requirements remain relevant when changing persistence. Dated plans and wave reports record the decisions and validation from those stages; this README describes the current interface.
 
 The product research, competitor findings, feature rationale, and staged rollout are summarized in the [`Stronger R&D Feature Roadmap`](Stronger_R%26D_Feature_Roadmap.pptx) presentation. Each implemented wave also has a concise decision record in the `docs` folder.
 
@@ -715,7 +721,7 @@ Before considering a release ready:
 - An active workout survives refresh and relaunch.
 - Unit changes preserve equivalent stored values.
 - History deletion updates Progress correctly.
-- Program sandbox changes survive relaunch without changing their source routine.
+- Program sandbox changes survive relaunch without changing their source template.
 - Next-set previews are off by default, require matching evidence, and never change the planned set.
 - A valid import replaces data only after confirmation.
 - An invalid import leaves existing data intact.

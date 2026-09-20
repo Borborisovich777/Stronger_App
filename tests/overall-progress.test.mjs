@@ -21,12 +21,16 @@ function session({ id, date, timestamp, exercises }) {
       id: `${id}-exercise-${exerciseIndex}`,
       exerciseKey: exercise.key,
       name: exercise.name ?? exercise.key,
+      ...(exercise.tracking ? { tracking: exercise.tracking } : {}),
+      ...(exercise.weightMode ? { weightMode: exercise.weightMode } : {}),
       restSeconds: 90,
       sets: exercise.sets.map((set, setIndex) => ({
         id: `${id}-set-${exerciseIndex}-${setIndex}`,
         weightKg: set.weight,
         reps: set.reps ?? 5,
         completed: set.completed ?? true,
+        ...(set.durationSeconds !== undefined ? { durationSeconds: set.durationSeconds } : {}),
+        ...(set.distanceMeters !== undefined ? { distanceMeters: set.distanceMeters } : {}),
         ...(set.dropSetOf ? { dropSetOf: set.dropSetOf } : {}),
       })),
     })),
@@ -178,7 +182,10 @@ test("period progress compares totals and per-exercise volume with the prior mat
       name: "Barbell row",
       completedSets: 1,
       volumeKg: 500,
+      tracking: "weight-reps",
+      weightMode: "external",
       bestWeightKg: 50,
+      isNewWeightBest: false,
       previousBestWeightKg: 50,
       previousCompletedSets: 1,
       previousVolumeKg: 400,
@@ -188,7 +195,10 @@ test("period progress compares totals and per-exercise volume with the prior mat
       name: "Bench press",
       completedSets: 1,
       volumeKg: 500,
+      tracking: "weight-reps",
+      weightMode: "external",
       bestWeightKg: 100,
+      isNewWeightBest: true,
       previousBestWeightKg: 80,
       previousCompletedSets: 1,
       previousVolumeKg: 400,
@@ -293,4 +303,77 @@ test("drop segments add volume without inflating working-set counts or best weig
   assert.equal(period.exercises[0].volumeKg, 316);
   assert.equal(period.exercises[0].bestWeightKg, 20);
   assert.equal(period.exercises[0].previousBestWeightKg, null);
+});
+
+test("period strength comparisons never compare legacy external load with added bodyweight load", () => {
+  const history = [
+    session({ id: "previous", date: "2026-09-07", timestamp: 100, exercises: [{ key: "chin-up", sets: [{ weight: 20 }] }] }),
+    session({ id: "current", date: "2026-09-14", timestamp: 200, exercises: [{ key: "chin-up", tracking: "weight-reps", weightMode: "added", sets: [{ weight: 40 }] }] }),
+  ];
+  const before = structuredClone(history);
+  const progress = overallProgress.buildPeriodProgress(history, "week", "2026-09-20");
+  const chinUp = progress.exercises[0];
+  assert.equal(chinUp.tracking, "weight-reps");
+  assert.equal(chinUp.weightMode, "added");
+  assert.equal(chinUp.bestWeightKg, 40);
+  assert.equal(chinUp.previousBestWeightKg, null);
+  assert.equal(chinUp.isNewWeightBest, false, "a new mode needs its own earlier baseline");
+  assert.equal(chinUp.previousCompletedSets, 1, "workload totals still include all performed work");
+  assert.equal(chinUp.previousVolumeKg, 100);
+  assert.equal(chinUp.volumeKg, 200);
+  assert.deepEqual(history, before);
+});
+
+test("current mode controls best-weight comparisons even when another mode earns a record", () => {
+  const history = [
+    session({ id: "previous", date: "2026-09-07", timestamp: 100, exercises: [
+      { key: "chin-up", sets: [{ weight: 20 }] },
+      { key: "chin-up", tracking: "weight-reps", weightMode: "added", sets: [{ weight: 50 }] },
+    ] }),
+    session({ id: "external-record", date: "2026-09-14", timestamp: 200, exercises: [{ key: "chin-up", sets: [{ weight: 100 }] }] }),
+    session({ id: "current-added", date: "2026-09-19", timestamp: 300, exercises: [{ key: "chin-up", tracking: "weight-reps", weightMode: "added", sets: [{ weight: 40 }] }] }),
+  ];
+  const progress = overallProgress.buildPeriodProgress(history, "week", "2026-09-20");
+  const chinUp = progress.exercises[0];
+  assert.equal(chinUp.bestWeightKg, 40);
+  assert.equal(chinUp.previousBestWeightKg, 50);
+  assert.equal(chinUp.isNewWeightBest, false, "the external-load record does not become an added-load record");
+  assert.ok(progress.report.highlights.some((highlight) => highlight.kind === "weight-pr" && highlight.exerciseKey === "chin-up"));
+  assert.equal(chinUp.completedSets, 2);
+  assert.equal(chinUp.volumeKg, 700);
+  assert.equal(chinUp.previousVolumeKg, 350);
+});
+
+test("mode-specific period records include earlier results in the period and ignore future history", () => {
+  const workout = (id, date, weight) => session({ id, date, timestamp: 100, exercises: [{ key: "chin-up", tracking: "weight-reps", weightMode: "added", sets: [{ weight }] }] });
+  const history = [
+    workout("old", "2026-08-01", 30),
+    workout("period-best", "2026-09-15", 40),
+    workout("latest", "2026-09-19", 35),
+    workout("future", "2026-09-21", 100),
+  ];
+  const progress = overallProgress.buildPeriodProgress(history, "week", "2026-09-20");
+  assert.equal(progress.exercises[0].bestWeightKg, 40);
+  assert.equal(progress.exercises[0].previousBestWeightKg, null, "the immediately preceding period has no matching work");
+  assert.equal(progress.exercises[0].isNewWeightBest, true, "the record uses all earlier comparable history");
+  assert.equal(overallProgress.buildPeriodProgress(history, "all", "2026-09-20").exercises[0].isNewWeightBest, false);
+});
+
+test("latest assistance or timed tracking excludes the exercise from load-strength highlights", () => {
+  const history = [
+    session({ id: "previous", date: "2026-09-07", timestamp: 100, exercises: [{ key: "chin-up", sets: [{ weight: 80 }] }, { key: "plank", sets: [{ weight: 10 }] }] }),
+    session({ id: "earlier-current", date: "2026-09-14", timestamp: 200, exercises: [{ key: "chin-up", sets: [{ weight: 90 }] }, { key: "plank", sets: [{ weight: 15 }] }] }),
+    session({ id: "current", date: "2026-09-19", timestamp: 300, exercises: [
+      { key: "chin-up", tracking: "weight-reps", weightMode: "assistance", sets: [{ weight: 20 }] },
+      { key: "plank", tracking: "duration", sets: [{ weight: 0, reps: 0, durationSeconds: 45 }] },
+    ] }),
+  ];
+  const progress = overallProgress.buildPeriodProgress(history, "week", "2026-09-20");
+  assert.equal(progress.current.completedSets, 4);
+  assert.equal(progress.current.totalVolumeKg, 525);
+  for (const exercise of progress.exercises) {
+    assert.equal(exercise.bestWeightKg, 0);
+    assert.equal(exercise.previousBestWeightKg, null);
+    assert.equal(exercise.isNewWeightBest, false);
+  }
 });

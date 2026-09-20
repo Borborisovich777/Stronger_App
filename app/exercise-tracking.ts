@@ -64,27 +64,32 @@ export function tracksEstimatedStrength(exercise: Pick<WorkoutExercise, "trackin
   return resolveExerciseTracking(exercise) === "weight-reps" && resolveExerciseWeightMode(exercise) === "external";
 }
 
+/** Keep completed working results in saved row order, including repeated exercise rows. */
 export function findPreviousSet(history: WorkoutSession[], exerciseKey: string, setIndex: number, tracking?: ExerciseTracking, weightMode?: ExerciseWeightMode): WorkoutSet | undefined {
   for (const session of history) {
-    const exercise = session.exercises.find((item) => item.exerciseKey === exerciseKey &&
+    const exercises = session.exercises.filter((item) => item.exerciseKey === exerciseKey &&
       (!tracking || resolveExerciseTracking(item, tracking) === tracking) &&
       (!weightMode || resolveExerciseWeightMode(item, weightMode) === weightMode));
-    if (!exercise) continue;
-    const workingSets = exercise.sets.filter((set) => !set.dropSetOf);
-    const comparable = workingSets[setIndex] ?? [...workingSets].reverse().find((set) => isCompletedTrackedSet(set, exercise));
-    if (comparable && isCompletedTrackedSet(comparable, exercise)) return comparable;
+    const workingSets = exercises.flatMap((exercise) => exercise.sets
+      .filter((set) => !set.dropSetOf && isCompletedTrackedSet(set, exercise)));
+    const comparable = workingSets[setIndex] ?? workingSets.at(-1);
+    if (comparable) return comparable;
   }
   return undefined;
 }
 
+/** Use the same completed-root ordering as Previous, then find that root's continuation. */
 export function findPreviousDropSet(history: WorkoutSession[], exerciseKey: string, workingSetIndex: number, dropIndex: number, tracking?: ExerciseTracking, weightMode?: ExerciseWeightMode): WorkoutSet | undefined {
   for (const session of history) {
-    const exercise = session.exercises.find((item) => item.exerciseKey === exerciseKey &&
+    const exercises = session.exercises.filter((item) => item.exerciseKey === exerciseKey &&
       (!tracking || resolveExerciseTracking(item, tracking) === tracking) &&
       (!weightMode || resolveExerciseWeightMode(item, weightMode) === weightMode));
-    if (!exercise) continue;
-    const root = exercise.sets.filter((set) => !set.dropSetOf)[workingSetIndex];
-    if (!root || !isCompletedTrackedSet(root, exercise)) continue;
+    const workingSets = exercises.flatMap((exercise) => exercise.sets
+      .filter((set) => !set.dropSetOf && isCompletedTrackedSet(set, exercise))
+      .map((set) => ({ set, exercise })));
+    const match = workingSets[workingSetIndex];
+    if (!match) continue;
+    const { set: root, exercise } = match;
     const drop = exercise.sets.filter((set) => set.dropSetOf === root.id)[dropIndex];
     if (drop && isCompletedTrackedSet(drop, exercise)) return drop;
   }
