@@ -1,8 +1,8 @@
 import { BUILT_IN_EXERCISES } from "./exercises";
-import { findPreviousWorkingSets, historyBeforeWorkout, resolveExerciseTracking, resolveExerciseWeightMode } from "./exercise-tracking";
+import { findPreviousSet, findPreviousWorkingSets, historyBeforeWorkout, resolveExerciseTracking, resolveExerciseWeightMode } from "./exercise-tracking";
 import type { Routine, WorkoutSession } from "./storage";
 
-/** Start the saved plan with the latest comparable loads; historical reps never lower its targets. */
+/** Weighted templates use recent loads and planned reps; other tracking retains previous results. */
 export function workoutFromTemplate(
   template: Routine,
   history: readonly WorkoutSession[],
@@ -23,10 +23,11 @@ export function workoutFromTemplate(
       const catalog = BUILT_IN_EXERCISES.find((item) => item.exerciseKey === exercise.exerciseKey);
       const tracking = resolveExerciseTracking(exercise, catalog?.tracking);
       const weightMode = resolveExerciseWeightMode(exercise, catalog?.weightMode);
+      const weighted = tracking === "weight-reps";
       const identity = JSON.stringify([exercise.exerciseKey, tracking, weightMode]);
       const previousSetOffset = previousSetOffsets.get(identity) ?? 0;
       previousSetOffsets.set(identity, previousSetOffset + exercise.targetSets);
-      const previousSets = findPreviousWorkingSets(previousHistory, exercise.exerciseKey, tracking, weightMode);
+      const previousSets = weighted ? findPreviousWorkingSets(previousHistory, exercise.exerciseKey, tracking, weightMode) : [];
       return {
         id: createId("session-exercise"),
         exerciseKey: exercise.exerciseKey,
@@ -36,11 +37,13 @@ export function workoutFromTemplate(
         restSeconds: exercise.restSeconds,
         notes: exercise.notes,
         sets: Array.from({ length: exercise.targetSets }, (_, index) => {
-          const previous = previousSets[previousSetOffset + index] ?? previousSets.at(-1);
+          const previous = weighted
+            ? previousSets[previousSetOffset + index] ?? previousSets.at(-1)
+            : findPreviousSet(history, exercise.exerciseKey, index, tracking, weightMode);
           return {
             id: createId("set"),
             weightKg: previous?.weightKg ?? exercise.targetWeightKg,
-            reps: exercise.targetReps,
+            reps: weighted ? exercise.targetReps : previous?.reps ?? exercise.targetReps,
             durationSeconds: previous?.durationSeconds ?? exercise.targetDurationSeconds,
             distanceMeters: previous?.distanceMeters ?? exercise.targetDistanceMeters,
             completed: false,

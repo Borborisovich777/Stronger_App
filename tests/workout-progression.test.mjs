@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { importTypeScriptModule } from "./helpers/import-typescript.mjs";
 
-const { applyNextWorkoutProgression } = await importTypeScriptModule(new URL("../app/workoutProgression.ts", import.meta.url));
+const { applyNextWorkoutProgression, resolveProgressionRepTarget, getWorkoutStartingWeightIncreases } = await importTypeScriptModule(new URL("../app/workoutProgression.ts", import.meta.url));
 
 function makeSet(id, weightKg = 60, reps = 8, completed = true) {
   return { id, weightKg, reps, completed };
@@ -208,6 +208,38 @@ test("an outdated lower progression threshold never overrides a higher saved rep
   assertUnchanged(input);
 });
 
+test("legacy generated ranges retain their upper goal and explicit user goals take precedence", () => {
+  const input = fixture();
+  const template = input.routine.exercises[0];
+  template.notes = "3 × 8–12 reps. Rest 120s. Keep the torso steady.";
+  assert.equal(resolveProgressionRepTarget(template), 12);
+  assertUnchanged(input);
+  template.notes = "3 × 8–12 reps / side. Rest 120s. Complete both sides before marking a set done.";
+  assert.equal(resolveProgressionRepTarget(template), 12);
+  template.progressionRepTarget = 8;
+  assert.equal(resolveProgressionRepTarget(template), 8);
+  assert.equal(progress(input).increases.length, 1, "an explicit goal must override the older generated notes");
+  template.progressionRepTarget = 6;
+  assert.equal(resolveProgressionRepTarget(template), 8, "the goal can never be below the planned reps");
+});
+
+test("plain custom notes and malformed or incompatible generated ranges cannot invent rep goals", () => {
+  const template = fixture().routine.exercises[0];
+  for (const notes of [
+    undefined, "Try 8–12 reps when ready.", "Goal: 3 × 8–12 reps. Rest 120s.",
+    "3 x 8-12 reps. Rest 120s.", "3 × 8–12 reps.", "3 × 8–12 sec. Rest 120s.",
+    "3 × 8–12 reps. Rest 120s.unsupported", "3 × 0–12 reps. Rest 120s.",
+    "3 × 12–8 reps. Rest 120s.", "3 × 8–100001 reps. Rest 120s.",
+    "3 × 8–12 reps. Rest 86401s.", "3 × 8–12 reps. Rest -1s.",
+    "2 × 8–12 reps. Rest 120s.", "3 × 9–12 reps. Rest 120s.",
+    "3 × 1–7 reps. Rest 120s.", "3 × 8.5–12 reps. Rest 120s.",
+  ]) {
+    assert.equal(resolveProgressionRepTarget({ ...template, notes }), 8, String(notes));
+  }
+  assert.equal(resolveProgressionRepTarget({ ...template, targetReps: 10, notes: "3 × 8–12 reps. Rest 120s." }), 12,
+    "an edited rep target still inside its original range keeps the upper goal");
+});
+
 test("near-limit recorded effort blocks an increase, while boundaries leave room", () => {
   for (const effort of [{ scale: "rpe", value: 9 }, { scale: "rir", value: 1 }]) {
     const input = fixture();
@@ -285,6 +317,51 @@ test("a started workload, mismatched template, or duplicate invocation cannot re
   assertUnchanged(input);
 });
 
+test("starting-weight explanations survive a reload and remain bound to the active workout", () => {
+  const input = fixture();
+  const result = progress(input);
+  const reloaded = JSON.parse(JSON.stringify(result.workout));
+  const expected = { ...result.increases[0] };
+  delete expected.evidenceSessionIds;
+  assert.deepEqual(getWorkoutStartingWeightIncreases(reloaded), [expected]);
+  assert.deepEqual(reloaded.startingWeightAdjustments, expected.sets);
+  assert.deepEqual(getWorkoutStartingWeightIncreases(fixture().workout), [], "a different imported workout cannot inherit another workout's explanation");
+  reloaded.exercises[0].sets[0].weightKg = 70;
+  assert.deepEqual(getWorkoutStartingWeightIncreases(reloaded), [expected], "metadata records what happened at the start, preserving the original values for conditional undo");
+  const before = structuredClone(reloaded);
+  getWorkoutStartingWeightIncreases(reloaded);
+  assert.deepEqual(reloaded, before);
+  reloaded.startingWeightAdjustments = undefined;
+  assert.deepEqual(getWorkoutStartingWeightIncreases(reloaded), [], "clearing metadata after undo also clears the explanation");
+});
+
+test("orphaned and foreign set references cannot create starting-weight explanations", () => {
+  const input = fixture();
+  const workout = progress(input).workout;
+  workout.startingWeightAdjustments.forEach((adjustment) => { adjustment.setId = `foreign-${adjustment.setId}`; });
+  assert.deepEqual(getWorkoutStartingWeightIncreases(workout), []);
+  const withRemovedRow = progress(fixture()).workout;
+  withRemovedRow.exercises = [];
+  assert.deepEqual(getWorkoutStartingWeightIncreases(withRemovedRow), []);
+  const finished = progress(fixture()).workout;
+  finished.finishedAt = 2300;
+  assert.deepEqual(getWorkoutStartingWeightIncreases(finished), []);
+  for (const changedMeaning of [{ tracking: "duration" }, { weightMode: "assistance" }]) {
+    const changed = progress(fixture()).workout;
+    Object.assign(changed.exercises[0], changedMeaning);
+    assert.deepEqual(getWorkoutStartingWeightIncreases(changed), []);
+  }
+});
+
+test("persisted adjustment metadata prevents reapplying progression even after manual load changes", () => {
+  const input = fixture();
+  input.workout = JSON.parse(JSON.stringify(progress(input).workout));
+  input.workout.exercises[0].sets.forEach((set) => { set.weightKg = 60; });
+  assertUnchanged(input);
+  input.workout.exercises[0].sets[0].completed = true;
+  assertUnchanged(input);
+});
+
 test("the operation preserves order, IDs, notes, and inputs without mutation", () => {
   const input = fixture();
   const before = structuredClone(input);
@@ -292,6 +369,7 @@ test("the operation preserves order, IDs, notes, and inputs without mutation", (
   assert.deepEqual(input, before);
   assert.deepEqual(result.workout, {
     ...before.workout,
+    startingWeightAdjustments: result.increases.flatMap((increase) => increase.sets),
     exercises: before.workout.exercises.map((exercise) => ({
       ...exercise, sets: exercise.sets.map((set) => ({ ...set, weightKg: 62.5 })),
     })),

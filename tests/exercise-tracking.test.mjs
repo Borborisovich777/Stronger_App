@@ -261,3 +261,41 @@ test("previous results use completed repeated rows in saved order with last-resu
   assert.equal(tracking.findPreviousDropSet(history, "bench-press", 1, 0, "weight-reps", "external"), undefined);
   assert.deepEqual(history, before);
 });
+
+test("legacy Previous helpers keep saved history order while template load lookup uses chronology", () => {
+  const makeHistory = (id, workoutDate, weightKg) => ({
+    ...session([exercise({ exerciseKey: "bench-press", tracking: "weight-reps", sets: [
+      set({ id: `${id}-root`, weightKg, reps: 8 }),
+      set({ id: `${id}-drop`, weightKg: weightKg - 20, reps: 8, dropSetOf: `${id}-root` }),
+    ] })]), id, workoutDate,
+  });
+  const history = [makeHistory("saved-first", "2026-09-01", 60), makeHistory("newest", "2026-09-20", 80)];
+  const before = structuredClone(history);
+  assert.equal(tracking.findPreviousSet(history, "bench-press", 0).weightKg, 60);
+  assert.equal(tracking.findPreviousDropSet(history, "bench-press", 0, 0).weightKg, 40);
+  assert.equal(tracking.findLatestPreviousSet(history, "bench-press", 0).weightKg, 80);
+  assert.deepEqual(history, before);
+});
+
+test("blank and repeated workouts retain per-row Previous values without template chronology or cutoffs", () => {
+  const history = [{
+    ...session([exercise({ exerciseKey: "bench-press", tracking: "weight-reps", sets: [
+      set({ id: "first-root", weightKg: 60, reps: 8 }),
+      set({ id: "first-drop", weightKg: 40, reps: 6, dropSetOf: "first-root" }),
+      set({ id: "second-root", weightKg: 55, reps: 8 }),
+    ] })]), workoutDate: "2026-09-23", startedAt: 300, finishedAt: 400,
+  }];
+  for (const name of ["Blank workout", "Repeat from History"]) {
+    const workout = {
+      id: "active", name, workoutDate: "2026-09-22", startedAt: 200,
+      exercises: ["first", "second"].map((id) => exercise({ id, exerciseKey: "bench-press", tracking: "weight-reps", sets: [
+        set({ id: `${id}-current-root`, weightKg: 70, reps: 8, completed: false }),
+        set({ id: `${id}-current-drop`, weightKg: 50, reps: 8, completed: false, dropSetOf: `${id}-current-root` }),
+      ] })),
+    };
+    const before = structuredClone({ workout, history });
+    const previous = tracking.previousSetsForWorkout(history, workout);
+    assert.deepEqual(workout.exercises.map((row) => row.sets.map((set) => previous.get(set.id)?.weightKg)), [[60, 40], [60, 40]], name);
+    assert.deepEqual({ workout, history }, before);
+  }
+});

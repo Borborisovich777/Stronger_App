@@ -307,6 +307,39 @@ test("progression preferences and rep goals survive backups without rewriting ol
   assert.equal(storage.normalizeStrongerBackup(backup), null);
 });
 
+test("starting-weight adjustment metadata survives reload and backup normalization without changing other data", () => {
+  const backup = structuredClone(activeHistoryBackup);
+  backup.data.activeWorkout.startingWeightAdjustments = [{
+    setId: "set-fixture-incomplete", previousWeightKg: 40, nextWeightKg: 42.5,
+  }];
+  const roundTrip = JSON.parse(JSON.stringify(backup));
+  const normalized = storage.normalizeStrongerBackup(roundTrip);
+  const expected = structuredClone(storage.normalizeStrongerBackup(activeHistoryBackup));
+  expected.activeWorkout.startingWeightAdjustments = backup.data.activeWorkout.startingWeightAdjustments;
+  assert.deepEqual(normalized, expected);
+  assert.deepEqual(storage.normalizeStrongerData(normalized), normalized);
+  assert.equal(storage.normalizeStrongerBackup(activeHistoryBackup).activeWorkout.startingWeightAdjustments, undefined,
+    "legacy workouts must remain unchanged");
+  const removedSet = structuredClone(backup);
+  removedSet.data.activeWorkout.exercises[0].sets.pop();
+  assert.ok(storage.normalizeStrongerBackup(removedSet), "removing a set must not make saved metadata block persistence");
+});
+
+test("malformed or duplicate starting-weight adjustment metadata rejects the selected backup", () => {
+  const valid = { setId: "set-fixture-incomplete", previousWeightKg: 40, nextWeightKg: 42.5 };
+  for (const startingWeightAdjustments of [
+    null, {}, [null], [{ ...valid, setId: "" }], [valid, { ...valid }],
+    [{ ...valid, previousWeightKg: -1 }], [{ ...valid, previousWeightKg: "40" }],
+    [{ ...valid, previousWeightKg: Number.NaN }], [{ ...valid, nextWeightKg: Number.POSITIVE_INFINITY }],
+    [{ ...valid, nextWeightKg: 100001 }], [{ ...valid, nextWeightKg: 40 }], [{ ...valid, nextWeightKg: 39 }],
+    Array.from({ length: storage.MAX_TOTAL_SETS_PER_ITEM + 1 }, (_, index) => ({ ...valid, setId: `set-${index}` })),
+  ]) {
+    const backup = structuredClone(activeHistoryBackup);
+    backup.data.activeWorkout.startingWeightAdjustments = startingWeightAdjustments;
+    assert.equal(storage.normalizeStrongerBackup(backup), null);
+  }
+});
+
 test("program blocks survive version-1 normalization as independent routine snapshots", () => {
   const data = storage.normalizeStrongerBackup(programBlockBackup);
 

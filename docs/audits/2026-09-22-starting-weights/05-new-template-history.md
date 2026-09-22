@@ -1,0 +1,1 @@
+Step 5 — Newly added exercise. Search selected exact Deadlift identity; new template draft immediately shows60kg from another template history,3 sets and8 planned reps. Unknown exercise still has original0 fallback by automated tests. Existing modal and compact field layout retained. Inputs have visible labels; no overflow at390px.

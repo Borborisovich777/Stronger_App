@@ -75,6 +75,12 @@ export type ProgramBlock = {
   weeks: ProgramBlockWeek[];
 };
 
+export type StartingWeightAdjustment = {
+  setId: string;
+  previousWeightKg: number;
+  nextWeightKg: number;
+};
+
 export type WorkoutSession = {
   id: string;
   name: string;
@@ -88,6 +94,7 @@ export type WorkoutSession = {
   timerPausedDurationMs?: number;
   timerResumedAt?: number;
   longSessionCheckState?: "pending" | "confirmed";
+  startingWeightAdjustments?: StartingWeightAdjustment[];
   exercises: WorkoutExercise[];
 };
 
@@ -471,12 +478,25 @@ function validSession(session: unknown, enforceResourceLimits = true): session i
     !optionalIntegerInRange(item.timerResumedAt, MAX_TIMESTAMP) ||
     (item.longSessionCheckState !== undefined && item.longSessionCheckState !== "pending" &&
       item.longSessionCheckState !== "confirmed") || !Array.isArray(item.exercises) ||
+    !validStartingWeightAdjustments(item.startingWeightAdjustments, enforceResourceLimits) ||
     (enforceResourceLimits && item.exercises.length > MAX_EXERCISES_PER_ITEM) ||
     !item.exercises.every((exercise) => validWorkoutExercise(exercise, enforceResourceLimits))) return false;
   return (!enforceResourceLimits ||
       item.exercises.reduce((total, exercise) => total + exercise.sets.length, 0) <= MAX_TOTAL_SETS_PER_ITEM) &&
     uniqueStrings(item.exercises.map((exercise) => exercise.id)) &&
     uniqueStrings(item.exercises.flatMap((exercise) => exercise.sets.map((set) => set.id)));
+}
+
+function validStartingWeightAdjustments(value: unknown, enforceResourceLimits: boolean): boolean {
+  if (value === undefined) return true;
+  if (!Array.isArray(value) || (enforceResourceLimits && value.length > MAX_TOTAL_SETS_PER_ITEM)) return false;
+  const maximumWeightKg = enforceResourceLimits ? MAX_WEIGHT_KG : Number.MAX_VALUE;
+  return value.every((adjustment: unknown) => {
+    if (!adjustment || typeof adjustment !== "object") return false;
+    const item = adjustment as Partial<StartingWeightAdjustment>;
+    return nonEmptyString(item.setId) && numberInRange(item.previousWeightKg, maximumWeightKg) &&
+      numberInRange(item.nextWeightKg, maximumWeightKg) && item.previousWeightKg < item.nextWeightKg;
+  }) && uniqueStrings(value.map((adjustment: StartingWeightAdjustment) => adjustment.setId));
 }
 
 function validRoutine(routine: unknown, enforceResourceLimits = true): routine is Routine {
