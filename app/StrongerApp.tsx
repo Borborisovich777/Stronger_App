@@ -101,6 +101,8 @@ import {
   PlateInventoryItem,
 } from "./plateCalculator";
 import { workoutFromTemplate } from "./workoutFromTemplate";
+import { buildWeeklyCoverage } from "./weeklyCoverage";
+import { WeeklyCalendar } from "./WeeklyCalendar";
 import { applyNextWorkoutProgression, getWorkoutStartingWeightIncreases, resolveProgressionRepTarget } from "./workoutProgression";
 import {
   buildPeriodProgress,
@@ -123,7 +125,7 @@ import { ExerciseGuide, ExercisePhoto } from "./ExerciseGuide";
 import { findExistingExercise, matchesExerciseSearch, mergeExerciseCatalog } from "./exercise-search";
 import { buildExerciseProgress, defaultSetMeasurements, ExerciseTracking, ExerciseWeightMode, findLatestPreviousSet, previousSetsForWorkout, formatDistanceKm, formatSetDuration, isTimedTracking, resolveExerciseTracking, resolveExerciseWeightMode, SetMeasurements, SetMeasurementUpdate, setCompletionError } from "./exercise-tracking";
 import { ArrowDown, ArrowUp, CaretDown, Check, ClockCounterClockwise, DotsThree, Barbell, GearSix, NotePencil, Plus, Timer, Trash, TrendUp, X } from "@phosphor-icons/react";
-import { createExistingUserPreviewData, createPreviewData, createProgressionPreviewData } from "./preview-data";
+import { createExistingUserPreviewData, createPreviewData, createProgressionPreviewData, createWeeklyCalendarPreviewData } from "./preview-data";
 import { TemplateLibrary } from "./TemplateLibrary";
 import { WORKOUT_TEMPLATES } from "./workoutTemplates";
 
@@ -1184,15 +1186,15 @@ function EmptyState({ title, copy }: { title: string; copy: string }) {
 
 export default function StrongerApp() {
   const [previewKind] = useState(() => import.meta.env.DEV ? new URLSearchParams(window.location.search).get("preview") : null);
-  const previewMode = previewKind === "compact" || previewKind === "templates" || previewKind === "fresh" || previewKind === "existing" || previewKind === "progression";
-  const [data, setData] = useState<StrongerData>(() => previewKind === "compact" ? createPreviewData() : previewKind === "existing" ? createExistingUserPreviewData() : previewKind === "progression" ? createProgressionPreviewData() : createDefaultData());
+  const previewMode = previewKind === "compact" || previewKind === "templates" || previewKind === "fresh" || previewKind === "existing" || previewKind === "progression" || previewKind === "calendar";
+  const [data, setData] = useState<StrongerData>(() => previewKind === "compact" ? createPreviewData() : previewKind === "existing" ? createExistingUserPreviewData() : previewKind === "progression" ? createProgressionPreviewData() : previewKind === "calendar" ? createWeeklyCalendarPreviewData() : createDefaultData());
   const [hydrated, setHydrated] = useState(previewMode);
   const [storageRecoveryRequired, setStorageRecoveryRequired] = useState(false);
   const [canOverwriteUnreadableStorage, setCanOverwriteUnreadableStorage] = useState(false);
   const [oversizedStoredData, setOversizedStoredData] = useState(false);
   const [isReplacingData, setIsReplacingData] = useState(false);
   const [sessionRescuePrompt, setSessionRescuePrompt] = useState<SessionRescuePrompt | null>(null);
-  const [tab, setTab] = useState<Tab>("workout");
+  const [tab, setTab] = useState<Tab>(previewKind === "calendar" ? "progress" : "workout");
   const [now, setNow] = useState(() => Date.now());
   const [message, setMessage] = useState("");
   const [editingWorkout, setEditingWorkout] = useState(false);
@@ -1235,6 +1237,7 @@ export default function StrongerApp() {
   const deferredRescueCheckRef = useRef(false);
   const progressDetailsRef = useRef<HTMLDivElement>(null);
   const historyHeadingRef = useRef<HTMLHeadingElement>(null);
+  const calendarReturnFocusRef = useRef<HTMLButtonElement | null>(null);
   const exerciseReorderGestureRef = useRef<ExerciseReorderGesture | null>(null);
   const exerciseReorderPreviewRef = useRef<HTMLDivElement>(null);
   const exerciseReorderAutoScrollRef = useRef<number | null>(null);
@@ -1599,6 +1602,13 @@ export default function StrongerApp() {
     }),
     [activeWorkoutForProgress, data.customExercises, data.history, progressPeriod, todayDateKey],
   );
+  const weeklyCoverage = useMemo(() => buildWeeklyCoverage({
+    history: data.history,
+    referenceDateKey: todayDateKey,
+    categoriesByExerciseKey: REPORT_CATEGORIES_BY_EXERCISE_KEY,
+    customExerciseKeys: data.customExercises.map((exercise) => exercise.exerciseKey),
+    activeWorkoutId: data.activeWorkout?.id,
+  }), [data.history, data.customExercises, data.activeWorkout?.id, todayDateKey]);
   const currentReport = periodProgress.report.current;
   const comparisonReport = periodProgress.report.comparison;
 
@@ -2370,7 +2380,7 @@ export default function StrongerApp() {
     setHistoryToDelete(null);
     setShowHistoryMenu(false);
     setMessage(`${session.name} deleted from History.`);
-    window.requestAnimationFrame(() => historyHeadingRef.current?.focus({ preventScroll: true }));
+    window.requestAnimationFrame(() => (historyHeadingRef.current ?? calendarReturnFocusRef.current)?.focus({ preventScroll: true }));
   }
 
   function saveRoutine(routine: Routine) {
@@ -3063,6 +3073,13 @@ export default function StrongerApp() {
                 </div>
                 <strong>{weeklyCompletedSessions} <span>of {weeklyTargetSessions}</span></strong>
               </div>
+            ) : null}
+
+            {progressPeriod === "week" ? (
+              <WeeklyCalendar coverage={weeklyCoverage} history={data.history} onOpenWorkout={(workout, returnFocus) => {
+                calendarReturnFocusRef.current = returnFocus;
+                setHistoryDetail(workout);
+              }} />
             ) : null}
 
             {hasSavedTrainingDose ? (

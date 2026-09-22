@@ -102,3 +102,34 @@ export function createProgressionPreviewData() {
   data.settings.nextSetPreview = true;
   return data;
 }
+
+/** Current-week examples for the calendar, never loaded from or written to saved data. */
+export function createWeeklyCalendarPreviewData() {
+  const data = createDefaultData();
+  const today = new Date();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (today.getDay() + 6) % 7);
+  const localDate = (value: Date) => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+  const workout = (id: string, name: string, date: Date, items: { key: string; name: string; weight: number; completed: boolean }[]): WorkoutSession => ({
+    id, name, workoutDate: localDate(date),
+    startedAt: date.getTime() - 45 * 60_000,
+    finishedAt: date.getTime(),
+    exercises: items.map((item, index) => ({
+      id: `${id}-exercise-${index}`, exerciseKey: item.key, name: item.name, restSeconds: 90,
+      sets: Array.from({ length: 3 }, (_, setIndex) => ({
+        id: `${id}-${index}-${setIndex}`, weightKg: item.weight, reps: 8, completed: item.completed,
+      })),
+    })),
+  });
+  data.history = [
+    workout("calendar-legs", "Legs", today, [
+      { key: "back-squat", name: "Back squat", weight: 60, completed: true },
+      { key: "bench-press", name: "Bench press", weight: 40, completed: false },
+    ]),
+    workout("calendar-pull", "Pull", monday, [
+      { key: "barbell-row", name: "Barbell row", weight: 40, completed: true },
+      { key: "biceps-curl", name: "Biceps curl", weight: 10, completed: true },
+    ]),
+  ];
+  return data;
+}
