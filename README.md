@@ -23,7 +23,7 @@ Your workout records stay in the browser storage on your device. Stronger does n
 - Editable active workouts with notes, folding, and long-press drag ordering
 - Compact set entry for weight and reps, bodyweight reps, duration, or distance and duration
 - Linked drop-set continuations with editable 20% load-reduction suggestions
-- Optional read-only next-set previews with visible evidence
+- Previous-weight template starts with progression between workouts
 - Previous results shown beside new sets
 - Foreground workout timer with an optional per-exercise rest timer
 - Searchable workout history
@@ -118,7 +118,7 @@ Use **Settings → Templates → Delete** to delete an entire template. Deleting
 
 Open **Workout → Template library**, beside **Exercise library**, to browse all 14 prepared sessions. **Your templates → Browse** opens the same catalog. Choose a session to see its exercise order, rep or time ranges, rest periods, equipment choices, and optional accessories. The catalog is included for everyone, but sessions are added to your saved list one at a time when you choose and save them.
 
-Choose alternatives and include optional exercises, then tap **Customize this template**. Review starting weights and targets in the editor and tap **Save template** to add an independent copy. Existing templates and history stay intact. All public starting loads are zero for you to set; zero added load means bodyweight only. Prior results for the same exercise can still prefill a workout, so check its displayed loads and reps before logging.
+Choose alternatives and include optional exercises, then tap **Customize this template**. Review starting weights and targets in the editor and tap **Save template** to add an independent copy. Existing templates and history stay intact. New drafts pick up your latest comparable weights where available; otherwise their starting loads are zero for you to set. Zero added load means bodyweight only. Workouts use the latest per-set weights and keep the template's planned reps.
 
 Full rep ranges and progression guidance are stored in editable template and exercise notes. These notes carry into the active workout; longer workout guidance can be expanded without covering the set list. Holds use duration tracking, and assistance stays separate from added weight.
 
@@ -171,7 +171,7 @@ You can start from a saved template or create a blank workout.
 2. Under **Your templates**, tap the row for any saved template. This starts the workout directly.
 3. Begin logging sets.
 
-Starting a template creates a working copy for today in its saved exercise order. Weight and reps are prefilled from previous results when available, with the template's exercise defaults as a fallback. Historical results also appear in **Previous**. Changes made inside the active workout do not silently rewrite the original template.
+Starting a template creates a working copy for today in its saved exercise order. Weights come from the most recent completed results for the same exercise and load type across all History, including exercises newly added to a template. Each set uses its corresponding previous weight; additional sets reuse the final previous working-set weight. The saved starting weight is the fallback when no comparable result exists. Reps stay at the template's planned target, even if a prior attempt ended at one rep. Eligible progression is applied once at this point, before any sets are logged. Historical results also appear in **Previous**. Changes made inside the active workout do not silently rewrite the original template.
 
 ### Start a blank workout
 
@@ -280,7 +280,7 @@ Use **Remove** while editing to delete one drop. Later drops remain attached and
 
 If you finish while a drop is incomplete, Stronger asks for confirmation. The unfinished entry remains visible in that workout’s History detail as **Incomplete**, but it does not count toward sets, drops, reps, volume, records, or Progress.
 
-In Workout, History, summaries, and Progress, the parent counts as one working set and continuations are shown separately as drops. Completed drop reps and `weight × reps` contribute to training totals, but drops do not set best-weight records, estimated one-rep max records, or next-set suggestions. Duplicating a saved workout keeps the drop structure with fresh internal IDs and resets every entry to incomplete. JSON backup preserves the full structure; workout CSV identifies each row with `set_type`, `drop_set_of`, and `drop_order`.
+In Workout, History, summaries, and Progress, the parent counts as one working set and continuations are shown separately as drops. Completed drop reps and `weight × reps` contribute to training totals, but drops do not set best-weight records, estimated one-rep max records, or progression evidence. Duplicating a saved workout keeps the drop structure with fresh internal IDs and resets every entry to incomplete. JSON backup preserves the full structure; workout CSV identifies each row with `set_type`, `drop_set_of`, and `drop_order`.
 
 ### Optional RPE or RIR
 
@@ -291,23 +291,19 @@ Effort tracking is off by default. Turn it on in **Settings → Effort tracking*
 
 The optional selector appears only after a set is marked complete. Each saved entry keeps its original scale, so changing the setting later does not reinterpret history. Turning effort tracking off hides the selectors without deleting recorded values. Marking a set incomplete removes its effort entry because the set is no longer recorded as performed.
 
-RPE and RIR are subjective notes. They never change a set or future workout automatically. If next-set previews are enabled, recorded effort is included in the evidence used by that optional prompt.
+RPE and RIR are subjective notes. Recorded RPE above 8.5 or RIR below 2 blocks an automatic starting-weight increase. Missing effort is unknown; it is not treated as evidence that a set was easy.
 
-### Optional next-set previews
+### Progression for the next workout
 
-Next-set previews are optional prompts for reviewing a possible load increment. Turn on **Settings → Next-set previews** to allow it; the setting is off by default.
+**Settings → Next-workout progression** is on by default. When you start a template, Stronger first carries forward your previous weights, then applies a small increase only to eligible exercises. There are no mid-workout increase prompts. Turning progression off keeps previous-weight prefilling.
 
-A preview appears only when all of these conditions are true:
+An exercise qualifies only when its two latest comparable workouts both finished every planned working set at the same carried-forward loads and met the progression rep goal. The set count must match. A newer missed, unchecked or incomplete attempt blocks an increase; it cannot be bypassed for an older success. Single-rep targets/results, drop continuations, assistance, timed/reps-only exercises and zero-load bodyweight work do not qualify. Skipping a different exercise does not block a completed exercise.
 
-- The exercise uses weight and reps with external or added load; assistance and timed exercises do not produce load-increase previews.
-- There is an unfinished next set with a positive planned load and rep count.
-- The immediately preceding completed set today met or exceeded that planned load and reps.
-- The latest saved History session containing completed sets for the same exercise, tracking type, and load convention also has a set that met or exceeded the plan. A newer miss cannot be skipped in favor of an older success.
-- If effort tracking is enabled, today's effort must be entered before a preview can appear. If either evidence set has effort recorded, it is no higher than RPE 8.5 or no lower than RIR 2. Missing historical effort is treated as unknown, not as proof that the set was easy.
+The rep goal defaults to the template's saved reps. New prepared-library copies use the upper end of their published rep range. Change **Progression rep goal** in the template exercise's actions menu if needed; previously saved templates without this field use their numeric rep target. Historical reps never replace today's planned reps.
 
-The preview shows both evidence sets and one small possible increment: 2.5 kg when displaying kilograms or 5 lb when displaying pounds. It has no apply button and does not change the next set, template, History, or Progress. If the prompt is useful, edit the next set manually; otherwise ignore it or turn the setting off.
+The step is 2.5 kg or 5 lb, and is skipped if that step would exceed 10% of any working-set load or the storage limit. This is a conservative product rule, not an assessment of readiness or a prescribed training program. You can always adjust the starting loads yourself.
 
-This arithmetic rule cannot assess fatigue, pain, technique, equipment, sleep, or readiness. It is not a requirement to add load and is not medical or coaching advice.
+An expandable **Starting weights increased** note lists the adjustments before your first set. **Use previous weights** restores unchanged prefilled loads; it preserves any values you edited yourself. Completing sets, adding sets, resuming, or reloading never triggers another increase. Saved templates and History are not rewritten. Older backups containing the retired next-set-preview flag remain readable; that flag no longer enables in-workout prompts.
 
 ## Rest timer
 
@@ -722,7 +718,7 @@ Before considering a release ready:
 - Unit changes preserve equivalent stored values.
 - History deletion updates Progress correctly.
 - Program sandbox changes survive relaunch without changing their source template.
-- Next-set previews are off by default, require matching evidence, and never change the planned set.
+- Template starts carry forward previous weights and preserve planned reps. Progression requires two complete comparable workloads and never runs during an active workout.
 - A valid import replaces data only after confirmation.
 - An invalid import leaves existing data intact.
 - Reset requires strong confirmation.

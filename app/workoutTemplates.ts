@@ -41,7 +41,7 @@ const lift = (exerciseKey: string, sets: number, min: number, max: number, restS
   ({ id: exerciseKey, exerciseKey, sets, min, max, restSeconds, ...extra });
 
 export const TEMPLATE_TRAINING_GUIDANCE = "Warm up with easy movement and lighter practice sets before your first loaded lifts. Choose a load or variation that leaves about 2 good reps in reserve; start easier while learning. When all sets reach the top of the range with controlled technique for two sessions, use the smallest practical load increase or a slightly harder variation and return to the lower end. For holds, build time before difficulty. These are working sets; warm-ups are additional.";
-export const TEMPLATE_LOAD_GUIDANCE = "Choose your starting weights in the editor. Zero is an unset external load; for bodyweight exercises, zero added load means bodyweight only. Stronger can prefill previous results for the same exercise and measurement type when you start. Check those values against today's rep range. Equipment changes need their own loads.";
+export const TEMPLATE_LOAD_GUIDANCE = "Starting weights use your latest completed sets for the same exercise and load type, even from another template. Without history, use the editor's starting weight. Zero added load means bodyweight only. Your planned reps stay unchanged. Eligible increases happen when starting the next workout, after two full comparable performances. Equipment changes keep their own loads.";
 export const TEMPLATE_SCHEDULE_GUIDANCE = "Choose sessions to fit a weekly plan, not a rotation through this whole library. For a simple starting schedule, alternate Full body A and B on 2–3 nonconsecutive days. Body-part sessions are options within a broader split; chest and back work already involve arms and shoulders, so adjust accessory volume. Aim to cover all major muscle groups at least twice weekly as recovery allows.";
 
 export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
@@ -250,6 +250,7 @@ export function createRoutineFromTemplate(template: WorkoutTemplate, choices: Te
       targetSets: slot.sets,
       targetWeightKg: 0,
       targetReps: slot.seconds ? 0 : slot.min,
+      ...(slot.seconds ? {} : { progressionRepTarget: slot.max }),
       ...(slot.seconds ? { targetDurationSeconds: slot.min } : {}),
       restSeconds: slot.restSeconds,
       notes: `${templateTargetLabel(slot)}. Rest ${slot.restSeconds}s.${slot.perSide ? " Complete both sides before marking a set done." : ""}${slot.cue ? ` ${slot.cue}` : ""}`,
