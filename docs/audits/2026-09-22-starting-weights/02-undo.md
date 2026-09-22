@@ -1,0 +1,1 @@
+Step 2 — Undo. Manual first-set load70 remains; untouched other Deadlift sets return60. Lat pulldown returns40 (DOM verified). Notice disappears. Native button was operable; focus recovery after notice unmounts should be improved only if task scope permits. No change to exercise order/count.

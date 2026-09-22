@@ -99,18 +99,29 @@ export function findPreviousWorkingSets(history: readonly WorkoutSession[], exer
   return latestSets;
 }
 
-/** Keep completed working results in saved row order, including repeated exercise rows. */
-export function findPreviousSet(history: readonly WorkoutSession[], exerciseKey: string, setIndex: number, tracking?: ExerciseTracking, weightMode?: ExerciseWeightMode): WorkoutSet | undefined {
+/** Use chronological working results when preparing weighted template exercises. */
+export function findLatestPreviousSet(history: readonly WorkoutSession[], exerciseKey: string, setIndex: number, tracking?: ExerciseTracking, weightMode?: ExerciseWeightMode): WorkoutSet | undefined {
   const workingSets = findPreviousWorkingSets(history, exerciseKey, tracking, weightMode);
   return workingSets[setIndex] ?? workingSets.at(-1);
 }
 
+/** Preserve saved history order and completed working-row ordering for existing logging flows. */
+export function findPreviousSet(history: readonly WorkoutSession[], exerciseKey: string, setIndex: number, tracking?: ExerciseTracking, weightMode?: ExerciseWeightMode): WorkoutSet | undefined {
+  for (const session of history) {
+    const exercises = session.exercises.filter((item) => item.exerciseKey === exerciseKey &&
+      (!tracking || resolveExerciseTracking(item, tracking) === tracking) &&
+      (!weightMode || resolveExerciseWeightMode(item, weightMode) === weightMode));
+    const workingSets = exercises.flatMap((exercise) => exercise.sets
+      .filter((set) => !set.dropSetOf && isCompletedTrackedSet(set, exercise)));
+    const comparable = workingSets[setIndex] ?? workingSets.at(-1);
+    if (comparable) return comparable;
+  }
+  return undefined;
+}
+
 /** Use the same completed-root ordering as Previous, then find that root's continuation. */
 export function findPreviousDropSet(history: readonly WorkoutSession[], exerciseKey: string, workingSetIndex: number, dropIndex: number, tracking?: ExerciseTracking, weightMode?: ExerciseWeightMode): WorkoutSet | undefined {
-  let latestSession: WorkoutSession | undefined;
-  let latestDrop: WorkoutSet | undefined;
   for (const session of history) {
-    if (latestSession && compareSessionRecency(session, latestSession) <= 0) continue;
     const exercises = session.exercises.filter((item) => item.exerciseKey === exerciseKey &&
       (!tracking || resolveExerciseTracking(item, tracking) === tracking) &&
       (!weightMode || resolveExerciseWeightMode(item, weightMode) === weightMode));
@@ -121,33 +132,33 @@ export function findPreviousDropSet(history: readonly WorkoutSession[], exercise
     if (!match) continue;
     const { set: root, exercise } = match;
     const drop = exercise.sets.filter((set) => set.dropSetOf === root.id)[dropIndex];
-    if (drop && isCompletedTrackedSet(drop, exercise)) {
-      latestSession = session;
-      latestDrop = drop;
-    }
+    if (drop && isCompletedTrackedSet(drop, exercise)) return drop;
   }
-  return latestDrop;
+  return undefined;
 }
 
-/** Resolve the displayed Previous values with the same cutoff and ordinals as template prefill. */
+/** Match weighted template prefill while preserving Previous in all other logging flows. */
 export function previousSetsForWorkout(history: readonly WorkoutSession[], workout: WorkoutSession): Map<string, WorkoutSet> {
-  const previousHistory = historyBeforeWorkout(history, workout);
+  const previousHistory = workout.sourceRoutineId
+    ? historyBeforeWorkout(history, workout).sort((first, second) => compareSessionRecency(second, first))
+    : history;
   const offsets = new Map<string, number>();
   const previous = new Map<string, WorkoutSet>();
   for (const exercise of workout.exercises) {
     const tracking = resolveExerciseTracking(exercise);
     const weightMode = resolveExerciseWeightMode(exercise);
+    const weightedTemplate = Boolean(workout.sourceRoutineId) && tracking === "weight-reps";
     const identity = JSON.stringify([exercise.exerciseKey, tracking, weightMode]);
-    const offset = offsets.get(identity) ?? 0;
+    const offset = weightedTemplate ? offsets.get(identity) ?? 0 : 0;
     const roots = exercise.sets.filter((set) => !set.dropSetOf);
-    offsets.set(identity, offset + roots.length);
-    const previousWorkingSets = findPreviousWorkingSets(previousHistory, exercise.exerciseKey, tracking, weightMode);
+    if (weightedTemplate) offsets.set(identity, offset + roots.length);
+    const lookupHistory = weightedTemplate ? previousHistory : history;
     for (const [index, root] of roots.entries()) {
-      const previousRoot = previousWorkingSets[offset + index] ?? previousWorkingSets.at(-1);
+      const previousRoot = findPreviousSet(lookupHistory, exercise.exerciseKey, offset + index, tracking, weightMode);
       if (previousRoot) previous.set(root.id, previousRoot);
       const drops = exercise.sets.filter((set) => set.dropSetOf === root.id);
       for (const [dropIndex, drop] of drops.entries()) {
-        const previousDrop = findPreviousDropSet(previousHistory, exercise.exerciseKey, offset + index, dropIndex, tracking, weightMode);
+        const previousDrop = findPreviousDropSet(lookupHistory, exercise.exerciseKey, offset + index, dropIndex, tracking, weightMode);
         if (previousDrop) previous.set(drop.id, previousDrop);
       }
     }
