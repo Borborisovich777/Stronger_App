@@ -27,7 +27,7 @@ test("builds a static Stronger shell for the GitHub Pages project path", async (
 });
 
 test("ships scoped install metadata and an offline shell", async () => {
-  const [manifestText, serviceWorker, app, storage, sessionRescue, effort, programBlocks, weeklyReview, overallProgress, reportMetrics, plateCalculator, nextSetPreview, historyCsv, dropSets, exerciseReorder, exercises, styles, packageText, workflow] = await Promise.all([
+  const [manifestText, serviceWorker, app, storage, sessionRescue, effort, programBlocks, weeklyReview, overallProgress, reportMetrics, plateCalculator, workoutProgression, historyCsv, dropSets, exerciseReorder, exercises, styles, packageText, workflow] = await Promise.all([
     readFile(new URL("dist/manifest.webmanifest", projectRoot), "utf8"),
     readFile(new URL("dist/sw.js", projectRoot), "utf8"),
     readFile(new URL("app/StrongerApp.tsx", projectRoot), "utf8"),
@@ -39,7 +39,7 @@ test("ships scoped install metadata and an offline shell", async () => {
     readFile(new URL("app/overallProgress.ts", projectRoot), "utf8"),
     readFile(new URL("app/reportMetrics.ts", projectRoot), "utf8"),
     readFile(new URL("app/plateCalculator.ts", projectRoot), "utf8"),
-    readFile(new URL("app/nextSetPreview.ts", projectRoot), "utf8"),
+    readFile(new URL("app/workoutProgression.ts", projectRoot), "utf8"),
     readFile(new URL("app/historyCsv.ts", projectRoot), "utf8"),
     readFile(new URL("app/dropSets.ts", projectRoot), "utf8"),
     readFile(new URL("app/exerciseReorder.ts", projectRoot), "utf8"),
@@ -156,10 +156,11 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(app, /The result shows what to load on each side/);
   assert.match(app, /Closest load without exceeding target/);
   assert.match(app, /This tool never changes your workout data/);
-  assert.match(app, /Next-set previews/);
-  assert.match(app, /OPTIONAL · READ-ONLY/);
-  assert.match(app, /The next set stays unchanged unless you edit it/);
-  assert.match(app, /aria-label="Next-set previews"/);
+  assert.match(app, /Next-workout progression/);
+  assert.match(app, /Starting weights increased/);
+  assert.match(app, /Use previous weights/);
+  assert.doesNotMatch(app, /buildNextSetPreview|Consider .*for set/);
+  assert.match(app, /aria-label="Next-workout progression"/);
   assert.match(app, /Export workout CSV/);
   assert.match(app, /CSV cannot be imported/);
   assert.match(app, /buildHistoryCsv\(data\.history\)/);
@@ -244,11 +245,8 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(plateCalculator, /existing\.plateCount <= nextPlateCount/);
   assert.doesNotMatch(plateCalculator, /saveData|setData|startWorkout|activeWorkout|WorkoutSet/);
 
-  assert.match(nextSetPreview, /latestComparableSession/);
-  assert.match(nextSetPreview, /effort\.value <= 8\.5/);
-  assert.match(nextSetPreview, /effort\.value >= 2/);
-  assert.match(nextSetPreview, /nextSet\.weightKg \+ incrementKg/);
-  assert.doesNotMatch(nextSetPreview, /saveData|setData|updateSet|startWorkout|activeWorkout/);
+  assert.match(workoutProgression, /applyNextWorkoutProgression/);
+  assert.doesNotMatch(workoutProgression, /saveData|setData|updateSet|startWorkout/);
 
   assert.match(historyCsv, /spreadsheetSafeText/);
   assert.match(historyCsv, /set\.completed \? "yes" : "no"/);
@@ -332,7 +330,7 @@ test("ships scoped install metadata and an offline shell", async () => {
   assert.match(styles, /\.progress-goal-track\s*\{[^}]*height:\s*12px;/s);
   assert.match(styles, /\.plate-inventory-grid select\s*\{[^}]*min-height:\s*44px;/s);
   assert.match(styles, /\.plate-result\s*\{/);
-  assert.match(styles, /\.next-set-preview\s*\{/);
+  assert.match(styles, /\.workout-start-adjustments\s*\{/);
   assert.match(styles, /\.set-continuation-row button\s*\{[^}]*min-height:\s*var\(--touch-target\);/s);
   assert.match(styles, /\.progress-story-card\s*\{/);
   assert.match(styles, /\.progress-period-tabs\s*\{/);

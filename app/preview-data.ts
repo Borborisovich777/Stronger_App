@@ -71,3 +71,34 @@ export function createExistingUserPreviewData() {
   data.activeWorkout = null;
   return data;
 }
+
+/** Two completed sessions: full rep goals for two lifts, a recent one-rep miss for the row. */
+export function createProgressionPreviewData() {
+  const data = createExistingUserPreviewData();
+  const routine = data.routines[0];
+  routine.exercises = routine.exercises.slice(0, 3).map((exercise, index) => ({
+    ...exercise, targetSets: 3, targetWeightKg: 0, targetReps: 8,
+    progressionRepTarget: index === 0 ? 12 : 8,
+  }));
+  const source = data.history[0];
+  data.history = [1, 2].map((daysAgo) => {
+    const startedAt = Date.now() - daysAgo * 86_400_000;
+    const date = new Date(startedAt);
+    return {
+      ...source, id: `progression-history-${daysAgo}`, sourceRoutineId: "another-template",
+      workoutDate: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`,
+      startedAt, finishedAt: startedAt + 30 * 60_000,
+      exercises: source.exercises.slice(0, 3).map((exercise, index) => ({
+        ...exercise, id: `progression-${daysAgo}-${index}`,
+        sets: exercise.sets.slice(0, 3).map((set, setIndex) => ({
+          ...set, id: `progression-${daysAgo}-${index}-${setIndex}`, weightKg: [60, 50, 40][index],
+          reps: index === 0 ? 12 : index === 1 && daysAgo === 1 && setIndex === 0 ? 1 : 8,
+          completed: true,
+        })),
+      })),
+    };
+  });
+  data.settings.workoutProgression = true;
+  data.settings.nextSetPreview = true;
+  return data;
+}

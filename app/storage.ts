@@ -46,6 +46,7 @@ export type RoutineExercise = {
   targetSets: number;
   targetWeightKg: number;
   targetReps: number;
+  progressionRepTarget?: number;
   targetDurationSeconds?: number;
   targetDistanceMeters?: number;
   restSeconds: number;
@@ -97,6 +98,7 @@ export type StrongerSettings = {
   weeklyDays: number;
   effortScale?: EffortScale | "off";
   nextSetPreview?: boolean;
+  workoutProgression?: boolean;
 };
 
 export type CustomExercise = {
@@ -136,7 +138,7 @@ export const MAX_TOTAL_SETS_PER_ITEM = 500;
 const MIN_TARGET_SETS = 1;
 const MAX_TARGET_SETS = 20;
 export const MAX_WEIGHT_KG = 100_000;
-const MAX_REPS = 100_000;
+export const MAX_REPS = 100_000;
 const MAX_REST_SECONDS = 86_400;
 const MAX_TIMESTAMP = 8_640_000_000_000_000;
 
@@ -338,6 +340,7 @@ export function createDefaultData(): StrongerData {
       weeklyDays: 4,
       effortScale: "off",
       nextSetPreview: false,
+      workoutProgression: true,
     },
     history: [],
     customExercises: [],
@@ -492,6 +495,8 @@ function validRoutine(routine: unknown, enforceResourceLimits = true): routine i
       routineItem.targetSets >= MIN_TARGET_SETS &&
       numberInRange(routineItem.targetWeightKg, enforceResourceLimits ? MAX_WEIGHT_KG : Number.MAX_VALUE) &&
       integerInRange(routineItem.targetReps, MAX_REPS) &&
+      (routineItem.progressionRepTarget === undefined ||
+        integerInRange(routineItem.progressionRepTarget, MAX_REPS) && routineItem.progressionRepTarget > 0) &&
       optionalNumberInRange(routineItem.targetDurationSeconds) &&
       optionalNumberInRange(routineItem.targetDistanceMeters) &&
       optionalTracking(routineItem.tracking) && optionalWeightMode(routineItem.weightMode) &&
@@ -537,7 +542,8 @@ function hasValidStrongerDataShape(value: unknown, enforceResourceLimits = true)
     !integerInRange(settings.weeklyDays, 7) || settings.weeklyDays < 1 ||
     (settings.effortScale !== undefined && settings.effortScale !== "off" &&
       settings.effortScale !== "rpe" && settings.effortScale !== "rir") ||
-    (settings.nextSetPreview !== undefined && typeof settings.nextSetPreview !== "boolean")) return false;
+    (settings.nextSetPreview !== undefined && typeof settings.nextSetPreview !== "boolean") ||
+    (settings.workoutProgression !== undefined && typeof settings.workoutProgression !== "boolean")) return false;
   const sessions = candidate.activeWorkout ? [candidate.activeWorkout, ...candidate.history] : candidate.history;
   return uniqueStrings(candidate.routines.map((routine) => routine.id)) &&
     uniqueStrings((candidate.programBlocks ?? []).map((block) => block.id)) &&

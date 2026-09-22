@@ -64,23 +64,53 @@ export function tracksEstimatedStrength(exercise: Pick<WorkoutExercise, "trackin
   return resolveExerciseTracking(exercise) === "weight-reps" && resolveExerciseWeightMode(exercise) === "external";
 }
 
-/** Keep completed working results in saved row order, including repeated exercise rows. */
-export function findPreviousSet(history: WorkoutSession[], exerciseKey: string, setIndex: number, tracking?: ExerciseTracking, weightMode?: ExerciseWeightMode): WorkoutSet | undefined {
+function compareSessionRecency(first: WorkoutSession, second: WorkoutSession): number {
+  return first.workoutDate.localeCompare(second.workoutDate) ||
+    (first.finishedAt ?? first.startedAt) - (second.finishedAt ?? second.startedAt) ||
+    first.id.localeCompare(second.id);
+}
+
+/** Only work already available when this workout started can inform its previous results. */
+export function historyBeforeWorkout(
+  history: readonly WorkoutSession[],
+  workout: Pick<WorkoutSession, "workoutDate" | "startedAt"> & Partial<Pick<WorkoutSession, "id">>,
+): WorkoutSession[] {
+  return history.filter((session) => session.id !== workout.id &&
+    session.workoutDate <= workout.workoutDate && session.startedAt <= workout.startedAt &&
+    (session.finishedAt ?? session.startedAt) <= workout.startedAt);
+}
+
+/** Use the latest performed workout, independent of save/import order or template source. */
+export function findPreviousWorkingSets(history: readonly WorkoutSession[], exerciseKey: string, tracking?: ExerciseTracking, weightMode?: ExerciseWeightMode): WorkoutSet[] {
+  let latestSession: WorkoutSession | undefined;
+  let latestSets: WorkoutSet[] = [];
   for (const session of history) {
+    if (latestSession && compareSessionRecency(session, latestSession) <= 0) continue;
     const exercises = session.exercises.filter((item) => item.exerciseKey === exerciseKey &&
       (!tracking || resolveExerciseTracking(item, tracking) === tracking) &&
       (!weightMode || resolveExerciseWeightMode(item, weightMode) === weightMode));
     const workingSets = exercises.flatMap((exercise) => exercise.sets
       .filter((set) => !set.dropSetOf && isCompletedTrackedSet(set, exercise)));
-    const comparable = workingSets[setIndex] ?? workingSets.at(-1);
-    if (comparable) return comparable;
+    if (workingSets.length) {
+      latestSession = session;
+      latestSets = workingSets;
+    }
   }
-  return undefined;
+  return latestSets;
+}
+
+/** Keep completed working results in saved row order, including repeated exercise rows. */
+export function findPreviousSet(history: readonly WorkoutSession[], exerciseKey: string, setIndex: number, tracking?: ExerciseTracking, weightMode?: ExerciseWeightMode): WorkoutSet | undefined {
+  const workingSets = findPreviousWorkingSets(history, exerciseKey, tracking, weightMode);
+  return workingSets[setIndex] ?? workingSets.at(-1);
 }
 
 /** Use the same completed-root ordering as Previous, then find that root's continuation. */
-export function findPreviousDropSet(history: WorkoutSession[], exerciseKey: string, workingSetIndex: number, dropIndex: number, tracking?: ExerciseTracking, weightMode?: ExerciseWeightMode): WorkoutSet | undefined {
+export function findPreviousDropSet(history: readonly WorkoutSession[], exerciseKey: string, workingSetIndex: number, dropIndex: number, tracking?: ExerciseTracking, weightMode?: ExerciseWeightMode): WorkoutSet | undefined {
+  let latestSession: WorkoutSession | undefined;
+  let latestDrop: WorkoutSet | undefined;
   for (const session of history) {
+    if (latestSession && compareSessionRecency(session, latestSession) <= 0) continue;
     const exercises = session.exercises.filter((item) => item.exerciseKey === exerciseKey &&
       (!tracking || resolveExerciseTracking(item, tracking) === tracking) &&
       (!weightMode || resolveExerciseWeightMode(item, weightMode) === weightMode));
@@ -91,9 +121,38 @@ export function findPreviousDropSet(history: WorkoutSession[], exerciseKey: stri
     if (!match) continue;
     const { set: root, exercise } = match;
     const drop = exercise.sets.filter((set) => set.dropSetOf === root.id)[dropIndex];
-    if (drop && isCompletedTrackedSet(drop, exercise)) return drop;
+    if (drop && isCompletedTrackedSet(drop, exercise)) {
+      latestSession = session;
+      latestDrop = drop;
+    }
   }
-  return undefined;
+  return latestDrop;
+}
+
+/** Resolve the displayed Previous values with the same cutoff and ordinals as template prefill. */
+export function previousSetsForWorkout(history: readonly WorkoutSession[], workout: WorkoutSession): Map<string, WorkoutSet> {
+  const previousHistory = historyBeforeWorkout(history, workout);
+  const offsets = new Map<string, number>();
+  const previous = new Map<string, WorkoutSet>();
+  for (const exercise of workout.exercises) {
+    const tracking = resolveExerciseTracking(exercise);
+    const weightMode = resolveExerciseWeightMode(exercise);
+    const identity = JSON.stringify([exercise.exerciseKey, tracking, weightMode]);
+    const offset = offsets.get(identity) ?? 0;
+    const roots = exercise.sets.filter((set) => !set.dropSetOf);
+    offsets.set(identity, offset + roots.length);
+    const previousWorkingSets = findPreviousWorkingSets(previousHistory, exercise.exerciseKey, tracking, weightMode);
+    for (const [index, root] of roots.entries()) {
+      const previousRoot = previousWorkingSets[offset + index] ?? previousWorkingSets.at(-1);
+      if (previousRoot) previous.set(root.id, previousRoot);
+      const drops = exercise.sets.filter((set) => set.dropSetOf === root.id);
+      for (const [dropIndex, drop] of drops.entries()) {
+        const previousDrop = findPreviousDropSet(previousHistory, exercise.exerciseKey, offset + index, dropIndex, tracking, weightMode);
+        if (previousDrop) previous.set(drop.id, previousDrop);
+      }
+    }
+  }
+  return previous;
 }
 
 export function formatSetDuration(totalSeconds: number): string {
@@ -148,11 +207,7 @@ export function buildExerciseProgress(
   allHistoryRecords: ExerciseProgressRecord[];
   newBest: boolean;
 } {
-  const orderedSessions = [...history].sort((first, second) =>
-    first.workoutDate.localeCompare(second.workoutDate) ||
-    (first.finishedAt ?? first.startedAt) - (second.finishedAt ?? second.startedAt) ||
-    first.id.localeCompare(second.id),
-  );
+  const orderedSessions = [...history].sort(compareSessionRecency);
   const selectedSessions = orderedSessions.filter((session) => !sessionIds || sessionIds.has(session.id));
   let selectedExercise: WorkoutExercise | undefined;
   for (const session of [...selectedSessions].reverse()) {

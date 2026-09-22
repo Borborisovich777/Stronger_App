@@ -166,6 +166,7 @@ test("default data is valid at the current schema version", () => {
   assert.equal(data.formatVersion, storage.CURRENT_FORMAT_VERSION);
   assert.equal(data.settings.effortScale, "off");
   assert.equal(data.settings.nextSetPreview, false);
+  assert.equal(data.settings.workoutProgression, true);
   assert.deepEqual(data.programBlocks, []);
   assert.equal(storage.isStrongerData(data), true);
   assert.deepEqual(storage.migrateStrongerData(data), data);
@@ -285,6 +286,25 @@ test("the optional next-set preview consent flag survives version-1 normalizatio
   const invalid = structuredClone(activeHistoryBackup);
   invalid.data.settings.nextSetPreview = "automatic";
   assert.equal(storage.normalizeStrongerBackup(invalid), null);
+});
+
+test("progression preferences and rep goals survive backups without rewriting old workout data", () => {
+  const backup = structuredClone(activeHistoryBackup);
+  backup.data.settings.workoutProgression = false;
+  backup.data.routines[0].exercises[0].progressionRepTarget = 12;
+  const normalized = storage.normalizeStrongerBackup(backup);
+  assert.equal(normalized.settings.workoutProgression, false);
+  assert.equal(normalized.routines[0].exercises[0].progressionRepTarget, 12);
+  assert.deepEqual(normalized.history, activeHistoryBackup.data.history);
+  assert.deepEqual(normalized.activeWorkout, activeHistoryBackup.data.activeWorkout);
+  assert.equal(storage.normalizeStrongerBackup(activeHistoryBackup).settings.workoutProgression, undefined);
+  for (const invalid of [0, -1, 1.5, "12", 100001]) {
+    const broken = structuredClone(backup);
+    broken.data.routines[0].exercises[0].progressionRepTarget = invalid;
+    assert.equal(storage.normalizeStrongerBackup(broken), null);
+  }
+  backup.data.settings.workoutProgression = "yes";
+  assert.equal(storage.normalizeStrongerBackup(backup), null);
 });
 
 test("program blocks survive version-1 normalization as independent routine snapshots", () => {
