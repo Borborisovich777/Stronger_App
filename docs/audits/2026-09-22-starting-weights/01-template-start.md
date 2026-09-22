@@ -1,0 +1,1 @@
+Step 1 — Template start. 0/9 completed sets. Previous 60×12; editable load62.5 and planned8 reps. Notice correctly names two progressed lifts; row with previous50×1 stays50×8 (DOM verified). Order Deadlift, Barbell row, Lat pulldown preserved. Clear separation of Previous and current. Disclosure/undo keyboard and reload lifecycle still to test.

@@ -74,7 +74,7 @@ test("editing a copied template cannot change the catalog or other copies", () =
   assert.deepEqual(templates.WORKOUT_TEMPLATES, before);
 });
 
-test("a prepared rep range uses history weights but waits for its upper goal before progressing", async () => {
+test("new and previously saved prepared rep ranges wait for their upper goal before progressing", async () => {
   const { workoutFromTemplate } = await importTypeScriptModule(new URL("app/workoutFromTemplate.ts", root));
   const { applyNextWorkoutProgression } = await importTypeScriptModule(new URL("app/workoutProgression.ts", root));
   const routine = templates.createRoutineFromTemplate(find("back-rows"), {}, id);
@@ -87,14 +87,21 @@ test("a prepared rep range uses history weights but waits for its upper goal bef
       sets: [1, 2, 3].map((set) => ({ id: `set-${day}-${set}`, weightKg: 40, reps: 8, completed: true })),
     }],
   }));
-  const start = () => workoutFromTemplate(routine, history, "2026-09-22", 2200, id);
-  const lowerGoal = applyNextWorkoutProgression(routine, start(), history, 2.5, storage.MAX_WEIGHT_KG);
-  assert.deepEqual(lowerGoal.increases, []);
-  assert.deepEqual(lowerGoal.workout.exercises[0].sets.map(({ weightKg, reps }) => [weightKg, reps]), [[40, 8], [40, 8], [40, 8]]);
-  history.forEach((session) => session.exercises[0].sets.forEach((set) => { set.reps = 12; }));
-  const upperGoal = applyNextWorkoutProgression(routine, start(), history, 2.5, storage.MAX_WEIGHT_KG);
-  assert.equal(upperGoal.increases.length, 1);
-  assert.deepEqual(upperGoal.workout.exercises[0].sets.map(({ weightKg, reps }) => [weightKg, reps]), [[42.5, 8], [42.5, 8], [42.5, 8]]);
+  const legacyRoutine = structuredClone(routine);
+  legacyRoutine.exercises.forEach((exercise) => { delete exercise.progressionRepTarget; });
+  for (const plan of [routine, legacyRoutine]) {
+    const before = structuredClone(plan);
+    const start = () => workoutFromTemplate(plan, history, "2026-09-22", 2200, id);
+    history.forEach((session) => session.exercises[0].sets.forEach((set) => { set.reps = 8; }));
+    const lowerGoal = applyNextWorkoutProgression(plan, start(), history, 2.5, storage.MAX_WEIGHT_KG);
+    assert.deepEqual(lowerGoal.increases, []);
+    assert.deepEqual(lowerGoal.workout.exercises[0].sets.map(({ weightKg, reps }) => [weightKg, reps]), [[40, 8], [40, 8], [40, 8]]);
+    history.forEach((session) => session.exercises[0].sets.forEach((set) => { set.reps = 12; }));
+    const upperGoal = applyNextWorkoutProgression(plan, start(), history, 2.5, storage.MAX_WEIGHT_KG);
+    assert.equal(upperGoal.increases.length, 1);
+    assert.deepEqual(upperGoal.workout.exercises[0].sets.map(({ weightKg, reps }) => [weightKg, reps]), [[42.5, 8], [42.5, 8], [42.5, 8]]);
+    assert.deepEqual(plan, before, "resolving the old range must not rewrite the saved template");
+  }
 });
 
 test("training notes survive backup normalization; malformed notes are rejected", () => {

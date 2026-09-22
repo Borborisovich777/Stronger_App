@@ -3,7 +3,7 @@ import test from "node:test";
 import { importTypeScriptModule } from "./helpers/import-typescript.mjs";
 
 const { workoutFromTemplate } = await importTypeScriptModule(new URL("../app/workoutFromTemplate.ts", import.meta.url));
-const { findPreviousSet, findPreviousDropSet, previousSetsForWorkout } = await importTypeScriptModule(new URL("../app/exercise-tracking.ts", import.meta.url));
+const { findLatestPreviousSet, previousSetsForWorkout } = await importTypeScriptModule(new URL("../app/exercise-tracking.ts", import.meta.url));
 const set = (values = {}) => ({ id: "set-1", weightKg: 60, reps: 8, completed: true, ...values });
 const exercise = (values = {}) => ({ id: "exercise-1", exerciseKey: "bench-press", name: "Bench press", tracking: "weight-reps", weightMode: "external", restSeconds: 90, sets: [set()], ...values });
 const session = (values = {}) => ({ id: "session-1", name: "Other workout", workoutDate: "2026-09-20", startedAt: 100, finishedAt: 200, exercises: [exercise()], ...values });
@@ -57,7 +57,7 @@ test("workout dates determine previous weights after a backdated save or unorder
   const recent = session({ id: "newest", finishedAt: 500, exercises: [exercise({ sets: [set({ weightKg: 75 })] })] });
   for (const history of [[backdated, olderSameDay, recent], [recent, backdated, olderSameDay]]) {
     assert.deepEqual(start(template(), history).exercises[0].sets.map((set) => set.weightKg), [75, 75, 75]);
-    assert.equal(findPreviousSet(history, "bench-press", 0, "weight-reps", "external").weightKg, 75);
+    assert.equal(findLatestPreviousSet(history, "bench-press", 0, "weight-reps", "external").weightKg, 75);
   }
 });
 
@@ -157,7 +157,7 @@ test("Previous never compares a history session against itself or uses edited ac
   assert.equal(workout.exercises[0].sets[0].weightKg, 100);
 });
 
-test("typed exercises keep prior time and distance, while rep exercises keep their planned rep target", () => {
+test("non-weight tracking retains prior reps, time and distance with saved targets as fallback", () => {
   const plan = template([
     target({ exerciseKey: "plank", tracking: "duration", targetReps: 0, targetWeightKg: 0, targetDurationSeconds: 30, targetSets: 1 }),
     target({ exerciseKey: "running", tracking: "distance-duration", targetReps: 0, targetWeightKg: 0, targetDurationSeconds: 600, targetDistanceMeters: 1000, targetSets: 1 }),
@@ -172,10 +172,37 @@ test("typed exercises keep prior time and distance, while rep exercises keep the
   assert.equal(workout.exercises[0].sets[0].durationSeconds, 45);
   assert.equal(workout.exercises[1].sets[0].durationSeconds, 750);
   assert.equal(workout.exercises[1].sets[0].distanceMeters, 1500);
-  assert.equal(workout.exercises[2].sets[0].reps, 12);
+  assert.equal(workout.exercises[2].sets[0].reps, 5);
   const fresh = start(plan, []);
   assert.equal(fresh.exercises[0].sets[0].durationSeconds, 30);
   assert.equal(fresh.exercises[1].sets[0].distanceMeters, 1000);
+  assert.equal(fresh.exercises[2].sets[0].reps, 12);
+});
+
+test("non-weight template rows keep history array order and restart prior-set indexes for each row", () => {
+  for (const tracking of ["reps", "duration", "distance-duration"]) {
+    const plan = template([target({ tracking, targetSets: 2 }), target({ id: "second-row", tracking, targetSets: 1 })]);
+    const olderFirst = session({ id: "saved-first", workoutDate: "2026-09-10", exercises: [exercise({ tracking, sets: [
+      set({ id: "first", reps: 12, durationSeconds: 45, distanceMeters: 1500 }),
+      set({ id: "second", reps: 10, durationSeconds: 30, distanceMeters: 1000 }),
+    ] })] });
+    const latest = session({ id: "chronologically-latest", exercises: [exercise({ tracking, sets: [set({ reps: 20, durationSeconds: 90, distanceMeters: 3000 })] })] });
+    const futureFirst = { ...olderFirst, id: "future-first", workoutDate: "2026-09-23", startedAt: 20000, finishedAt: 20100 };
+    for (const first of [olderFirst, futureFirst]) {
+      const history = [first, latest];
+      const before = structuredClone({ history, plan });
+      const workout = start(plan, history);
+      const measurements = (set) => [set.reps, set.durationSeconds, set.distanceMeters];
+      assert.deepEqual(workout.exercises.map((row) => row.sets.map(measurements)), [
+        [[12, 45, 1500], [10, 30, 1000]], [[12, 45, 1500]],
+      ], `${tracking} must preserve existing prefill ordering and per-row indexes`);
+      const previous = previousSetsForWorkout(history, workout);
+      assert.deepEqual(workout.exercises.map((row) => row.sets.map((set) => measurements(previous.get(set.id)))), [
+        [[12, 45, 1500], [10, 30, 1000]], [[12, 45, 1500]],
+      ], `${tracking} Previous must still match its unchanged prefill behavior`);
+      assert.deepEqual({ history, plan }, before);
+    }
+  }
 });
 
 test("starting a template creates independent unchecked sets without carrying history effort or completion metadata", () => {
@@ -195,10 +222,12 @@ test("starting a template creates independent unchecked sets without carrying hi
   assert.equal(JSON.stringify({ plan, history }), before);
 });
 
-test("Previous drop results follow workout dates rather than import ordering", () => {
+test("weighted template Previous drop results follow workout dates rather than import ordering", () => {
   const withDrop = (date, weightKg) => session({ id: date, workoutDate: date, exercises: [exercise({ sets: [
     set({ id: "root", weightKg: 60 }), set({ id: "drop", dropSetOf: "root", weightKg }),
   ] })] });
   const history = [withDrop("2026-09-01", 25), withDrop("2026-09-20", 35)];
-  assert.equal(findPreviousDropSet(history, "bench-press", 0, 0, "weight-reps", "external").weightKg, 35);
+  const workout = start(template(), history);
+  workout.exercises[0].sets.push(set({ id: "current-drop", dropSetOf: workout.exercises[0].sets[0].id, completed: false }));
+  assert.equal(previousSetsForWorkout(history, workout).get("current-drop").weightKg, 35);
 });

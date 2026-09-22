@@ -101,7 +101,7 @@ import {
   PlateInventoryItem,
 } from "./plateCalculator";
 import { workoutFromTemplate } from "./workoutFromTemplate";
-import { applyNextWorkoutProgression, type WorkoutLoadIncrease } from "./workoutProgression";
+import { applyNextWorkoutProgression, getWorkoutStartingWeightIncreases, resolveProgressionRepTarget } from "./workoutProgression";
 import {
   buildPeriodProgress,
   type ProgressPeriod,
@@ -121,7 +121,7 @@ import { nextRoutineInRotation } from "./weeklyReview";
 import { EXERCISE_IMAGE_VERSION, EXERCISE_MEDIA } from "./exercise-media";
 import { ExerciseGuide, ExercisePhoto } from "./ExerciseGuide";
 import { findExistingExercise, matchesExerciseSearch, mergeExerciseCatalog } from "./exercise-search";
-import { buildExerciseProgress, defaultSetMeasurements, ExerciseTracking, ExerciseWeightMode, findPreviousSet, previousSetsForWorkout, formatDistanceKm, formatSetDuration, isTimedTracking, resolveExerciseTracking, resolveExerciseWeightMode, SetMeasurements, SetMeasurementUpdate, setCompletionError } from "./exercise-tracking";
+import { buildExerciseProgress, defaultSetMeasurements, ExerciseTracking, ExerciseWeightMode, findLatestPreviousSet, previousSetsForWorkout, formatDistanceKm, formatSetDuration, isTimedTracking, resolveExerciseTracking, resolveExerciseWeightMode, SetMeasurements, SetMeasurementUpdate, setCompletionError } from "./exercise-tracking";
 import { ArrowDown, ArrowUp, CaretDown, Check, ClockCounterClockwise, DotsThree, Barbell, GearSix, NotePencil, Plus, Timer, Trash, TrendUp, X } from "@phosphor-icons/react";
 import { createExistingUserPreviewData, createPreviewData, createProgressionPreviewData } from "./preview-data";
 import { TemplateLibrary } from "./TemplateLibrary";
@@ -1059,7 +1059,7 @@ function RoutineEditor({
     }
     setLimitStatus("");
     const values = defaultSetMeasurements(tracking);
-    const previous = findPreviousSet(history, exercise.exerciseKey, 0, tracking, exerciseWeightMode(exercise));
+    const previous = tracking === "weight-reps" ? findLatestPreviousSet(history, exercise.exerciseKey, 0, tracking, exerciseWeightMode(exercise)) : undefined;
     setDraft((current) => ({
       ...current,
       exercises: [...current.exercises, {
@@ -1090,7 +1090,7 @@ function RoutineEditor({
           <summary>Training notes & progression</summary>
           <label>Template notes<textarea value={draft.notes ?? ""} rows={5} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} /></label>
         </details>
-        <p className="exercise-note">Starting weights use your latest completed workout. These saved weights are used when no history exists; reps stay as planned.</p>
+        <p className="exercise-note">Starting weights use your latest completed workout. These saved weights are used when no history exists. Loaded exercises keep their planned reps.</p>
 
         <div className="routine-editor-list">
           {draft.exercises.map((exercise, index) => (
@@ -1102,7 +1102,7 @@ function RoutineEditor({
               {menuId === exercise.id ? <div className="routine-exercise-menu">
                 <label>Exercise name<input aria-label={`Exercise ${index + 1} name`} value={exercise.name} onChange={(event) => updateExercise(index, { name: event.target.value })} /></label>
                 <label>Exercise notes<textarea value={exercise.notes ?? ""} rows={3} onChange={(event) => updateExercise(index, { notes: event.target.value })} /></label>
-                {exerciseTracking(exercise) === "weight-reps" && exerciseWeightMode(exercise) !== "assistance" ? <label htmlFor={`progression-${exercise.id}`}>Progression rep goal<NumericInput id={`progression-${exercise.id}`} value={Math.max(exercise.targetReps, exercise.progressionRepTarget ?? exercise.targetReps)} min={Math.max(1, exercise.targetReps)} max={MAX_REPS} onValueChange={(progressionRepTarget) => updateExercise(index, { progressionRepTarget })} /><small>Reach this on every set in two workouts before a starting-weight increase.</small></label> : null}
+                {exerciseTracking(exercise) === "weight-reps" && exerciseWeightMode(exercise) !== "assistance" ? <label htmlFor={`progression-${exercise.id}`}>Progression rep goal<NumericInput id={`progression-${exercise.id}`} value={resolveProgressionRepTarget(exercise)} min={Math.max(1, exercise.targetReps)} max={MAX_REPS} onValueChange={(progressionRepTarget) => updateExercise(index, { progressionRepTarget })} /><small>Reach this on every set in two workouts before a starting-weight increase.</small></label> : null}
                 <div className="row-actions"><button type="button" className="small-button" disabled={index === 0} onClick={() => setDraft({ ...draft, exercises: moveItem(draft.exercises, index, index - 1) })}><ArrowUp size={15} aria-hidden="true" /> Move up</button>
                 <button type="button" className="small-button" disabled={index === draft.exercises.length - 1} onClick={() => setDraft({ ...draft, exercises: moveItem(draft.exercises, index, index + 1) })}><ArrowDown size={15} aria-hidden="true" /> Move down</button>
                 <button type="button" className="small-button danger-text" onClick={() => setDraft({ ...draft, exercises: draft.exercises.filter((_, exerciseIndex) => exerciseIndex !== index) })}>Remove</button></div>
@@ -1200,7 +1200,6 @@ export default function StrongerApp() {
   const [showWorkoutMenu, setShowWorkoutMenu] = useState(false);
   const [exerciseAction, setExerciseAction] = useState<{ id: string; view: "menu" | "edit" | "reorder" | "notes" | "rest" } | null>(null);
   const [showHistoryMenu, setShowHistoryMenu] = useState(false);
-  const [workoutStartIncreases, setWorkoutStartIncreases] = useState<WorkoutLoadIncrease[]>([]);
   const [collapsedExerciseIds, setCollapsedExerciseIds] = useState<Set<string>>(() => new Set());
   const [exerciseReorderPreview, setExerciseReorderPreview] = useState<ExerciseReorderPreview | null>(null);
   const [showBlankWorkout, setShowBlankWorkout] = useState(false);
@@ -1241,6 +1240,8 @@ export default function StrongerApp() {
   const exerciseReorderAutoScrollRef = useRef<number | null>(null);
 
   const activeWorkout = data.activeWorkout;
+  const workoutStartIncreases = useMemo(() => activeWorkout
+    ? getWorkoutStartingWeightIncreases(activeWorkout) : [], [activeWorkout]);
   const activePreviousSets = useMemo(() => activeWorkout
     ? previousSetsForWorkout(data.history, activeWorkout)
     : new Map<string, WorkoutSet>(), [activeWorkout, data.history]);
@@ -1721,7 +1722,7 @@ export default function StrongerApp() {
     });
   }
 
-  function startWorkout(workout: WorkoutSession, increases: WorkoutLoadIncrease[] = []) {
+  function startWorkout(workout: WorkoutSession) {
     if (data.activeWorkout && !window.confirm("Replace the workout currently in progress? Its unfinished changes will be removed.")) return;
     rescueEligibleWorkoutIdRef.current = workout.id;
     dismissedRescuePromptRef.current = null;
@@ -1732,7 +1733,6 @@ export default function StrongerApp() {
     setWorkoutMinimized(false);
     setCollapsedExerciseIds(new Set());
     setExerciseAction(null);
-    setWorkoutStartIncreases(increases);
     setMessage(`${workout.name} is ready.`);
   }
 
@@ -1765,12 +1765,13 @@ export default function StrongerApp() {
     const result = workoutProgressionEnabled
       ? applyNextWorkoutProgression(routine, workout, data.history, toKilograms(unit === "kg" ? 2.5 : 5, unit), MAX_WEIGHT_KG)
       : { workout, increases: [] };
-    startWorkout(result.workout, result.increases);
+    startWorkout(result.workout);
   }
 
   function usePreviousStartingWeights() {
     updateActive((workout) => ({
       ...workout,
+      startingWeightAdjustments: undefined,
       exercises: workout.exercises.map((exercise) => {
         const increase = workoutStartIncreases.find((item) => item.exerciseId === exercise.id);
         if (!increase) return exercise;
@@ -1781,7 +1782,7 @@ export default function StrongerApp() {
         }) };
       }),
     }));
-    setWorkoutStartIncreases([]);
+    setMessage("Previous starting weights restored. Your edits were kept.");
   }
 
   function submitBlankWorkout(event: FormEvent) {
@@ -3316,7 +3317,7 @@ export default function StrongerApp() {
             <div className="setting-row">
               <div>
                 <strong>Next-workout progression</strong>
-                <small>Start slightly heavier after every planned set meets its rep goal in two workouts. Weights stay fixed once you start logging.</small>
+                <small>Start slightly heavier after every planned set meets its rep goal in two workouts. Never changes weights while you log.</small>
               </div>
               <button
                 className="theme-switch"
@@ -3548,7 +3549,9 @@ export default function StrongerApp() {
           <TemplateLibrary onChoose={(routine) => {
             setShowTemplateLibrary(false);
             setRoutineDraft({ ...routine, exercises: routine.exercises.map((exercise) => ({ ...exercise,
-              targetWeightKg: findPreviousSet(data.history, exercise.exerciseKey, 0, exerciseTracking(exercise), exerciseWeightMode(exercise))?.weightKg ?? exercise.targetWeightKg,
+              targetWeightKg: exerciseTracking(exercise) === "weight-reps"
+                ? findLatestPreviousSet(data.history, exercise.exerciseKey, 0, exerciseTracking(exercise), exerciseWeightMode(exercise))?.weightKg ?? exercise.targetWeightKg
+                : exercise.targetWeightKg,
             })) });
           }} />
         </Modal>
