@@ -1,5 +1,38 @@
 # Stronger design QA
 
+## Compact weekly calendar — 22 September 2026
+
+**final result: passed**
+
+Scope: the new calendar inside the existing Progress → Week summary. The source is the user's current Progress screenshot (`/var/folders/p5/3lk7_p691q3dpbz7ztx_bpfc0000gp/T/codex-clipboard-848f314d-c6a0-4943-ba51-ed91f2fb7f69.png`, 1132 × 1724 pixels, original CSS viewport/density unknown). A fresh pre-change capture provides the exact normalized comparison: [before](docs/design/2026-09-22-weekly-calendar/01-before.png) and [after](docs/design/2026-09-22-weekly-calendar/02-empty-week.png), both 390 × 844 pixels at a 390 × 844 CSS viewport, 1:1 density. Both empty-state captures and the supplied source were opened together in the same comparison input. The empty preview has no saved next template, unlike the user's Push template; this content difference is intentional synthetic data. No screenshot resizing or generated replacement was used.
+
+### Findings and comparison
+
+No actionable P0/P1/P2 visual differences remain. The existing header, typography, card, goal bar, tabs, palette and navigation remain unchanged; the calendar intentionally adds about 110 CSS pixels plus its 16px top gap below the bar. The empty screen still fits its next-template control above the navigation. The exact before/after images allow direct full-view and readable calendar-region comparison without a separate crop.
+
+- **Fonts:** existing system family; modest 12px calendar heading, 13px dates, 10px weekday labels and 11px status labels. No new oversized text or truncated category labels.
+- **Spacing:** one seven-column week plus a five-category row inside the existing card, without a second card. Today has an outline, selected day has a theme accent, and checked dates have a tick below their date. The calendar measured 109.34px at 320 and 430 CSS pixels. A one-pixel subpixel overshoot in the 320px Cardio grid cell does not overlap another cell or the container edge; document width remains 320px.
+- **Colors:** all new colors use the existing cream/charcoal/lime theme tokens. Completed and pending states also differ by check/circle icons and accessible text, not color alone.
+- **Assets:** existing Phosphor Check, CheckCircle, Circle and CaretRight icons; no new raster illustration or imitation icon asset is needed.
+- **Copy:** “This week · 1× each”, explicit weekday/date labels, five requested categories, compact count, and an explanation only when a day is expanded. This describes the user's goal, not a training prescription. Unclassified custom work can tick the workout date but cannot guess a category.
+
+### Interaction and code-review verification
+
+The independent read-only review found one P2 keyboard regression in the new path: deleting a workout opened from Progress left focus without a mounted History heading. The fix preserves the selected day button and uses it as the deletion fallback. A fresh browser test opened Tuesday via Enter, opened Legs, inspected its three skipped bench sets, and deleted only the reversible synthetic preview workout. The result dropped from 3/5 to 2/5; Tuesday lost its completion tick and retained focus. [Post-fix evidence](docs/design/2026-09-22-weekly-calendar/04-delete-focus.png). Follow-up review: no findings.
+
+Other verified browser states:
+
+- [Partial week, 390 × 844](docs/design/2026-09-22-weekly-calendar/03-partial-week.png): Legs, Arms and Back complete; skipped Bench press does not tick Chest.
+- [Narrow dark, 320 × 740](docs/design/2026-09-22-weekly-calendar/05-narrow-dark.png): no horizontal page overflow or category collision; date buttons retain 60px height.
+- [Wide light, 430 × 932](docs/design/2026-09-22-weekly-calendar/06-light-wide.png): same geometry and existing palette.
+- Month removes the weekly calendar and retains the existing monthly report. Week restores it. Date expansion and existing History detail actions work. Browser error log was empty.
+
+The first narrow screenshot was taken during the existing page-entry fade and rejected; only the stable recapture is retained. The initial partial-week preview used a nonexistent fixture key and was corrected to the real `back-squat` key before accepted evidence. These were capture/fixture corrections, not visual acceptance of a faded state or guessed exercise classification.
+
+Automated validation: production build and 236 tests pass (223 existing plus 13 calendar cases); ESLint and whitespace checks pass. Calendar tests cover empty/complete/partial weeks, real catalog mappings, week rollover, active/future workouts, mixed tracking, deletion, duplicate IDs, unclassified exercises, drops, immutability, leap/year/DST boundaries. The 12-case initial suite also passed under America/New_York. No storage format, saved template, workout progression or existing report calculation changed.
+
+Residual limits: full screen-reader use, actual iPhone keyboard/background behavior and enlarged system text are not verified. This is scoped design QA, not a claim of complete accessibility conformance. Manual future-day planning is not implemented; automatic weekly coverage was the stated default while the optional question remained unanswered.
+
 ## Integration with current main — passed
 
 Verified on 2026-09-13 after resolving the PR branch against current `main`. The merged implementation retains the 257-entry illustrated library and measurement-specific logging together with drop sets, exercise reordering, effort notes, session rescue, program copies, reporting, equipment alternatives, and data protection. The historical reviews below remain scoped to their original implementations.
