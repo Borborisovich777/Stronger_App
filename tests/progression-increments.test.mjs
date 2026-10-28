@@ -34,6 +34,8 @@ test("increments convert to kilograms for both units", () => {
   assert.equal(progressionIncrementKg({ exerciseKey: "dumbbell-bench-press", name: "Dumbbell bench press" }, "kg"), 2.5);
   assert.equal(progressionIncrementKg({ exerciseKey: "lateral-raise", name: "Lateral raise" }, "lb"), 1.134);
   assert.equal(progressionIncrementKg({ exerciseKey: "dumbbell-bench-press", name: "Dumbbell bench press" }, "lb"), 2.268);
+  assert.equal(progressionIncrementKg({ exerciseKey: "lat-pulldown", name: "Lat pulldown" }, "kg"), 3.75);
+  assert.equal(progressionIncrementKg({ exerciseKey: "bench-press-smith-machine", name: "Bench press (Smith machine)" }, "kg"), 2.5);
 });
 
 function lateralRaiseFixture(weightKg, loggedReps = 15) {
@@ -69,6 +71,16 @@ test("a bigger dumbbell jump waits until every set beats the range by the extra 
   const result = applyNextWorkoutProgression(earned.routine, earned.workout, earned.history, byExercise, 100_000);
   assert.deepEqual(result.workout.exercises[0].sets.map((set) => set.weightKg), [10, 10, 10]);
   assert.equal(result.increases[0].incrementKg, 2.5);
+});
+
+test("a machine moves by the 3.75 kg add-on weight", () => {
+  const input = lateralRaiseFixture(30);
+  for (const exercise of [...input.routine.exercises, input.workout.exercises[0], ...input.history.map((session) => session.exercises[0])]) {
+    exercise.exerciseKey = "lat-pulldown";
+    exercise.name = "Lat pulldown";
+  }
+  const result = applyNextWorkoutProgression(input.routine, input.workout, input.history, byExercise, 100_000);
+  assert.deepEqual(result.workout.exercises[0].sets.map((set) => set.weightKg), [33.75, 33.75, 33.75]);
 });
 
 test("a step above 50% of the working load is never applied", () => {

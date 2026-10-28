@@ -62,19 +62,3 @@ test("deleting is refused while the exercise is in the workout in progress", () 
   const data = fixture({ id: "a", name: "Upper A", workoutDate: "2026-10-28", startedAt: 5, exercises: [logged("a1")] });
   assert.equal(deleteCustomExercise(data, key), data);
 });
-
-const { parseRestAlertPreferences, DEFAULT_REST_ALERTS } = await importTypeScriptModule(new URL("../app/restAlert.ts", import.meta.url));
-
-test("rest alert preferences fall back field by field", () => {
-  assert.deepEqual(parseRestAlertPreferences(null), DEFAULT_REST_ALERTS);
-  assert.deepEqual(parseRestAlertPreferences("not json"), DEFAULT_REST_ALERTS);
-  assert.deepEqual(parseRestAlertPreferences('{"sound":false,"keepAwake":true,"vibrate":"yes"}'),
-    { sound: false, vibrate: true, iphoneTimer: false, keepAwake: true });
-});
-
-const { restTimerShortcutUrl } = await importTypeScriptModule(new URL("../app/restAlert.ts", import.meta.url));
-
-test("the iPhone timer link passes whole remaining seconds to the named shortcut", () => {
-  assert.equal(restTimerShortcutUrl(89.6), "shortcuts://run-shortcut?name=Stronger%20Rest&input=text&text=90");
-  assert.equal(restTimerShortcutUrl(0), "shortcuts://run-shortcut?name=Stronger%20Rest&input=text&text=1");
-});

@@ -9,14 +9,16 @@ const INCREMENT_STEPS: Record<ProgressionIncrementKind, Record<WeightUnit, numbe
   barbell: { kg: 2.5, lb: 5 },
   // Metric dumbbell racks commonly step by 2.5 kg; lb racks by 5 lb.
   dumbbell: { kg: 2.5, lb: 5 },
-  // One pin on a typical stack.
-  machine: { kg: 2.5, lb: 5 },
+  // Selectorised machines and cables: the half-step add-on weight (3.75 kg) on each stack.
+  machine: { kg: 3.75, lb: 5 },
   // Raises, curls and extensions use the same 2.5 kg dumbbells or 1.25 kg plate pairs.
   // Jumps over 20% must be earned with extra reps (see workoutProgression).
   isolation: { kg: 2.5, lb: 2.5 },
 };
 
-const MACHINE_PATTERN = /\b(cable|machine|smith|pec-deck|leg-press|hack-squat|lat-pulldown|pulldown|plate-loaded|seated-row|face-pull|pushdown)\b/;
+const MACHINE_PATTERN = /\b(cable|machine|pec-deck|leg-press|hack-squat|lat-pulldown|pulldown|seated-row|face-pull|pushdown)\b/;
+// Loaded with plates rather than a pin stack.
+const PLATE_LOADED_PATTERN = /\b(smith|plate-loaded)\b/;
 const ISOLATION_PATTERN = /\b(curl|raise|fly|extension|kickback|skull-?crusher|pullover|wrist)\b/;
 const DUMBBELL_PATTERN = /\b(dumbbell|goblet|kettlebell|arnold)\b/;
 
@@ -33,6 +35,7 @@ export function progressionIncrementKind(exercise: { exerciseKey: string; name: 
   const equipment = equipmentForExercise(exercise.exerciseKey);
   if (equipment === "Cable" || equipment === "Machine") return "machine";
   const text = exerciseText(exercise.exerciseKey, exercise.name);
+  if (PLATE_LOADED_PATTERN.test(text)) return "barbell";
   if (MACHINE_PATTERN.test(text)) return "machine";
   // Calf raises load like compounds even though their names say "raise".
   if (ISOLATION_PATTERN.test(text) && !/\bcalf\b/.test(text)) return "isolation";

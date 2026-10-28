@@ -22,7 +22,8 @@ export type WorkoutProgressionResult = {
   increases: WorkoutLoadIncrease[];
 };
 
-const MAX_INCREMENT_KG = 2.5;
+// The largest step is the 3.75 kg add-on weight on selectorised machines.
+const MAX_INCREMENT_KG = 3.75;
 // A normal step adds at most 20% to every working set.
 const MAX_RELATIVE_INCREASE = 0.2;
 // Light lifts on 2.5 kg dumbbells (7.5 -> 10 kg) can only move in bigger jumps.
