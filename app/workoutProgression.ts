@@ -23,7 +23,8 @@ export type WorkoutProgressionResult = {
 };
 
 const MAX_INCREMENT_KG = 2.5;
-const MAX_RELATIVE_INCREASE = 0.1;
+// Allows one small dumbbell or pin step on light isolation work (for example 5 kg -> 6 kg).
+const MAX_RELATIVE_INCREASE = 0.2;
 const WEIGHT_TOLERANCE_KG = 0.000001;
 
 /** Recover the start-only explanation from this workout, including after a reload or import. */
@@ -109,17 +110,18 @@ type PlannedRow = { index: number; template: RoutineExercise; exercise: WorkoutE
  * The two latest attempts must both finish this exercise's planned workload at
  * the baseline loads. Repeated exercise rows form one ordered workload; changed
  * set counts, missed sets and newer incomplete attempts cannot be skipped.
+ * The increment may be one value or a per-exercise step (see progressionIncrements).
  */
 export function applyNextWorkoutProgression(
   routine: Routine,
   workout: WorkoutSession,
   history: readonly WorkoutSession[],
-  incrementKg: number,
+  increment: number | ((exercise: WorkoutExercise) => number),
   maximumWeightKg: number,
 ): WorkoutProgressionResult {
   const unchanged = { workout, increases: [] };
-  if (!Number.isFinite(incrementKg) || incrementKg <= 0 || incrementKg > MAX_INCREMENT_KG ||
-    !Number.isFinite(maximumWeightKg) || maximumWeightKg <= 0 ||
+  const incrementFor = typeof increment === "function" ? increment : () => increment;
+  if (!Number.isFinite(maximumWeightKg) || maximumWeightKg <= 0 ||
     workout.finishedAt !== undefined || workout.startingWeightAdjustments !== undefined || workout.sourceRoutineId !== routine.id ||
     workout.exercises.length !== routine.exercises.length ||
     workout.exercises.some((exercise) => exercise.sets.some((set) => set.completed || set.completedAt !== undefined))) {
@@ -142,6 +144,8 @@ export function applyNextWorkoutProgression(
     const representative = rows[0].exercise;
     if (resolveExerciseTracking(representative) !== "weight-reps" ||
       resolveExerciseWeightMode(representative) === "assistance") continue;
+    const incrementKg = incrementFor(representative);
+    if (!Number.isFinite(incrementKg) || incrementKg <= 0 || incrementKg > MAX_INCREMENT_KG) continue;
 
     const validPlan = rows.every(({ template, exercise }) =>
       Number.isInteger(template.targetSets) && template.targetSets > 0 &&

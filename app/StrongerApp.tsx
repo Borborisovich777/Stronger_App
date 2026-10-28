@@ -2,6 +2,7 @@
 
 import {
   ChangeEvent,
+  CSSProperties,
   FormEvent,
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
@@ -102,6 +103,17 @@ import {
 } from "./plateCalculator";
 import { workoutFromTemplate } from "./workoutFromTemplate";
 import { applyNextWorkoutProgression, getWorkoutStartingWeightIncreases, resolveProgressionRepTarget } from "./workoutProgression";
+import { progressionIncrementKg } from "./progressionIncrements";
+import { customExerciseUsage, deleteCustomExercise, renameCustomExercise } from "./customExercises";
+import {
+  fireRestAlert,
+  parseRestAlertPreferences,
+  primeRestAlertSound,
+  REST_ALERT_STORAGE_KEY,
+  restAlertSupport,
+  requestRestNotificationPermission,
+  type RestAlertPreferences,
+} from "./restAlert";
 import {
   buildPeriodProgress,
   type ProgressPeriod,
@@ -129,6 +141,7 @@ import { WORKOUT_TEMPLATES } from "./workoutTemplates";
 
 type Tab = "workout" | "history" | "progress" | "settings";
 type ThemeMode = "light" | "dark";
+type ColorPalette = "lime" | "ocean" | "teal" | "violet";
 type SessionRescuePrompt = {
   workoutId: string;
   offeredAt: number;
@@ -162,6 +175,14 @@ type ExerciseReorderGesture = ExerciseReorderPreview & {
 };
 
 const THEME_STORAGE_KEY = "stronger-theme";
+const PALETTE_STORAGE_KEY = "stronger-palette";
+/** Paper and accent per mode; paper also feeds the browser chrome colour. Keep in sync with globals.css and index.html. */
+const COLOR_PALETTES: { id: ColorPalette; label: string; light: { paper: string; accent: string }; dark: { paper: string; accent: string } }[] = [
+  { id: "lime", label: "Lime", light: { paper: "#f3f1e9", accent: "#c8ef5a" }, dark: { paper: "#171a18", accent: "#c8ef5a" } },
+  { id: "ocean", label: "White and blue", light: { paper: "#f4f7fb", accent: "#2563eb" }, dark: { paper: "#0f1622", accent: "#5b8cff" } },
+  { id: "teal", label: "Teal", light: { paper: "#f1f6f5", accent: "#14b8a6" }, dark: { paper: "#0e1a18", accent: "#2dd4bf" } },
+  { id: "violet", label: "Violet", light: { paper: "#f5f3fa", accent: "#7c3aed" }, dark: { paper: "#15121e", accent: "#a78bfa" } },
+];
 const REST_DURATION_OPTIONS = [0, 30, 45, 60, 90, 120, 150, 180, 240, 300] as const;
 const REPORT_CATEGORIES_BY_EXERCISE_KEY = Object.fromEntries(
   BUILT_IN_EXERCISES.map((exercise) => [exercise.exerciseKey, exercise.category]),
@@ -258,6 +279,50 @@ function formatReportDateRange(range: { startDate: string; endDate: string } | n
   if (range.startDate === range.endDate) return start;
   const end = formatter.format(new Date(`${range.endDate}T12:00:00`));
   return `${start}–${end}`;
+}
+
+function isColorPalette(value: unknown): value is ColorPalette {
+  return COLOR_PALETTES.some((palette) => palette.id === value);
+}
+
+function initialPalette(): ColorPalette {
+  if (typeof window === "undefined") return "lime";
+  const pagePalette = document.documentElement.dataset.palette;
+  if (isColorPalette(pagePalette)) return pagePalette;
+  try {
+    const saved = window.localStorage.getItem(PALETTE_STORAGE_KEY);
+    if (isColorPalette(saved)) return saved;
+  } catch {
+    // Lime remains the default when storage is unavailable.
+  }
+  return "lime";
+}
+
+function initialRestAlerts(): RestAlertPreferences {
+  if (typeof window === "undefined") return parseRestAlertPreferences(null);
+  try {
+    return parseRestAlertPreferences(window.localStorage.getItem(REST_ALERT_STORAGE_KEY));
+  } catch {
+    return parseRestAlertPreferences(null);
+  }
+}
+
+function SettingSwitch({ label, description, checked, disabled, onToggle }: {
+  label: string;
+  description: string;
+  checked: boolean;
+  disabled?: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="setting-row">
+      <div><strong>{label}</strong><small>{description}</small></div>
+      <button className="theme-switch" type="button" role="switch" aria-label={label} aria-checked={checked} disabled={disabled} onClick={onToggle}>
+        <span className="theme-switch-label" aria-hidden="true">{checked ? "On" : "Off"}</span>
+        <span className="theme-switch-track" aria-hidden="true"><span /></span>
+      </button>
+    </div>
+  );
 }
 
 function initialTheme(): ThemeMode {
@@ -688,10 +753,16 @@ function ExercisePicker({
   catalog,
   onSelect,
   onCreateCustom,
+  onRenameCustom,
+  onDeleteCustom,
 }: {
   catalog: ExerciseCatalogItem[];
   onSelect?: (exercise: ExerciseCatalogItem) => void;
   onCreateCustom: (name: string) => CreateCustomExerciseResult;
+  /** Returns an error to show, or null after a successful rename. */
+  onRenameCustom?: (exerciseKey: string, name: string) => string | null;
+  /** Returns true when the exercise was removed. */
+  onDeleteCustom?: (exerciseKey: string) => boolean;
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<"All" | ExerciseCatalogCategory>("All");
@@ -699,6 +770,7 @@ function ExercisePicker({
   const [customName, setCustomName] = useState("");
   const [customStatus, setCustomStatus] = useState("");
   const [preview, setPreview] = useState<ExerciseCatalogItem | null>(null);
+  const [editingCustom, setEditingCustom] = useState<{ exerciseKey: string; name: string; status: string } | null>(null);
   const previewHeading = useRef<HTMLHeadingElement>(null);
   const previewTrigger = useRef<HTMLButtonElement | null>(null);
   const customToggle = useRef<HTMLButtonElement>(null);
@@ -852,8 +924,35 @@ function ExercisePicker({
                     <ExercisePhoto exerciseKey={exercise.exerciseKey} name={exercise.name} thumbnail />
                     <span className="exercise-option-copy"><strong>{exercise.name}</strong><small>{exercise.category} · {EXERCISE_MEDIA[exercise.exerciseKey]?.equipment ?? equipment ?? "Personal"}</small><span className="exercise-view-label">View movement</span></span>
                   </button>
+                  {exercise.category === "Custom" && onRenameCustom ? <button className="exercise-quick-add secondary" type="button" aria-label={`Edit ${exercise.name}`} aria-expanded={editingCustom?.exerciseKey === exercise.exerciseKey}
+                    onClick={() => setEditingCustom(editingCustom?.exerciseKey === exercise.exerciseKey ? null : { exerciseKey: exercise.exerciseKey, name: exercise.name, status: "" })}>Edit</button> : null}
                   {onSelect ? <button className="exercise-quick-add" type="button" aria-label={`Select ${exercise.name}`} onClick={() => onSelect(exercise)}>Add</button> : null}
                 </div>
+                {editingCustom?.exerciseKey === exercise.exerciseKey && onRenameCustom ? (
+                  <div className="custom-exercise-fields custom-exercise-edit">
+                    <label>
+                      Exercise name
+                      <input
+                        value={editingCustom.name}
+                        onChange={(event) => setEditingCustom({ ...editingCustom, name: event.target.value, status: "" })}
+                        maxLength={80}
+                        autoComplete="off"
+                      />
+                    </label>
+                    <div className="custom-exercise-edit-actions">
+                      <button className="primary-button" type="button" onClick={() => {
+                        const error = onRenameCustom(exercise.exerciseKey, editingCustom.name);
+                        if (error) setEditingCustom({ ...editingCustom, status: error });
+                        else setEditingCustom(null);
+                      }}>Save name</button>
+                      {onDeleteCustom ? <button className="danger-link bordered" type="button" onClick={() => {
+                        if (onDeleteCustom(exercise.exerciseKey)) setEditingCustom(null);
+                      }}>Delete</button> : null}
+                    </div>
+                    <small>Renaming updates every template that uses this exercise. Past workouts keep their logged name.</small>
+                    {editingCustom.status ? <p className="field-status" role="status">{editingCustom.status}</p> : null}
+                  </div>
+                ) : null}
                 {alternatives.length ? <button className="equipment-alternative-trigger" type="button"
                   aria-expanded={alternativesOpen} aria-controls={`equipment-alternatives-${exercise.exerciseKey}`}
                   onClick={() => setAlternativeForKey(alternativesOpen ? "" : exercise.exerciseKey)}>Alternatives</button> : null}
@@ -1227,6 +1326,9 @@ export default function StrongerApp() {
   const [isStandalone, setIsStandalone] = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>(initialTheme);
+  const [palette, setPalette] = useState<ColorPalette>(initialPalette);
+  const [restAlerts, setRestAlerts] = useState<RestAlertPreferences>(initialRestAlerts);
+  const alertedRestEndRef = useRef<number | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const finishingRef = useRef(false);
   const skipNextSaveRef = useRef(true);
@@ -1265,7 +1367,10 @@ export default function StrongerApp() {
     const savedExercises: ExerciseCatalogItem[] = [
       ...data.routines.flatMap((routine) => routine.exercises),
       ...(data.activeWorkout?.exercises ?? []),
-      ...data.history.flatMap((session) => session.exercises),
+      // A deleted custom exercise stays in History but no longer offers itself in the library.
+      ...data.history.flatMap((session) => session.exercises).filter((exercise) =>
+        !exercise.exerciseKey.startsWith("custom-exercise") ||
+        data.customExercises.some((custom) => custom.exerciseKey === exercise.exerciseKey)),
     ].map((exercise) => ({
       exerciseKey: exercise.exerciseKey,
       name: exercise.name,
@@ -1287,17 +1392,19 @@ export default function StrongerApp() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.palette = palette;
     document.documentElement.style.colorScheme = theme;
     try {
-      if (!previewMode) window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+      if (!previewMode) {
+        window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+        window.localStorage.setItem(PALETTE_STORAGE_KEY, palette);
+      }
     } catch {
       // Theme still applies for this session if localStorage is unavailable.
     }
-    document.querySelector('meta[name="theme-color"]')?.setAttribute(
-      "content",
-      theme === "dark" ? "#171a18" : "#f3f1e9",
-    );
-  }, [theme, previewMode]);
+    const colors = COLOR_PALETTES.find((item) => item.id === palette) ?? COLOR_PALETTES[0];
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", colors[theme].paper);
+  }, [theme, palette, previewMode]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -1447,6 +1554,65 @@ export default function StrongerApp() {
       document.removeEventListener("visibilitychange", syncClock);
     };
   }, []);
+
+  useEffect(() => {
+    try {
+      if (!previewMode) window.localStorage.setItem(REST_ALERT_STORAGE_KEY, JSON.stringify(restAlerts));
+    } catch {
+      // Alerts still work for this session if localStorage is unavailable.
+    }
+    if (!restAlerts.sound) return;
+    // Audio may only start from a tap; every tap while logging keeps it unlocked.
+    document.addEventListener("pointerdown", primeRestAlertSound, { passive: true });
+    return () => document.removeEventListener("pointerdown", primeRestAlertSound);
+  }, [restAlerts, previewMode]);
+
+  const restEndsAt = data.activeWorkout?.timerPausedAt === undefined ? data.activeWorkout?.restEndsAt : undefined;
+  useEffect(() => {
+    if (!restEndsAt || alertedRestEndRef.current === restEndsAt) return;
+    const alert = () => {
+      if (alertedRestEndRef.current === restEndsAt || Date.now() < restEndsAt) return;
+      alertedRestEndRef.current = restEndsAt;
+      // A phone that was frozen for a long time should not buzz for a rest that ended minutes ago.
+      if (Date.now() - restEndsAt > 60_000) return;
+      fireRestAlert(restAlerts, "Time for your next set.");
+    };
+    const delay = restEndsAt - Date.now();
+    if (delay <= 0) {
+      alert();
+      return;
+    }
+    const timer = window.setTimeout(alert, delay);
+    document.addEventListener("visibilitychange", alert);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", alert);
+    };
+  }, [restEndsAt, restAlerts]);
+
+  const workoutInProgress = data.activeWorkout !== null;
+  useEffect(() => {
+    if (!restAlerts.keepAwake || !workoutInProgress || !restAlertSupport.keepAwake()) return;
+    let lock: WakeLockSentinel | null = null;
+    let cancelled = false;
+    const acquire = () => {
+      if (document.visibilityState !== "visible" || (lock && !lock.released)) return;
+      navigator.wakeLock.request("screen").then((sentinel) => {
+        if (cancelled) void sentinel.release();
+        else lock = sentinel;
+      }).catch(() => {
+        // Low battery mode or an unsupported browser; the screen locks normally.
+      });
+    };
+    acquire();
+    // The browser drops the lock whenever the app is hidden.
+    document.addEventListener("visibilitychange", acquire);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", acquire);
+      void lock?.release();
+    };
+  }, [restAlerts.keepAwake, workoutInProgress]);
 
   useEffect(() => {
     const workout = data.activeWorkout;
@@ -1760,10 +1926,43 @@ export default function StrongerApp() {
     return { exercise: { ...custom, category: "Custom" }, created: true };
   }
 
+  function renameCustom(exerciseKey: string, rawName: string): string | null {
+    const name = cleanExerciseName(rawName).slice(0, 80);
+    if (!name) return "Enter an exercise name first.";
+    const existing = findExistingExercise(exerciseCatalog, name);
+    if (existing && existing.exerciseKey !== exerciseKey) return `${existing.name} already exists. Choose another name.`;
+    const usage = customExerciseUsage(data, exerciseKey);
+    setData((current) => renameCustomExercise(current, exerciseKey, name));
+    const templates = usage.routineNames.length + usage.programBlockNames.length;
+    setMessage(templates
+      ? `Renamed to ${name} in your library and ${templates} ${templates === 1 ? "template" : "templates"}.`
+      : `Renamed to ${name}.`);
+    return null;
+  }
+
+  function deleteCustom(exerciseKey: string): boolean {
+    const custom = data.customExercises.find((exercise) => exercise.exerciseKey === exerciseKey);
+    if (!custom) return false;
+    const usage = customExerciseUsage(data, exerciseKey);
+    if (usage.inActiveWorkout) {
+      setMessage(`${custom.name} is in your workout in progress. Finish or remove it there first.`);
+      return false;
+    }
+    const planned = [...usage.routineNames, ...usage.programBlockNames];
+    const details = [
+      planned.length ? `It will also be removed from: ${planned.join(", ")}.` : "",
+      usage.historySessions ? `${usage.historySessions} past ${usage.historySessions === 1 ? "workout keeps" : "workouts keep"} their logged sets.` : "",
+    ].filter(Boolean).join(" ");
+    if (!window.confirm(`Delete ${custom.name} from your exercise library?${details ? ` ${details}` : ""}`)) return false;
+    setData((current) => deleteCustomExercise(current, exerciseKey));
+    setMessage(`${custom.name} was deleted.`);
+    return true;
+  }
+
   function startRoutine(routine: Routine) {
     const workout = workoutFromTemplate(routine, data.history, localDateKey(), Date.now(), makeId);
     const result = workoutProgressionEnabled
-      ? applyNextWorkoutProgression(routine, workout, data.history, toKilograms(unit === "kg" ? 2.5 : 5, unit), MAX_WEIGHT_KG)
+      ? applyNextWorkoutProgression(routine, workout, data.history, (exercise) => progressionIncrementKg(exercise, unit), MAX_WEIGHT_KG)
       : { workout, increases: [] };
     startWorkout(result.workout);
   }
@@ -3258,7 +3457,7 @@ export default function StrongerApp() {
 
           <section className="settings-card">
             <div className="setting-row">
-              <div><strong>Appearance</strong><small>Switch between light and dark without changing Stronger’s palette.</small></div>
+              <div><strong>Appearance</strong><small>Switch between light and dark without changing your colour preset.</small></div>
               <button
                 className="theme-switch"
                 type="button"
@@ -3270,6 +3469,25 @@ export default function StrongerApp() {
                 <span className="theme-switch-label" aria-hidden="true">{theme === "dark" ? "Dark" : "Light"}</span>
                 <span className="theme-switch-track" aria-hidden="true"><span /></span>
               </button>
+            </div>
+            <div className="setting-row">
+              <div><strong>Colour</strong><small>{COLOR_PALETTES.find((item) => item.id === palette)?.label}</small></div>
+              <div className="palette-options" role="radiogroup" aria-label="Colour preset">
+                {COLOR_PALETTES.map((option) => (
+                  <button
+                    key={option.id}
+                    className="palette-swatch"
+                    type="button"
+                    role="radio"
+                    aria-checked={palette === option.id}
+                    aria-label={option.label}
+                    title={option.label}
+                    onClick={() => setPalette(option.id)}
+                  >
+                    <span aria-hidden="true" style={{ "--swatch-paper": option[theme].paper, "--swatch-accent": option[theme].accent } as CSSProperties} />
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="setting-row">
               <div><strong>Weight units</strong><small>Stored safely in kg; converted only for display.</small></div>
@@ -3317,7 +3535,7 @@ export default function StrongerApp() {
             <div className="setting-row">
               <div>
                 <strong>Next-workout progression</strong>
-                <small>Start slightly heavier after every planned set meets its rep goal in two workouts. Never changes weights while you log.</small>
+                <small>Start slightly heavier after every planned set meets its rep goal in two workouts: {unit === "kg" ? "+2.5 kg barbell, machine and cable; +2 kg dumbbells; +1 kg small isolation lifts" : "+5 lb barbell, machine, cable and dumbbells; +2.5 lb small isolation lifts"}. Never changes weights while you log.</small>
               </div>
               <button
                 className="theme-switch"
@@ -3340,6 +3558,36 @@ export default function StrongerApp() {
                 {[1, 2, 3, 4, 5, 6, 7].map((days) => <option key={days} value={days}>{days} {days === 1 ? "day" : "days"}</option>)}
               </select>
             </label>
+          </section>
+
+          <section className="settings-card" aria-label="Rest timer alerts">
+            <div className="setting-row">
+              <div><strong>Rest timer alerts</strong><small>What happens when a rest ends.</small></div>
+              <button className="small-button" type="button" onClick={() => {
+                primeRestAlertSound();
+                fireRestAlert({ ...restAlerts, notify: false }, "Time for your next set.");
+              }}>Test</button>
+            </div>
+              <SettingSwitch label="Sound" description="Three beeps when rest ends. iPhone mutes it on silent mode." checked={restAlerts.sound}
+                onToggle={() => setRestAlerts((current) => ({ ...current, sound: !current.sound }))} />
+              <SettingSwitch label="Vibration" description={restAlertSupport.vibrate() ? "Buzz when rest ends." : "Not available in this browser. iPhone does not allow web apps to vibrate."}
+                checked={restAlerts.vibrate && restAlertSupport.vibrate()} disabled={!restAlertSupport.vibrate()}
+                onToggle={() => setRestAlerts((current) => ({ ...current, vibrate: !current.vibrate }))} />
+              <SettingSwitch label="Notification" description={restAlertSupport.notify() ? "Shows when you switch to another app. Cannot reach a locked iPhone." : "Not available in this browser."}
+                checked={restAlerts.notify} disabled={!restAlertSupport.notify()}
+                onToggle={() => {
+                  if (restAlerts.notify) {
+                    setRestAlerts((current) => ({ ...current, notify: false }));
+                    return;
+                  }
+                  void requestRestNotificationPermission().then((permission) => {
+                    if (permission === "granted") setRestAlerts((current) => ({ ...current, notify: true }));
+                    else setMessage(permission === "denied" ? "Notifications are blocked. Allow them for Stronger in your browser or phone settings." : "Notifications are not available here.");
+                  });
+                }} />
+              <SettingSwitch label="Keep screen on" description={restAlertSupport.keepAwake() ? "Stops the phone locking during a workout so you always see and hear the timer. Uses more battery." : "Not available in this browser."}
+                checked={restAlerts.keepAwake} disabled={!restAlertSupport.keepAwake()}
+                onToggle={() => setRestAlerts((current) => ({ ...current, keepAwake: !current.keepAwake }))} />
           </section>
 
           <section className="section-block settings-section">
@@ -3560,7 +3808,7 @@ export default function StrongerApp() {
       {showExerciseLibrary ? (
         <Modal eyebrow="LEARN THE MOVEMENT" title="Exercise library" onClose={() => setShowExerciseLibrary(false)} initialFocus="close">
           <p className="exercise-library-intro">Find your exercise. See how it moves.</p>
-          <ExercisePicker catalog={exerciseCatalog} onCreateCustom={createCustomExercise} />
+          <ExercisePicker catalog={exerciseCatalog} onCreateCustom={createCustomExercise} onRenameCustom={renameCustom} onDeleteCustom={deleteCustom} />
         </Modal>
       ) : null}
 
