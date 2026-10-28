@@ -111,7 +111,8 @@ import {
   primeRestAlertSound,
   REST_ALERT_STORAGE_KEY,
   restAlertSupport,
-  requestRestNotificationPermission,
+  REST_TIMER_SHORTCUT_NAME,
+  restTimerShortcutUrl,
   type RestAlertPreferences,
 } from "./restAlert";
 import {
@@ -1575,7 +1576,7 @@ export default function StrongerApp() {
       alertedRestEndRef.current = restEndsAt;
       // A phone that was frozen for a long time should not buzz for a rest that ended minutes ago.
       if (Date.now() - restEndsAt > 60_000) return;
-      fireRestAlert(restAlerts, "Time for your next set.");
+      fireRestAlert(restAlerts);
     };
     const delay = restEndsAt - Date.now();
     if (delay <= 0) {
@@ -3535,7 +3536,7 @@ export default function StrongerApp() {
             <div className="setting-row">
               <div>
                 <strong>Next-workout progression</strong>
-                <small>Start slightly heavier after every planned set meets its rep goal in two workouts: {unit === "kg" ? "+2.5 kg barbell, machine and cable; +2 kg dumbbells; +1 kg small isolation lifts" : "+5 lb barbell, machine, cable and dumbbells; +2.5 lb small isolation lifts"}. Never changes weights while you log.</small>
+                <small>Start slightly heavier after every planned set meets its rep goal in two workouts: {unit === "kg" ? "+2.5 kg" : "+5 lb (+2.5 lb small isolation lifts)"}. If that jump is over 20% of a light weight, every set first needs about 20% more reps than the range. Never changes weights while you log.</small>
               </div>
               <button
                 className="theme-switch"
@@ -3565,7 +3566,7 @@ export default function StrongerApp() {
               <div><strong>Rest timer alerts</strong><small>What happens when a rest ends.</small></div>
               <button className="small-button" type="button" onClick={() => {
                 primeRestAlertSound();
-                fireRestAlert({ ...restAlerts, notify: false }, "Time for your next set.");
+                fireRestAlert(restAlerts);
               }}>Test</button>
             </div>
               <SettingSwitch label="Sound" description="Three beeps when rest ends. iPhone mutes it on silent mode." checked={restAlerts.sound}
@@ -3573,18 +3574,9 @@ export default function StrongerApp() {
               <SettingSwitch label="Vibration" description={restAlertSupport.vibrate() ? "Buzz when rest ends." : "Not available in this browser. iPhone does not allow web apps to vibrate."}
                 checked={restAlerts.vibrate && restAlertSupport.vibrate()} disabled={!restAlertSupport.vibrate()}
                 onToggle={() => setRestAlerts((current) => ({ ...current, vibrate: !current.vibrate }))} />
-              <SettingSwitch label="Notification" description={restAlertSupport.notify() ? "Shows when you switch to another app. Cannot reach a locked iPhone." : "Not available in this browser."}
-                checked={restAlerts.notify} disabled={!restAlertSupport.notify()}
-                onToggle={() => {
-                  if (restAlerts.notify) {
-                    setRestAlerts((current) => ({ ...current, notify: false }));
-                    return;
-                  }
-                  void requestRestNotificationPermission().then((permission) => {
-                    if (permission === "granted") setRestAlerts((current) => ({ ...current, notify: true }));
-                    else setMessage(permission === "denied" ? "Notifications are blocked. Allow them for Stronger in your browser or phone settings." : "Notifications are not available here.");
-                  });
-                }} />
+              <SettingSwitch label="iPhone timer" description={`Adds a button to the rest banner that starts the Clock timer through Shortcuts, so it rings when locked or on silent. One-time setup: in Shortcuts, make "${REST_TIMER_SHORTCUT_NAME}" with one action, Start Timer for Shortcut Input seconds.`}
+                checked={restAlerts.iphoneTimer}
+                onToggle={() => setRestAlerts((current) => ({ ...current, iphoneTimer: !current.iphoneTimer }))} />
               <SettingSwitch label="Keep screen on" description={restAlertSupport.keepAwake() ? "Stops the phone locking during a workout so you always see and hear the timer. Uses more battery." : "Not available in this browser."}
                 checked={restAlerts.keepAwake} disabled={!restAlertSupport.keepAwake()}
                 onToggle={() => setRestAlerts((current) => ({ ...current, keepAwake: !current.keepAwake }))} />
@@ -3648,6 +3640,7 @@ export default function StrongerApp() {
           {restRemaining === 0 ? <span className="visually-hidden" role="status">Rest complete. Ready for the next set.</span> : null}
           <span className="rest-ring" aria-hidden="true">{restRemaining === 0 ? "✓" : "↻"}</span>
           <span><small>{restRemaining === 0 ? "REST COMPLETE" : "REST TIMER"}</small><strong>{restRemaining === 0 ? "Ready for the next set" : formatDuration(restRemaining)}</strong></span>
+          {restAlerts.iphoneTimer && restRemaining > 0 ? <a className="rest-banner-action" href={restTimerShortcutUrl(restRemaining)}>iPhone timer</a> : null}
           <button type="button" onClick={() => updateActive((workout) => ({ ...workout, restEndsAt: undefined }))}>{restRemaining === 0 ? "Dismiss" : "Skip"}</button>
         </div>
       ) : null}

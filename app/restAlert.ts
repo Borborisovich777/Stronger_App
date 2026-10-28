@@ -5,9 +5,11 @@
  * - Sound (Web Audio): every browser while Stronger is on screen. iOS mutes it
  *   when the ring/silent switch is on and after the screen locks.
  * - Vibration: Android Chrome/Edge/Firefox. Safari on iPhone has no Vibration API.
- * - Notification: Android when Stronger is in the background but still running.
- *   iPhone only allows notifications for a Home Screen app through Web Push,
- *   which needs a server, so a locked iPhone cannot be alerted from here.
+ * - Locked iPhone: a web app can only be woken by Web Push, which needs a
+ *   server. Instead the rest banner can hand the remaining time to an Apple
+ *   Shortcut that starts the built-in Clock timer, which rings when locked and
+ *   on silent. One-time setup: a shortcut named REST_TIMER_SHORTCUT_NAME whose only action
+ *   is "Start Timer" for "Shortcut Input" seconds.
  * - Keep screen on (Screen Wake Lock): stops the phone locking mid-rest so the
  *   sound and on-screen banner still reach the user. iOS 18.4+ in Home Screen apps.
  */
@@ -15,12 +17,14 @@
 export type RestAlertPreferences = {
   sound: boolean;
   vibrate: boolean;
-  notify: boolean;
+  iphoneTimer: boolean;
   keepAwake: boolean;
 };
 
+export const REST_TIMER_SHORTCUT_NAME = "Stronger Rest";
+
 export const REST_ALERT_STORAGE_KEY = "stronger-rest-alerts";
-export const DEFAULT_REST_ALERTS: RestAlertPreferences = { sound: true, vibrate: true, notify: false, keepAwake: false };
+export const DEFAULT_REST_ALERTS: RestAlertPreferences = { sound: true, vibrate: true, iphoneTimer: false, keepAwake: false };
 
 export function parseRestAlertPreferences(raw: string | null): RestAlertPreferences {
   if (!raw) return DEFAULT_REST_ALERTS;
@@ -29,7 +33,7 @@ export function parseRestAlertPreferences(raw: string | null): RestAlertPreferen
     return {
       sound: typeof value.sound === "boolean" ? value.sound : DEFAULT_REST_ALERTS.sound,
       vibrate: typeof value.vibrate === "boolean" ? value.vibrate : DEFAULT_REST_ALERTS.vibrate,
-      notify: typeof value.notify === "boolean" ? value.notify : DEFAULT_REST_ALERTS.notify,
+      iphoneTimer: typeof value.iphoneTimer === "boolean" ? value.iphoneTimer : DEFAULT_REST_ALERTS.iphoneTimer,
       keepAwake: typeof value.keepAwake === "boolean" ? value.keepAwake : DEFAULT_REST_ALERTS.keepAwake,
     };
   } catch {
@@ -39,7 +43,6 @@ export function parseRestAlertPreferences(raw: string | null): RestAlertPreferen
 
 export const restAlertSupport = {
   vibrate: () => typeof navigator !== "undefined" && typeof navigator.vibrate === "function",
-  notify: () => typeof window !== "undefined" && "Notification" in window && "serviceWorker" in navigator,
   keepAwake: () => typeof navigator !== "undefined" && "wakeLock" in navigator,
 };
 
@@ -86,30 +89,8 @@ function playChime(): void {
   });
 }
 
-export async function requestRestNotificationPermission(): Promise<NotificationPermission | "unsupported"> {
-  if (!restAlertSupport.notify()) return "unsupported";
-  if (Notification.permission !== "default") return Notification.permission;
-  try {
-    return await Notification.requestPermission();
-  } catch {
-    return "denied";
-  }
-}
-
-async function showRestNotification(body: string): Promise<void> {
-  if (!restAlertSupport.notify() || Notification.permission !== "granted") return;
-  try {
-    const registration = await navigator.serviceWorker.getRegistration();
-    const options = { body, tag: "stronger-rest", renotify: true, silent: false } as NotificationOptions;
-    if (registration) await registration.showNotification("Rest is over", options);
-    else new Notification("Rest is over", options);
-  } catch {
-    // The in-app banner still shows the finished rest.
-  }
-}
-
 /** Fire every enabled alert once, when a rest period ends. */
-export function fireRestAlert(preferences: RestAlertPreferences, nextLabel: string): void {
+export function fireRestAlert(preferences: RestAlertPreferences): void {
   if (preferences.sound) playChime();
   if (preferences.vibrate && restAlertSupport.vibrate()) {
     try {
@@ -118,5 +99,10 @@ export function fireRestAlert(preferences: RestAlertPreferences, nextLabel: stri
       // Some browsers block vibration without a recent tap.
     }
   }
-  if (preferences.notify && document.visibilityState === "hidden") void showRestNotification(nextLabel);
+}
+
+/** Opens the user's Apple Shortcut with the seconds left, so the Clock app rings at the end. */
+export function restTimerShortcutUrl(seconds: number): string {
+  const params = new URLSearchParams({ name: REST_TIMER_SHORTCUT_NAME, input: "text", text: String(Math.max(1, Math.round(seconds))) });
+  return `shortcuts://run-shortcut?${params.toString().replace(/\+/g, "%20")}`;
 }

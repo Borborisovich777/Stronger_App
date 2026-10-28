@@ -5177,3 +5177,29 @@ body.is-reordering-exercises {
 .custom-exercise-edit small {
   color: var(--muted);
 }
+
+.rest-banner-action {
+  display: inline-flex;
+  min-height: var(--touch-target);
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+  color: var(--inverse-text);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.rest-banner:has(.rest-banner-action) {
+  grid-template-columns: 44px minmax(0, 1fr) auto auto;
+}
+
+:root[data-palette="ocean"] .rest-banner.is-ready,
+:root[data-palette="teal"] .rest-banner.is-ready,
+:root[data-palette="violet"] .rest-banner.is-ready {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 28%, #0b0d10);
+}

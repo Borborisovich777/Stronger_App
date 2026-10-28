@@ -7,12 +7,13 @@ export type ProgressionIncrementKind = "barbell" | "dumbbell" | "machine" | "iso
 const INCREMENT_STEPS: Record<ProgressionIncrementKind, Record<WeightUnit, number>> = {
   // A pair of 1.25 kg plates, or 2.5 lb plates.
   barbell: { kg: 2.5, lb: 5 },
-  // Most dumbbell racks step by 2 kg or 5 lb.
-  dumbbell: { kg: 2, lb: 5 },
+  // Metric dumbbell racks commonly step by 2.5 kg; lb racks by 5 lb.
+  dumbbell: { kg: 2.5, lb: 5 },
   // One pin on a typical stack.
   machine: { kg: 2.5, lb: 5 },
-  // Small free-weight isolation lifts (raises, curls, extensions) stall on big jumps.
-  isolation: { kg: 1, lb: 2.5 },
+  // Raises, curls and extensions use the same 2.5 kg dumbbells or 1.25 kg plate pairs.
+  // Jumps over 20% must be earned with extra reps (see workoutProgression).
+  isolation: { kg: 2.5, lb: 2.5 },
 };
 
 const MACHINE_PATTERN = /\b(cable|machine|smith|pec-deck|leg-press|hack-squat|lat-pulldown|pulldown|plate-loaded|seated-row|face-pull|pushdown)\b/;
