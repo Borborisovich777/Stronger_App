@@ -19,6 +19,15 @@
   --danger-soft: #fff0ed;
   --focus: #145fbe;
   --on-accent: #171a18;
+  --notice-bg: #f3f8df;
+  --notice-border: #bfca9e;
+  --install-bg-start: #fbfff0;
+  --install-bg-end: #f3f7df;
+  --install-border: #c6d0a5;
+  --ready-bg: #f5f9e7;
+  --ready-border: #bfd092;
+  --accent-hairline: rgba(61, 86, 0, 0.22);
+  --accent-glow: rgba(200, 239, 90, 0.22);
   --inverse-text: #fff;
   --chrome-bg: rgba(250, 249, 244, 0.94);
   --chrome-border: rgba(185, 190, 180, 0.88);
@@ -645,8 +654,8 @@ small {
   margin-top: 14px;
   padding: 12px 12px 12px 15px;
   gap: 12px;
-  border: 1px solid #bfca9e;
-  background: #f3f8df;
+  border: 1px solid var(--notice-border);
+  background: var(--notice-bg);
   color: var(--ink-soft);
   font-size: 0.88rem;
 }
@@ -666,9 +675,9 @@ small {
   margin: 0 0 32px;
   padding: 19px;
   gap: 15px;
-  border: 1px solid #c6d0a5;
+  border: 1px solid var(--install-border);
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, #fbfff0, #f3f7df);
+  background: linear-gradient(135deg, var(--install-bg-start), var(--install-bg-end));
   box-shadow: var(--shadow-sm);
 }
 
@@ -704,8 +713,8 @@ small {
   margin-bottom: 30px;
   padding: 13px 15px;
   gap: 10px;
-  border: 1px solid #bfd092;
-  background: #f5f9e7;
+  border: 1px solid var(--ready-border);
+  background: var(--ready-bg);
   color: var(--ink-soft);
   font-size: 0.88rem;
   font-weight: 600;
@@ -3478,7 +3487,7 @@ body.is-reordering-exercises {
   padding-top: 12px;
   align-items: start;
   gap: 10px;
-  border-top: 1px solid rgba(61, 86, 0, 0.22);
+  border-top: 1px solid var(--accent-hairline);
   font-size: 0.82rem;
 }
 
@@ -4362,7 +4371,7 @@ body.is-reordering-exercises {
   justify-items: center;
   gap: 10px;
   background:
-    radial-gradient(circle at 50% 35%, rgba(200, 239, 90, 0.22), transparent 16rem),
+    radial-gradient(circle at 50% 35%, var(--accent-glow), transparent 16rem),
     var(--paper);
   color: var(--ink);
   text-align: center;
@@ -4727,7 +4736,7 @@ body.is-reordering-exercises {
 
 :root[data-theme="dark"] .brand-mark {
   border-color: var(--line);
-  background: #171a18;
+  background: var(--paper);
 }
 
 :root[data-theme="dark"] .timer-pill,
@@ -4743,9 +4752,9 @@ body.is-reordering-exercises {
 
 :root[data-theme="dark"] .primary-button,
 :root[data-theme="dark"] .finish-button {
-  border-color: #f3f1e9;
-  background: #f3f1e9;
-  color: #171a18;
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
 }
 
 :root[data-theme="dark"] .danger-link.bordered {
@@ -4763,7 +4772,7 @@ body.is-reordering-exercises {
 
 :root[data-theme="dark"] .install-card {
   border-color: var(--line);
-  background: linear-gradient(135deg, #303630, #282d29);
+  background: linear-gradient(135deg, var(--surface), var(--surface-soft));
 }
 
 :root[data-theme="dark"] .section-kicker,
@@ -4949,3 +4958,225 @@ body.is-reordering-exercises {
   .template-slot-top { flex-direction: column; gap: 2px; }
   .template-catalog-card { padding: 16px; }
 }
+
+/* Colour presets. Lime is the original palette and needs no overrides. */
+:root[data-palette="ocean"] {
+  --ink: #0f1a2a;
+  --ink-soft: #26344a;
+  --muted: #52617a;
+  --subtle: #5f6d85;
+  --paper: #f4f7fb;
+  --paper-deep: #e8eef6;
+  --surface: #ffffff;
+  --surface-soft: #f7f9fc;
+  --line: #d3dbe6;
+  --line-strong: #b6c2d2;
+  --accent: #2563eb;
+  --accent-soft: #e3ecfd;
+  --accent-strong: #1d4ed8;
+  --accent-ink: #1e40af;
+  --on-accent: #ffffff;
+  --focus: #1d4ed8;
+  --chrome-bg: rgba(250, 252, 255, 0.94);
+  --chrome-border: rgba(182, 194, 210, 0.88);
+  --notice-bg: #eef3fd;
+  --notice-border: #b9cbef;
+  --install-bg-start: #f8fbff;
+  --install-bg-end: #eaf1fd;
+  --install-border: #c3d3f0;
+  --ready-bg: #eef3fd;
+  --ready-border: #b9cbef;
+  --accent-hairline: rgba(30, 64, 175, 0.22);
+  --accent-glow: rgba(37, 99, 235, 0.18);
+}
+
+:root[data-palette="ocean"][data-theme="dark"] {
+  --ink: #eef3fb;
+  --ink-soft: #dbe4f2;
+  --muted: #a9b6ca;
+  --subtle: #a9b6ca;
+  --paper: #0f1622;
+  --paper-deep: #0a0f18;
+  --surface: #1c2636;
+  --surface-soft: #162030;
+  --line: #34425a;
+  --line-strong: #46556e;
+  --accent: #5b8cff;
+  --accent-soft: #1e3a75;
+  --accent-strong: #3b6ef0;
+  --accent-ink: #a9c4ff;
+  --on-accent: #0a0f18;
+  --focus: #a9c4ff;
+  --chrome-bg: rgba(15, 22, 34, 0.96);
+  --chrome-border: #34425a;
+}
+
+:root[data-palette="teal"] {
+  --ink: #10201d;
+  --ink-soft: #26403b;
+  --muted: #52665f;
+  --subtle: #5c706a;
+  --paper: #f1f6f5;
+  --paper-deep: #e4eeec;
+  --surface: #fdfffe;
+  --surface-soft: #f5faf9;
+  --line: #cfdcd9;
+  --line-strong: #b2c4c0;
+  --accent: #14b8a6;
+  --accent-soft: #d5f5f0;
+  --accent-strong: #0f766e;
+  --accent-ink: #0f5f57;
+  --on-accent: #04201c;
+  --focus: #0f766e;
+  --chrome-bg: rgba(248, 252, 251, 0.94);
+  --chrome-border: rgba(178, 196, 192, 0.88);
+  --notice-bg: #e6f7f4;
+  --notice-border: #a9dcd4;
+  --install-bg-start: #f6fdfb;
+  --install-bg-end: #e2f5f1;
+  --install-border: #b5dcd5;
+  --ready-bg: #e6f7f4;
+  --ready-border: #a9dcd4;
+  --accent-hairline: rgba(15, 95, 87, 0.22);
+  --accent-glow: rgba(20, 184, 166, 0.2);
+}
+
+:root[data-palette="teal"][data-theme="dark"] {
+  --ink: #eaf6f3;
+  --ink-soft: #d6ebe6;
+  --muted: #a3bdb6;
+  --subtle: #a3bdb6;
+  --paper: #0e1a18;
+  --paper-deep: #091211;
+  --surface: #1b2b28;
+  --surface-soft: #152320;
+  --line: #33504a;
+  --line-strong: #44625b;
+  --accent: #2dd4bf;
+  --accent-soft: #134e48;
+  --accent-strong: #14b8a6;
+  --accent-ink: #99f6e4;
+  --on-accent: #04201c;
+  --focus: #5eead4;
+  --chrome-bg: rgba(14, 26, 24, 0.96);
+  --chrome-border: #33504a;
+}
+
+:root[data-palette="violet"] {
+  --ink: #1b1528;
+  --ink-soft: #332a45;
+  --muted: #5f5675;
+  --subtle: #69607e;
+  --paper: #f5f3fa;
+  --paper-deep: #ebe7f4;
+  --surface: #fefdff;
+  --surface-soft: #f8f6fc;
+  --line: #d9d3e6;
+  --line-strong: #bfb6d2;
+  --accent: #7c3aed;
+  --accent-soft: #ede4fd;
+  --accent-strong: #6d28d9;
+  --accent-ink: #5b21b6;
+  --on-accent: #ffffff;
+  --focus: #6d28d9;
+  --chrome-bg: rgba(251, 250, 254, 0.94);
+  --chrome-border: rgba(191, 182, 210, 0.88);
+  --notice-bg: #f3eefd;
+  --notice-border: #cfc0ef;
+  --install-bg-start: #fbf9ff;
+  --install-bg-end: #efe8fd;
+  --install-border: #d3c6f0;
+  --ready-bg: #f3eefd;
+  --ready-border: #cfc0ef;
+  --accent-hairline: rgba(91, 33, 182, 0.22);
+  --accent-glow: rgba(124, 58, 237, 0.18);
+}
+
+:root[data-palette="violet"][data-theme="dark"] {
+  --ink: #f2effa;
+  --ink-soft: #e2dcf0;
+  --muted: #b5abcb;
+  --subtle: #b5abcb;
+  --paper: #15121e;
+  --paper-deep: #0e0c15;
+  --surface: #262036;
+  --surface-soft: #1e192b;
+  --line: #433a59;
+  --line-strong: #554b6d;
+  --accent: #a78bfa;
+  --accent-soft: #3b2a6b;
+  --accent-strong: #8b5cf6;
+  --accent-ink: #d4c6ff;
+  --on-accent: #15121e;
+  --focus: #c4b5fd;
+  --chrome-bg: rgba(21, 18, 30, 0.96);
+  --chrome-border: #433a59;
+}
+
+/* Non-lime presets carry their colour into the main actions. */
+:root[data-palette="ocean"] :is(.primary-button, .finish-button),
+:root[data-palette="teal"] :is(.primary-button, .finish-button),
+:root[data-palette="violet"] :is(.primary-button, .finish-button) {
+  border-color: var(--accent-strong);
+  background: var(--accent-strong);
+  color: #ffffff;
+}
+
+:root[data-palette="ocean"][data-theme="dark"] :is(.primary-button, .finish-button),
+:root[data-palette="teal"][data-theme="dark"] :is(.primary-button, .finish-button),
+:root[data-palette="violet"][data-theme="dark"] :is(.primary-button, .finish-button) {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.palette-options {
+  display: flex;
+  gap: 8px;
+}
+
+.palette-swatch {
+  display: inline-grid;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  place-items: center;
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.palette-swatch[aria-checked="true"] {
+  border-color: var(--ink);
+}
+
+.palette-swatch span {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--swatch-paper) 0 50%, var(--swatch-accent) 50% 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.exercise-quick-add.secondary {
+  margin-right: 4px;
+  background: var(--surface-soft);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.custom-exercise-edit {
+  margin: 0 9px 10px;
+}
+
+.custom-exercise-edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.custom-exercise-edit small {
+  color: var(--muted);
+}
+
+
+

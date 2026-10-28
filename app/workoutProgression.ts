@@ -22,8 +22,19 @@ export type WorkoutProgressionResult = {
   increases: WorkoutLoadIncrease[];
 };
 
-const MAX_INCREMENT_KG = 2.5;
-const MAX_RELATIVE_INCREASE = 0.1;
+// The largest step is the 3.75 kg add-on weight on selectorised machines.
+const MAX_INCREMENT_KG = 3.75;
+// A normal step adds at most 20% to every working set.
+const MAX_RELATIVE_INCREASE = 0.2;
+// Light lifts on 2.5 kg dumbbells (7.5 -> 10 kg) can only move in bigger jumps.
+// Those must be earned with extra reps beyond the range, and never exceed 50%.
+const MAX_EARNED_RELATIVE_INCREASE = 0.5;
+const EARNED_JUMP_EXTRA_REPS = 0.2;
+
+/** Reps every set must reach before a step bigger than 20% is allowed (15 -> 18, 12 -> 15, 8 -> 10). */
+export function earnedJumpRepTarget(progressionReps: number): number {
+  return progressionReps + Math.max(2, Math.ceil(progressionReps * EARNED_JUMP_EXTRA_REPS));
+}
 const WEIGHT_TOLERANCE_KG = 0.000001;
 
 /** Recover the start-only explanation from this workout, including after a reload or import. */
@@ -109,17 +120,18 @@ type PlannedRow = { index: number; template: RoutineExercise; exercise: WorkoutE
  * The two latest attempts must both finish this exercise's planned workload at
  * the baseline loads. Repeated exercise rows form one ordered workload; changed
  * set counts, missed sets and newer incomplete attempts cannot be skipped.
+ * The increment may be one value or a per-exercise step (see progressionIncrements).
  */
 export function applyNextWorkoutProgression(
   routine: Routine,
   workout: WorkoutSession,
   history: readonly WorkoutSession[],
-  incrementKg: number,
+  increment: number | ((exercise: WorkoutExercise) => number),
   maximumWeightKg: number,
 ): WorkoutProgressionResult {
   const unchanged = { workout, increases: [] };
-  if (!Number.isFinite(incrementKg) || incrementKg <= 0 || incrementKg > MAX_INCREMENT_KG ||
-    !Number.isFinite(maximumWeightKg) || maximumWeightKg <= 0 ||
+  const incrementFor = typeof increment === "function" ? increment : () => increment;
+  if (!Number.isFinite(maximumWeightKg) || maximumWeightKg <= 0 ||
     workout.finishedAt !== undefined || workout.startingWeightAdjustments !== undefined || workout.sourceRoutineId !== routine.id ||
     workout.exercises.length !== routine.exercises.length ||
     workout.exercises.some((exercise) => exercise.sets.some((set) => set.completed || set.completedAt !== undefined))) {
@@ -142,6 +154,8 @@ export function applyNextWorkoutProgression(
     const representative = rows[0].exercise;
     if (resolveExerciseTracking(representative) !== "weight-reps" ||
       resolveExerciseWeightMode(representative) === "assistance") continue;
+    const incrementKg = incrementFor(representative);
+    if (!Number.isFinite(incrementKg) || incrementKg <= 0 || incrementKg > MAX_INCREMENT_KG) continue;
 
     const validPlan = rows.every(({ template, exercise }) =>
       Number.isInteger(template.targetSets) && template.targetSets > 0 &&
@@ -151,14 +165,18 @@ export function applyNextWorkoutProgression(
       exercise.sets.length === template.targetSets &&
       exercise.sets.every((set) => !set.dropSetOf && set.reps === template.targetReps &&
         Number.isFinite(set.weightKg) && set.weightKg > 0 &&
-        incrementKg <= set.weightKg * MAX_RELATIVE_INCREASE + WEIGHT_TOLERANCE_KG &&
+        incrementKg <= set.weightKg * MAX_EARNED_RELATIVE_INCREASE + WEIGHT_TOLERANCE_KG &&
         increasedWeight(set.weightKg, incrementKg) > set.weightKg &&
         increasedWeight(set.weightKg, incrementKg) <= maximumWeightKg));
     if (!validPlan) continue;
+    const earnedJump = rows.some(({ exercise }) => exercise.sets.some((set) =>
+      incrementKg > set.weightKg * MAX_RELATIVE_INCREASE + WEIGHT_TOLERANCE_KG));
 
     const baseline = rows.flatMap(({ template, exercise }) => exercise.sets.map((set) => ({
       ...set,
-      progressionReps: resolveProgressionRepTarget(template),
+      progressionReps: earnedJump
+        ? earnedJumpRepTarget(resolveProgressionRepTarget(template))
+        : resolveProgressionRepTarget(template),
     })));
     // A future-dated/imported session cannot be evidence for this workout.
     // Among prior attempts, select before checking completion so a recent miss blocks older successes.
