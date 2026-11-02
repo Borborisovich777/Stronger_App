@@ -123,7 +123,7 @@ import {
 } from "./sessionRescue";
 import { nextRoutineInRotation } from "./weeklyReview";
 import { planDays, usablePlan } from "./trainingPlan";
-import { TodayPlanCard, TrainingPlanSettings } from "./TrainingPlan";
+import { TodayPlanCard, TrainingPlanSettings } from "./TrainingPlanCards";
 import { EXERCISE_IMAGE_VERSION, EXERCISE_MEDIA } from "./exercise-media";
 import { ExerciseGuide, ExercisePhoto } from "./ExerciseGuide";
 import { findExistingExercise, matchesExerciseSearch, mergeExerciseCatalog } from "./exercise-search";
