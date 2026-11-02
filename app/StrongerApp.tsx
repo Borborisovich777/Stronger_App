@@ -105,6 +105,7 @@ import { workoutFromTemplate } from "./workoutFromTemplate";
 import { applyNextWorkoutProgression, getWorkoutStartingWeightIncreases, resolveProgressionRepTarget } from "./workoutProgression";
 import { progressionIncrementKg } from "./progressionIncrements";
 import { customExerciseUsage, deleteCustomExercise, renameCustomExercise } from "./customExercises";
+import { exerciseUseCounts, replaceExerciseEverywhere, templateFromWorkout, workoutDiffersFromTemplate } from "./templateSync";
 import {
   buildPeriodProgress,
   type ProgressPeriod,
@@ -124,8 +125,8 @@ import { nextRoutineInRotation } from "./weeklyReview";
 import { EXERCISE_IMAGE_VERSION, EXERCISE_MEDIA } from "./exercise-media";
 import { ExerciseGuide, ExercisePhoto } from "./ExerciseGuide";
 import { findExistingExercise, matchesExerciseSearch, mergeExerciseCatalog } from "./exercise-search";
-import { buildExerciseProgress, defaultSetMeasurements, ExerciseTracking, ExerciseWeightMode, findLatestPreviousSet, previousSetsForWorkout, formatDistanceKm, formatSetDuration, isTimedTracking, resolveExerciseTracking, resolveExerciseWeightMode, SetMeasurements, SetMeasurementUpdate, setCompletionError } from "./exercise-tracking";
-import { ArrowDown, ArrowUp, CaretDown, Check, ClockCounterClockwise, DotsThree, Barbell, GearSix, NotePencil, Plus, Timer, Trash, TrendUp, X } from "@phosphor-icons/react";
+import { buildExerciseProgress, defaultSetMeasurements, ExerciseTracking, ExerciseWeightMode, findLatestPreviousSet, findPreviousWorkingSets, previousSetsForWorkout, formatDistanceKm, formatSetDuration, isTimedTracking, resolveExerciseTracking, resolveExerciseWeightMode, SetMeasurements, SetMeasurementUpdate, setCompletionError } from "./exercise-tracking";
+import { ArrowDown, ArrowUp, CaretDown, Check, ClockCounterClockwise, DotsThree, Barbell, GearSix, NotePencil, Plus, Swap, Timer, Trash, TrendUp, X } from "@phosphor-icons/react";
 import { createExistingUserPreviewData, createPreviewData, createProgressionPreviewData } from "./preview-data";
 import { TemplateLibrary } from "./TemplateLibrary";
 import { WORKOUT_TEMPLATES } from "./workoutTemplates";
@@ -719,6 +720,7 @@ function ExercisePicker({
   onCreateCustom,
   onRenameCustom,
   onDeleteCustom,
+  onReplaceSaved,
 }: {
   catalog: ExerciseCatalogItem[];
   onSelect?: (exercise: ExerciseCatalogItem) => void;
@@ -727,6 +729,8 @@ function ExercisePicker({
   onRenameCustom?: (exerciseKey: string, name: string) => string | null;
   /** Returns true when the exercise was removed. */
   onDeleteCustom?: (exerciseKey: string) => boolean;
+  /** Offered on Saved exercises that are not in the catalogue, to merge them into one that is. */
+  onReplaceSaved?: (exercise: ExerciseCatalogItem) => void;
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<"All" | ExerciseCatalogCategory>("All");
@@ -888,6 +892,8 @@ function ExercisePicker({
                     <ExercisePhoto exerciseKey={exercise.exerciseKey} name={exercise.name} thumbnail />
                     <span className="exercise-option-copy"><strong>{exercise.name}</strong><small>{exercise.category} · {EXERCISE_MEDIA[exercise.exerciseKey]?.equipment ?? equipment ?? "Personal"}</small><span className="exercise-view-label">View movement</span></span>
                   </button>
+                  {exercise.category === "Saved" && onReplaceSaved ? <button className="exercise-quick-add secondary" type="button" aria-label={`Replace ${exercise.name} with a catalogue exercise`}
+                    onClick={() => onReplaceSaved(exercise)}>Replace</button> : null}
                   {exercise.category === "Custom" && onRenameCustom ? <button className="exercise-quick-add secondary" type="button" aria-label={`Edit ${exercise.name}`} aria-expanded={editingCustom?.exerciseKey === exercise.exerciseKey}
                     onClick={() => setEditingCustom(editingCustom?.exerciseKey === exercise.exerciseKey ? null : { exerciseKey: exercise.exerciseKey, name: exercise.name, status: "" })}>Edit</button> : null}
                   {onSelect ? <button className="exercise-quick-add" type="button" aria-label={`Select ${exercise.name}`} onClick={() => onSelect(exercise)}>Add</button> : null}
@@ -1261,7 +1267,8 @@ export default function StrongerApp() {
   const [editingWorkout, setEditingWorkout] = useState(false);
   const [workoutMinimized, setWorkoutMinimized] = useState(false);
   const [showWorkoutMenu, setShowWorkoutMenu] = useState(false);
-  const [exerciseAction, setExerciseAction] = useState<{ id: string; view: "menu" | "edit" | "reorder" | "notes" | "rest" } | null>(null);
+  const [exerciseAction, setExerciseAction] = useState<{ id: string; view: "menu" | "edit" | "reorder" | "notes" | "rest" | "replace" } | null>(null);
+  const [mergeSource, setMergeSource] = useState<{ source: ExerciseCatalogItem; target: ExerciseCatalogItem | null; includeHistory: boolean } | null>(null);
   const [showHistoryMenu, setShowHistoryMenu] = useState(false);
   const [collapsedExerciseIds, setCollapsedExerciseIds] = useState<Set<string>>(() => new Set());
   const [exerciseReorderPreview, setExerciseReorderPreview] = useState<ExerciseReorderPreview | null>(null);
@@ -1860,6 +1867,59 @@ export default function StrongerApp() {
     setData((current) => deleteCustomExercise(current, exerciseKey));
     setMessage(`${custom.name} was deleted.`);
     return true;
+  }
+
+  function replaceWorkoutExercise(exerciseId: string, replacement: ExerciseCatalogItem) {
+    const current = data.activeWorkout?.exercises.find((exercise) => exercise.id === exerciseId);
+    if (!current) return;
+    if (current.sets.some((set) => set.completed)) {
+      setMessage(`${current.name} already has completed sets. Remove it and add ${replacement.name} instead.`);
+      return;
+    }
+    const tracking = exerciseTracking(replacement);
+    const weightMode = exerciseWeightMode(replacement);
+    const trackingChanged = tracking !== exerciseTracking(current) || weightMode !== exerciseWeightMode(current);
+    const previous = tracking === "weight-reps" ? findPreviousWorkingSets(data.history, replacement.exerciseKey, tracking, weightMode) : [];
+    updateActive((workout) => ({
+      ...workout,
+      exercises: workout.exercises.map((exercise) => exercise.id !== exerciseId ? exercise : {
+        ...exercise,
+        exerciseKey: replacement.exerciseKey,
+        name: replacement.name,
+        tracking,
+        weightMode,
+        sets: exercise.sets.filter((set) => !set.dropSetOf).map((set, index) => {
+          const base = trackingChanged ? { ...set, ...defaultSetMeasurements(tracking) } : set;
+          const weightKg = previous[index]?.weightKg ?? previous.at(-1)?.weightKg ?? base.weightKg;
+          return { ...base, weightKg };
+        }),
+      }),
+    }));
+    setExerciseAction(null);
+    setMessage(`Replaced ${current.name} with ${replacement.name}. Finish the workout to save it to the template.`);
+  }
+
+  function updateTemplateFromWorkout(session: WorkoutSession) {
+    const routine = data.routines.find((item) => item.id === session.sourceRoutineId);
+    if (!routine) return;
+    setData((current) => ({
+      ...current,
+      routines: current.routines.map((item) => item.id === routine.id ? templateFromWorkout(item, session, makeId) : item),
+    }));
+    setMessage(`${routine.name} now matches this workout.`);
+  }
+
+  function mergeSavedExercise() {
+    if (!mergeSource?.target) return;
+    const { source, target, includeHistory } = mergeSource;
+    setData((current) => replaceExerciseEverywhere(current, source.exerciseKey, {
+      exerciseKey: target.exerciseKey,
+      name: target.name,
+      tracking: exerciseTracking(target),
+      weightMode: exerciseWeightMode(target),
+    }, includeHistory));
+    setMergeSource(null);
+    setMessage(`${source.name} was replaced with ${target.name}.`);
   }
 
   function startRoutine(routine: Routine) {
@@ -3579,6 +3639,7 @@ export default function StrongerApp() {
       {exerciseAction && actionExercise && activeWorkout ? <Modal key={exerciseAction.view} title={actionExercise.name} onClose={() => setExerciseAction(null)} initialFocus="close">
         {exerciseAction.view === "menu" ? <div className="exercise-actions-sheet">
           <button type="button" onClick={() => setExerciseAction({ ...exerciseAction, view: "edit" })}><NotePencil size={19} aria-hidden="true" /> Edit sets</button>
+          <button type="button" onClick={() => setExerciseAction({ ...exerciseAction, view: "replace" })}><Swap size={19} aria-hidden="true" /> Replace exercise</button>
           <button type="button" onClick={() => setExerciseAction({ ...exerciseAction, view: "reorder" })}><ArrowUp size={19} aria-hidden="true" /> Reorder</button>
           <button type="button" onClick={() => setExerciseAction({ ...exerciseAction, view: "notes" })}><NotePencil size={19} aria-hidden="true" /> Notes</button>
           <button type="button" onClick={() => setExerciseAction({ ...exerciseAction, view: "rest" })}><Timer size={19} aria-hidden="true" /> Rest timer <small>{formatRestOption(actionExercise.restSeconds)}</small></button>
@@ -3589,6 +3650,11 @@ export default function StrongerApp() {
           <SetTable idPrefix="edit-" sets={actionExercise.sets} exerciseName={actionExercise.name} tracking={exerciseTracking(actionExercise)} weightMode={exerciseWeightMode(actionExercise)} unit={unit} onUpdate={(id, update) => updateSet(actionExercise.id, id, update)} onRemove={(id) => removeSet(actionExercise, id)} />
           <button className="add-set-button" type="button" onClick={() => addSet(actionExercise)}><Plus size={15} aria-hidden="true" /> Add set</button>
           <button className="primary-button" type="button" onClick={() => setExerciseAction(null)}>Done</button>
+        </> : null}
+        {exerciseAction.view === "replace" ? <>
+          <p className="exercise-action-summary">Pick the exercise to do instead. Sets stay; completed sets block the swap.</p>
+          <ExercisePicker catalog={exerciseCatalog.filter((item) => item.exerciseKey !== actionExercise.exerciseKey)} onCreateCustom={createCustomExercise}
+            onSelect={(replacement) => replaceWorkoutExercise(actionExercise.id, replacement)} />
         </> : null}
         {exerciseAction.view === "reorder" ? <div className="exercise-actions-sheet">
           <p className="exercise-action-summary">Position {actionExerciseIndex + 1} of {activeWorkout.exercises.length}</p>
@@ -3681,7 +3747,8 @@ export default function StrongerApp() {
       {showExerciseLibrary ? (
         <Modal eyebrow="LEARN THE MOVEMENT" title="Exercise library" onClose={() => setShowExerciseLibrary(false)} initialFocus="close">
           <p className="exercise-library-intro">Find your exercise. See how it moves.</p>
-          <ExercisePicker catalog={exerciseCatalog} onCreateCustom={createCustomExercise} onRenameCustom={renameCustom} onDeleteCustom={deleteCustom} />
+          <ExercisePicker catalog={exerciseCatalog} onCreateCustom={createCustomExercise} onRenameCustom={renameCustom} onDeleteCustom={deleteCustom}
+            onReplaceSaved={(source) => { setShowExerciseLibrary(false); setMergeSource({ source, target: null, includeHistory: true }); }} />
         </Modal>
       ) : null}
 
@@ -3940,7 +4007,38 @@ export default function StrongerApp() {
             <div><small>SETS / DROPS</small><strong>{completedSets(summary).length} / {completedDropSegments(summary).length}</strong></div>
             <div><small>{sessionMetric(summary, unit).label}</small><strong>{sessionMetric(summary, unit).value}</strong></div>
           </div>
+          {(() => {
+            const routine = data.routines.find((item) => item.id === summary.sourceRoutineId);
+            return routine && workoutDiffersFromTemplate(summary, routine) ? (
+              <div className="template-update-card">
+                <p>You changed exercises or sets compared with <strong>{routine.name}</strong>.</p>
+                <button className="secondary-button full-width" type="button" onClick={() => updateTemplateFromWorkout(summary)}>Update template</button>
+              </div>
+            ) : null;
+          })()}
           <button className="primary-button" type="button" onClick={() => { setSummary(null); setTab("history"); }}>View in history</button>
+        </Modal>
+      ) : null}
+
+      {mergeSource ? (
+        <Modal eyebrow="MERGE DUPLICATE" title={`Replace ${mergeSource.source.name}`} onClose={() => setMergeSource(null)} initialFocus="close">
+          {mergeSource.target ? (() => {
+            const counts = exerciseUseCounts(data, mergeSource.source.exerciseKey);
+            return (
+              <div className="form-stack">
+                <p>{mergeSource.source.name} → <strong>{mergeSource.target.name}</strong> in {counts.templates} {counts.templates === 1 ? "template" : "templates"}.</p>
+                {counts.workouts ? <label className="checkbox-row">
+                  <input type="checkbox" checked={mergeSource.includeHistory} onChange={(event) => setMergeSource({ ...mergeSource, includeHistory: event.target.checked })} />
+                  <span>Also move {counts.workouts} past {counts.workouts === 1 ? "workout" : "workouts"}, so previous weights and progression carry over. Logged sets are not changed.</span>
+                </label> : null}
+                <button className="primary-button" type="button" onClick={mergeSavedExercise}>Replace</button>
+                <button className="secondary-button" type="button" onClick={() => setMergeSource({ ...mergeSource, target: null })}>Choose another</button>
+              </div>
+            );
+          })() : (
+            <ExercisePicker catalog={exerciseCatalog.filter((item) => item.category !== "Saved")} onCreateCustom={createCustomExercise}
+              onSelect={(target) => setMergeSource({ ...mergeSource, target })} />
+          )}
         </Modal>
       ) : null}
     </div>
