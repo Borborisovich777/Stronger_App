@@ -1,3 +1,4 @@
+import { validTrainingPlan, type TrainingPlan } from "./trainingPlan";
 import { isCompletedTrackedSet, resolveExerciseTracking, resolveExerciseWeightMode, type ExerciseTracking, type ExerciseWeightMode } from "./exercise-tracking";
 
 export const CURRENT_FORMAT_VERSION = 1 as const;
@@ -106,6 +107,8 @@ export type StrongerSettings = {
   effortScale?: EffortScale | "off";
   nextSetPreview?: boolean;
   workoutProgression?: boolean;
+  /** Upper/lower plan for the day-by-day suggestion; absent until set up. */
+  trainingPlan?: TrainingPlan;
 };
 
 export type CustomExercise = {
@@ -563,7 +566,8 @@ function hasValidStrongerDataShape(value: unknown, enforceResourceLimits = true)
     (settings.effortScale !== undefined && settings.effortScale !== "off" &&
       settings.effortScale !== "rpe" && settings.effortScale !== "rir") ||
     (settings.nextSetPreview !== undefined && typeof settings.nextSetPreview !== "boolean") ||
-    (settings.workoutProgression !== undefined && typeof settings.workoutProgression !== "boolean")) return false;
+    (settings.workoutProgression !== undefined && typeof settings.workoutProgression !== "boolean") ||
+    (settings.trainingPlan !== undefined && !validTrainingPlan(settings.trainingPlan))) return false;
   const sessions = candidate.activeWorkout ? [candidate.activeWorkout, ...candidate.history] : candidate.history;
   return uniqueStrings(candidate.routines.map((routine) => routine.id)) &&
     uniqueStrings((candidate.programBlocks ?? []).map((block) => block.id)) &&

@@ -122,6 +122,8 @@ import {
   workoutElapsedSeconds,
 } from "./sessionRescue";
 import { nextRoutineInRotation } from "./weeklyReview";
+import { planDays, usablePlan } from "./trainingPlan";
+import { TodayPlanCard, TrainingPlanSettings } from "./TrainingPlan";
 import { EXERCISE_IMAGE_VERSION, EXERCISE_MEDIA } from "./exercise-media";
 import { ExerciseGuide, ExercisePhoto } from "./ExerciseGuide";
 import { findExistingExercise, matchesExerciseSearch, mergeExerciseCatalog } from "./exercise-search";
@@ -1695,10 +1697,18 @@ export default function StrongerApp() {
   const selectedProgressTracking = exerciseProgress.tracking;
   const selectedProgressWeightMode = exerciseProgress.weightMode;
   const progressRecords = exerciseProgress.records;
-  const nextRoutine = useMemo(
-    () => nextRoutineInRotation(data.history, data.routines),
-    [data.history, data.routines],
+  const trainingPlan = useMemo(
+    () => usablePlan(data.settings.trainingPlan, data.routines),
+    [data.routines, data.settings.trainingPlan],
   );
+  const nextRoutine = useMemo(() => {
+    if (trainingPlan) {
+      const next = planDays(trainingPlan, data.history, todayDateKey, 8).find((day) => day.kind === "train");
+      const routine = data.routines.find((item) => item.id === next?.routineId);
+      if (routine) return routine;
+    }
+    return nextRoutineInRotation(data.history, data.routines);
+  }, [data.history, data.routines, todayDateKey, trainingPlan]);
   const summaryWorkoutCount = currentReport.totals.sessions;
   const progressHeadline = summaryWorkoutCount === 0
     ? currentReport.emptyReason === "active-workout-excluded"
@@ -3050,6 +3060,10 @@ export default function StrongerApp() {
                 <p>Start a template or build today as you go.</p>
               </section>
 
+              {trainingPlan ? (
+                <TodayPlanCard plan={trainingPlan} routines={data.routines} history={data.history} todayKey={todayDateKey} onStart={startRoutine} />
+              ) : null}
+
               {!isStandalone ? (
                 <section className="install-card">
                   <div className="install-icon" aria-hidden="true">↗</div>
@@ -3535,6 +3549,17 @@ export default function StrongerApp() {
               ))}
             </div>
           </section>
+
+          <TrainingPlanSettings
+            plan={data.settings.trainingPlan}
+            routines={data.routines}
+            usable={trainingPlan !== null}
+            onChange={(plan) => setData((current) => {
+              const settings = { ...current.settings, trainingPlan: plan };
+              if (!plan) delete settings.trainingPlan;
+              return { ...current, settings };
+            })}
+          />
 
           <section className="section-block settings-section">
             <p className="section-kicker">TEMPORARY TOOL</p><h2>Plate calculator</h2>
