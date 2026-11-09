@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { importTypeScriptModule } from "./helpers/import-typescript.mjs";
 
-const { workoutFromTemplate } = await importTypeScriptModule(new URL("../app/workoutFromTemplate.ts", import.meta.url));
+const { prefillExerciseFromPrevious, workoutFromTemplate } = await importTypeScriptModule(new URL("../app/workoutFromTemplate.ts", import.meta.url));
 const { findLatestPreviousSet, previousSetsForWorkout } = await importTypeScriptModule(new URL("../app/exercise-tracking.ts", import.meta.url));
 const set = (values = {}) => ({ id: "set-1", weightKg: 60, reps: 8, completed: true, ...values });
 const exercise = (values = {}) => ({ id: "exercise-1", exerciseKey: "bench-press", name: "Bench press", tracking: "weight-reps", weightMode: "external", restSeconds: 90, sets: [set()], ...values });
@@ -230,4 +230,25 @@ test("weighted template Previous drop results follow workout dates rather than i
   const workout = start(template(), history);
   workout.exercises[0].sets.push(set({ id: "current-drop", dropSetOf: workout.exercises[0].sets[0].id, completed: false }));
   assert.equal(previousSetsForWorkout(history, workout).get("current-drop").weightKg, 35);
+});
+
+test("an exercise added during a workout starts at last session's weights and reps, set by set", () => {
+  const history = [session({ exercises: [exercise({ sets: [
+    set({ id: "p1", weightKg: 45, reps: 14 }),
+    set({ id: "p2", weightKg: 56.25, reps: 12 }),
+  ] })] })];
+  const added = exercise({ id: "added", sets: [
+    { id: "n1", weightKg: 0, reps: 8, completed: false },
+    { id: "n2", weightKg: 0, reps: 8, completed: false },
+    { id: "n3", weightKg: 0, reps: 8, completed: false },
+  ] });
+  const workout = freeze({ id: "live", name: "Blank", workoutDate: "2026-09-22", startedAt: 12345, exercises: [added] });
+  const filled = prefillExerciseFromPrevious(history, workout, "added");
+  assert.deepEqual(filled.exercises[0].sets.map(({ weightKg, reps }) => [weightKg, reps]), [[45, 14], [56.25, 12], [56.25, 12]]);
+});
+
+test("an added exercise with no history keeps what was entered", () => {
+  const added = exercise({ id: "added", exerciseKey: "never-done", sets: [{ id: "n1", weightKg: 0, reps: 8, completed: false }] });
+  const workout = { id: "live", name: "Blank", workoutDate: "2026-09-22", startedAt: 12345, exercises: [added] };
+  assert.deepEqual(prefillExerciseFromPrevious([session()], workout, "added").exercises[0].sets[0], added.sets[0]);
 });
