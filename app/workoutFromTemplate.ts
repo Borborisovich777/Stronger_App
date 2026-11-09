@@ -1,5 +1,5 @@
 import { BUILT_IN_EXERCISES } from "./exercises";
-import { findPreviousSet, findPreviousWorkingSets, historyBeforeWorkout, resolveExerciseTracking, resolveExerciseWeightMode } from "./exercise-tracking";
+import { findPreviousSet, findPreviousWorkingSets, historyBeforeWorkout, previousSetsForWorkout, resolveExerciseTracking, resolveExerciseWeightMode } from "./exercise-tracking";
 import type { Routine, WorkoutSession } from "./storage";
 
 /** Weighted templates use recent loads and planned reps; other tracking retains previous results. */
@@ -50,6 +50,31 @@ export function workoutFromTemplate(
           };
         }),
       };
+    }),
+  };
+}
+
+/**
+ * Fill an exercise that was just added to a workout with what its Previous
+ * column shows, set by set, so the inputs start at last session's results
+ * instead of empty. Sets with no previous result are left as they are.
+ */
+export function prefillExerciseFromPrevious(history: readonly WorkoutSession[], workout: WorkoutSession, exerciseId: string): WorkoutSession {
+  const previous = previousSetsForWorkout(history, workout);
+  return {
+    ...workout,
+    exercises: workout.exercises.map((exercise) => exercise.id !== exerciseId ? exercise : {
+      ...exercise,
+      sets: exercise.sets.map((set) => {
+        const prior = previous.get(set.id);
+        return prior && !set.completed ? {
+          ...set,
+          weightKg: prior.weightKg,
+          reps: prior.reps,
+          durationSeconds: prior.durationSeconds,
+          distanceMeters: prior.distanceMeters,
+        } : set;
+      }),
     }),
   };
 }

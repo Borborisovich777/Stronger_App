@@ -101,7 +101,7 @@ import {
   MAX_PLATE_PAIRS_PER_SIZE,
   PlateInventoryItem,
 } from "./plateCalculator";
-import { workoutFromTemplate } from "./workoutFromTemplate";
+import { prefillExerciseFromPrevious, workoutFromTemplate } from "./workoutFromTemplate";
 import { applyNextWorkoutProgression, getWorkoutStartingWeightIncreases, resolveProgressionRepTarget } from "./workoutProgression";
 import { progressionIncrementKg } from "./progressionIncrements";
 import { customExerciseUsage, deleteCustomExercise, renameCustomExercise } from "./customExercises";
@@ -1444,6 +1444,9 @@ export default function StrongerApp() {
     const syncKeyboardInset = () => {
       const coveredHeight = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
       setHistoryKeyboardOpen(coveredHeight > 120);
+      // iOS pins fixed bars to the layout viewport, which stops following the screen while the
+      // keyboard is open; this lifts the rest timer back to the visible bottom edge.
+      document.documentElement.style.setProperty("--visible-bottom-inset", `${Math.round(coveredHeight)}px`);
     };
     syncKeyboardInset();
     viewport.addEventListener("resize", syncKeyboardInset);
@@ -1980,25 +1983,33 @@ export default function StrongerApp() {
       setMessage("This workout has reached its safe exercise or set limit.");
       return;
     }
-    updateActive((workout) => ({
-      ...workout,
-      exercises: [...workout.exercises, {
-        id: makeId("session-exercise"),
-        exerciseKey: draft.exerciseKey,
-        name: draft.name,
-        tracking: draft.tracking,
-        weightMode: draft.weightMode,
-        restSeconds: draft.restSeconds,
-        sets: Array.from({ length: draft.sets }, () => ({
-          id: makeId("set"),
-          weightKg: toKilograms(draft.weight, unit),
-          reps: draft.reps,
-          durationSeconds: draft.durationSeconds,
-          distanceMeters: draft.distanceMeters,
-          completed: false,
-        })),
-      }],
-    }));
+    const exerciseId = makeId("session-exercise");
+    const defaults = defaultSetMeasurements(draft.tracking);
+    // Targets left untouched in the dialog start from last session, matching the Previous column.
+    const untouched = draft.weight === 0 && draft.reps === defaults.reps &&
+      draft.durationSeconds === defaults.durationSeconds && draft.distanceMeters === defaults.distanceMeters;
+    updateActive((current) => {
+      const workout: WorkoutSession = {
+        ...current,
+        exercises: [...current.exercises, {
+          id: exerciseId,
+          exerciseKey: draft.exerciseKey,
+          name: draft.name,
+          tracking: draft.tracking,
+          weightMode: draft.weightMode,
+          restSeconds: draft.restSeconds,
+          sets: Array.from({ length: draft.sets }, () => ({
+            id: makeId("set"),
+            weightKg: toKilograms(draft.weight, unit),
+            reps: draft.reps,
+            durationSeconds: draft.durationSeconds,
+            distanceMeters: draft.distanceMeters,
+            completed: false,
+          })),
+        }],
+      };
+      return untouched ? prefillExerciseFromPrevious(data.history, workout, exerciseId) : workout;
+    });
     setShowExerciseModal(false);
   }
 

@@ -3130,7 +3130,10 @@ body.is-reordering-exercises {
   background: rgba(23, 26, 24, 0.96);
   color: var(--inverse-text);
   box-shadow: 0 14px 36px rgba(16, 20, 17, 0.28);
-  transform: translateX(-50%);
+  /* Own compositing layer so iOS keeps it on screen during momentum scrolling. */
+  transform: translate3d(-50%, calc(-1 * var(--visible-bottom-inset, 0px)), 0);
+  will-change: transform;
+  -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
 
