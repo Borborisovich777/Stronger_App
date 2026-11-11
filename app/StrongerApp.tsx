@@ -101,7 +101,7 @@ import {
   MAX_PLATE_PAIRS_PER_SIZE,
   PlateInventoryItem,
 } from "./plateCalculator";
-import { prefillExerciseFromPrevious, workoutFromTemplate } from "./workoutFromTemplate";
+import { carryPreviousReps, prefillExerciseFromPrevious, workoutFromTemplate } from "./workoutFromTemplate";
 import { applyNextWorkoutProgression, getWorkoutStartingWeightIncreases, resolveProgressionRepTarget } from "./workoutProgression";
 import { progressionIncrementKg } from "./progressionIncrements";
 import { customExerciseUsage, deleteCustomExercise, renameCustomExercise } from "./customExercises";
@@ -1940,7 +1940,7 @@ export default function StrongerApp() {
     const result = workoutProgressionEnabled
       ? applyNextWorkoutProgression(routine, workout, data.history, (exercise) => progressionIncrementKg(exercise, unit), MAX_WEIGHT_KG)
       : { workout, increases: [] };
-    startWorkout(result.workout);
+    startWorkout(carryPreviousReps(data.history, result.workout));
   }
 
   function usePreviousStartingWeights() {

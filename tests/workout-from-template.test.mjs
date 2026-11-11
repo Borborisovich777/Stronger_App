@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { importTypeScriptModule } from "./helpers/import-typescript.mjs";
 
-const { prefillExerciseFromPrevious, workoutFromTemplate } = await importTypeScriptModule(new URL("../app/workoutFromTemplate.ts", import.meta.url));
+const { carryPreviousReps, prefillExerciseFromPrevious, workoutFromTemplate } = await importTypeScriptModule(new URL("../app/workoutFromTemplate.ts", import.meta.url));
 const { findLatestPreviousSet, previousSetsForWorkout } = await importTypeScriptModule(new URL("../app/exercise-tracking.ts", import.meta.url));
 const set = (values = {}) => ({ id: "set-1", weightKg: 60, reps: 8, completed: true, ...values });
 const exercise = (values = {}) => ({ id: "exercise-1", exerciseKey: "bench-press", name: "Bench press", tracking: "weight-reps", weightMode: "external", restSeconds: 90, sets: [set()], ...values });
@@ -251,4 +251,24 @@ test("an added exercise with no history keeps what was entered", () => {
   const added = exercise({ id: "added", exerciseKey: "never-done", sets: [{ id: "n1", weightKg: 0, reps: 8, completed: false }] });
   const workout = { id: "live", name: "Blank", workoutDate: "2026-09-22", startedAt: 12345, exercises: [added] };
   assert.deepEqual(prefillExerciseFromPrevious([session()], workout, "added").exercises[0].sets[0], added.sets[0]);
+});
+
+test("a template workout starts each set at last session's reps on the same weight", () => {
+  const history = [session({ sourceRoutineId: "new-template", exercises: [exercise({ sets: [
+    set({ id: "p1", weightKg: 60, reps: 10 }),
+    set({ id: "p2", weightKg: 60, reps: 9 }),
+    set({ id: "p3", weightKg: 60, reps: 7 }),
+  ] })] })];
+  const workout = carryPreviousReps(history, start(template([target({ targetReps: 8 })]), history));
+  assert.deepEqual(workout.exercises[0].sets.map(({ weightKg, reps }) => [weightKg, reps]), [[60, 10], [60, 9], [60, 7]]);
+});
+
+test("a set whose weight went up keeps the template's rep goal", () => {
+  const history = [session({ sourceRoutineId: "new-template", exercises: [exercise({ sets: [
+    set({ id: "p1", weightKg: 60, reps: 12 }),
+    set({ id: "p2", weightKg: 60, reps: 12 }),
+  ] })] })];
+  const started = start(template([target({ targetSets: 2, targetReps: 8 })]), history);
+  const raised = { ...started, exercises: started.exercises.map((item) => ({ ...item, sets: item.sets.map((row) => ({ ...row, weightKg: 62.5 })) })) };
+  assert.deepEqual(carryPreviousReps(history, raised).exercises[0].sets.map(({ reps }) => reps), [8, 8]);
 });

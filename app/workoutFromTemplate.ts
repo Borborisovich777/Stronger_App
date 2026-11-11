@@ -78,3 +78,24 @@ export function prefillExerciseFromPrevious(history: readonly WorkoutSession[], 
     }),
   };
 }
+
+/**
+ * Start each weighted set at the reps you did last time on the same weight,
+ * as the Previous column shows them. A set whose weight was raised by
+ * next-workout progression keeps the template's rep goal, so the new weight
+ * starts at the bottom of the range.
+ */
+export function carryPreviousReps(history: readonly WorkoutSession[], workout: WorkoutSession): WorkoutSession {
+  const previous = previousSetsForWorkout(history, workout);
+  return {
+    ...workout,
+    exercises: workout.exercises.map((exercise) => resolveExerciseTracking(exercise) !== "weight-reps" ? exercise : {
+      ...exercise,
+      sets: exercise.sets.map((set) => {
+        const prior = previous.get(set.id);
+        return prior && !set.completed && prior.reps > 0 && Math.abs(prior.weightKg - set.weightKg) < 0.001
+          ? { ...set, reps: prior.reps } : set;
+      }),
+    }),
+  };
+}
